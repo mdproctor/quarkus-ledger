@@ -1,0 +1,124 @@
+package io.quarkiverse.ledger.runtime.service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
+import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
+import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+
+/**
+ * Computes EigenTrust-inspired trust scores from ledger decision history.
+ *
+ * <p>
+ * Pure Java — no CDI, no database. Accepts collections and returns a result record.
+ * Suitable for use in unit tests without a Quarkus runtime.
+ *
+ * <p>
+ * Algorithm:
+ * <ul>
+ * <li>Base score per decision: 1.0 if no negative attestations, 0.5 if mixed, 0.0 if majority negative</li>
+ * <li>Recency weighting: {@code weight = 2^(-(ageInDays / halfLifeDays))}</li>
+ * <li>{@code TrustScore = sum(weight * decisionScore) / sum(weight)}</li>
+ * <li>Clamped to [0.0, 1.0]; neutral prior 0.5 when no history</li>
+ * </ul>
+ */
+public final class TrustScoreComputer {
+
+    private final int halfLifeDays;
+
+    /**
+     * Construct a computer with the given exponential-decay half-life.
+     *
+     * @param halfLifeDays half-life in days; values {@code <= 0} default to 90
+     */
+    public TrustScoreComputer(final int halfLifeDays) {
+        this.halfLifeDays = halfLifeDays > 0 ? halfLifeDays : 90;
+    }
+
+    /**
+     * The computed score and metrics for one actor.
+     *
+     * @param trustScore computed trust score in [0.0, 1.0]
+     * @param decisionCount number of EVENT entries evaluated
+     * @param overturnedCount number of decisions with at least one negative attestation
+     * @param appealCount appeal count (always 0; reserved for future use)
+     * @param attestationPositive total positive attestation count
+     * @param attestationNegative total negative attestation count
+     */
+    public record ActorScore(
+            double trustScore,
+            int decisionCount,
+            int overturnedCount,
+            int appealCount,
+            int attestationPositive,
+            int attestationNegative) {
+    }
+
+    /**
+     * Compute a trust score for one actor.
+     *
+     * @param decisions ledger entries where this actor was the decision-maker (EVENT entries)
+     * @param attestationsByEntryId map from ledger entry id to its attestations
+     * @param now reference timestamp for age calculation
+     * @return the computed score and metrics
+     */
+    public ActorScore compute(
+            final List<LedgerEntry> decisions,
+            final Map<UUID, List<LedgerAttestation>> attestationsByEntryId,
+            final Instant now) {
+
+        if (decisions.isEmpty()) {
+            return new ActorScore(0.5, 0, 0, 0, 0, 0);
+        }
+
+        double weightedPositive = 0.0;
+        double weightedTotal = 0.0;
+        int overturnedCount = 0;
+        int totalPositive = 0;
+        int totalNegative = 0;
+
+        for (final LedgerEntry entry : decisions) {
+            final Instant entryTime = entry.occurredAt != null ? entry.occurredAt : now;
+            final long ageInDays = java.time.Duration.between(entryTime, now).toDays();
+            final double weight = Math.pow(2.0, -(double) ageInDays / halfLifeDays);
+
+            final List<LedgerAttestation> attestations = attestationsByEntryId.getOrDefault(entry.id, List.of());
+
+            final long positive = attestations.stream()
+                    .filter(a -> a.verdict == AttestationVerdict.SOUND
+                            || a.verdict == AttestationVerdict.ENDORSED)
+                    .count();
+            final long negative = attestations.stream()
+                    .filter(a -> a.verdict == AttestationVerdict.FLAGGED
+                            || a.verdict == AttestationVerdict.CHALLENGED)
+                    .count();
+
+            totalPositive += (int) positive;
+            totalNegative += (int) negative;
+            if (negative > 0) {
+                overturnedCount++;
+            }
+
+            // Decision score: 1.0 clean, 0.5 mixed, 0.0 predominantly negative
+            final double decisionScore;
+            if (negative == 0) {
+                decisionScore = 1.0;
+            } else if (positive > negative) {
+                decisionScore = 0.5;
+            } else {
+                decisionScore = 0.0;
+            }
+
+            weightedPositive += weight * decisionScore;
+            weightedTotal += weight;
+        }
+
+        final double rawScore = weightedTotal > 0.0 ? weightedPositive / weightedTotal : 0.5;
+        final double trustScore = Math.max(0.0, Math.min(1.0, rawScore));
+
+        return new ActorScore(trustScore, decisions.size(), overturnedCount, 0, totalPositive, totalNegative);
+    }
+}

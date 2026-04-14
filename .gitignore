@@ -1,0 +1,22 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.quarkus/
+.env
+*.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+
+# Native build artifacts
+*-runner
+*-runner.exe
+*.so
+*.dylib
