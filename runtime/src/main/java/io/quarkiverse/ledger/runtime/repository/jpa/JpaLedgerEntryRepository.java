@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Alternative;
 
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
@@ -21,8 +22,17 @@ import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
  * <p>
  * Queries on {@link LedgerEntry} are polymorphic — Hibernate joins to all registered
  * subclass tables and returns the correct concrete type for each row.
+ *
+ * <p>
+ * Marked {@code @Alternative} so that domain-specific extensions (e.g. Tarkus's
+ * {@code JpaWorkItemLedgerEntryRepository}) can provide a single, unambiguous
+ * {@code LedgerEntryRepository} bean without CDI conflicts. When no domain-specific
+ * implementation is present, this class must be activated via {@code beans.xml}.
+ * In embedded deployments with a subclass-specific repository, no activation is needed
+ * — the subclass repository handles all polymorphic {@code LedgerEntry} queries.
  */
 @ApplicationScoped
+@Alternative
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     /** {@inheritDoc} */

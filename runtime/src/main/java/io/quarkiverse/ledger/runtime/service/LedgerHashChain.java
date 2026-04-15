@@ -79,10 +79,10 @@ public final class LedgerHashChain {
      * Returns {@code false} on the first entry whose stored {@code digest} does not match
      * the computed value. Returns {@code true} only when all digests are consistent.
      *
-     * @param entries ordered list of ledger entries for a single subject (ascending sequence)
+     * @param entries ordered list of ledger entries (or subclass instances) for a single subject (ascending sequence)
      * @return {@code true} if the chain is intact; {@code false} if any entry has been tampered with
      */
-    public static boolean verify(final List<LedgerEntry> entries) {
+    public static boolean verify(final List<? extends LedgerEntry> entries) {
         String expectedPrevious = null;
         for (final LedgerEntry entry : entries) {
             final String computed = compute(expectedPrevious, entry);
