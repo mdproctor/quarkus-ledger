@@ -76,6 +76,12 @@
 
   <profiles>
     <profile>
+      <id>with-examples</id>
+      <modules>
+        <module>examples/order-processing</module>
+      </modules>
+    </profile>
+    <profile>
       <id>native</id>
       <activation>
         <property>

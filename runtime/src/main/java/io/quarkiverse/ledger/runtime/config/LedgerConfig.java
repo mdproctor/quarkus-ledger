@@ -1,5 +1,7 @@
 package io.quarkiverse.ledger.runtime.config;
 
+import io.quarkus.runtime.annotations.ConfigPhase;
+import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -11,6 +13,7 @@ import io.smallrye.config.WithDefault;
  * gated so consuming applications can enable only what they need.
  */
 @ConfigMapping(prefix = "quarkus.ledger")
+@ConfigRoot(phase = ConfigPhase.RUN_TIME)
 public interface LedgerConfig {
 
     /**

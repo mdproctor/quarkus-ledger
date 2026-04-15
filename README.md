@@ -126,6 +126,7 @@ boolean intact = LedgerHashChain.verify(entries); // true if untampered
 |---|---|
 | [Integration Guide](docs/integration-guide.md) | Step-by-step: subclass, migration, repository, capture, queries, configuration |
 | [Examples](docs/examples.md) | Complete worked example — order processing domain |
+| [Runnable Example](examples/order-processing/) | `mvn quarkus:dev` — live order API with ledger, hash chain, attestations |
 
 ---
 
