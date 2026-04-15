@@ -43,6 +43,10 @@ ledger_entry (base — created by quarkus-ledger V1000)
 
 Flyway picks up `quarkus-ledger`'s migrations (V1000, V1001) automatically from the classpath. Your own migrations start from a lower number (e.g. V1–V9) or a distinct high range (e.g. V2000+). Do not use V1000–V1001.
 
+> **Critical:** your subclass migration must run **after** quarkus-ledger's V1000 (which creates `ledger_entry`), because the subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)`. If you number your subclass migration V5 and the base schema is V1000, Flyway will try to create the FK before the parent table exists and fail with `Table "LEDGER_ENTRY" not found`.
+>
+> Safe numbering: use V1–V999 for your domain tables and **V1002+ for any subclass join tables** (V1000 = ledger_entry base, V1001 = actor_trust_score). See the [example](../examples/order-processing/) where `V1002__order_ledger_entry.sql` follows this rule.
+
 ---
 
 ## Step 2 — Create your LedgerEntry subclass
@@ -113,10 +117,10 @@ public class OrderLedgerEntry extends LedgerEntry {
 
 ## Step 3 — Write the Flyway migration
 
-Number your migration above the base schema V1000 or below V1000. A safe range is V1–V999 for application schemas and V2000+ if you also need to stay below quarkus-ledger's range.
+Number your subclass migration **after V1001** (the last quarkus-ledger migration). The subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)` — if it runs before V1000 creates `ledger_entry`, the migration fails. V1002 is the safe starting point for the first subclass table.
 
 ```sql
--- V5__order_ledger_entry.sql
+-- V1002__order_ledger_entry.sql
 -- OrderLedgerEntry subclass table (JPA JOINED inheritance)
 CREATE TABLE order_ledger_entry (
     id           UUID         NOT NULL,
