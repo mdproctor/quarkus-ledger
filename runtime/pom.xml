@@ -27,6 +27,12 @@
       <artifactId>quarkus-flyway</artifactId>
     </dependency>
 
+    <!-- JSON serialisation for LedgerSupplementSerializer -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
     <!-- JDBC drivers — optional; consuming app provides them -->
     <dependency>
       <groupId>io.quarkus</groupId>
