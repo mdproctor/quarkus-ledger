@@ -16,8 +16,8 @@ import jakarta.persistence.Table;
  *
  * <pre>{@code
  * ProvenanceSupplement ps = new ProvenanceSupplement();
- * ps.sourceEntityId     = workflowInstance.id.toString();
- * ps.sourceEntityType   = "Flow:WorkflowInstance";
+ * ps.sourceEntityId = workflowInstance.id.toString();
+ * ps.sourceEntityType = "Flow:WorkflowInstance";
  * ps.sourceEntitySystem = "quarkus-flow";
  * entry.attach(ps);
  * }</pre>
