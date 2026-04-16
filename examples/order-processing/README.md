@@ -66,8 +66,9 @@ curl -s "http://localhost:8080/orders/$ORDER/ledger" | jq '.[0].attestations'
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test
 ```
 
-8 integration tests cover: order creation, ledger entry creation, hash chain linking,
-chain verification, decision context snapshots, cancel with rationale, and peer attestations.
+10 integration tests cover: order creation, ledger entry creation, hash chain linking,
+chain verification, supplementJson with decision context, cancel with rationale,
+peer attestations, and supplement-specific assertions.
 
 ---
 
@@ -78,6 +79,7 @@ chain verification, decision context snapshots, cancel with rationale, and peer 
 | V1 | `V1__order_schema.sql` | `orders` table |
 | V1000 | from `quarkus-ledger` jar | `ledger_entry` + `ledger_attestation` base tables |
 | V1001 | from `quarkus-ledger` jar | `actor_trust_score` table |
-| V1002 | `V1002__order_ledger_entry.sql` | `order_ledger_entry` join table |
+| V1002 | from `quarkus-ledger` jar | supplement tables (`ledger_supplement` + subclass tables) |
+| V1003 | `V1003__order_ledger_entry.sql` | `order_ledger_entry` join table |
 
-V1002 must be > V1001 so the base `ledger_entry` table exists before the FK constraint.
+V1003 must be > V1002 so the supplement infrastructure and base `ledger_entry` table both exist before the FK constraint.

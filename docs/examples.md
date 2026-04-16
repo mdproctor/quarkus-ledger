@@ -48,7 +48,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 ## Flyway migration
 
 ```sql
--- V5__order_ledger_entry.sql
+-- V1003__order_ledger_entry.sql
 CREATE TABLE order_ledger_entry (
     id           UUID         NOT NULL,
     order_id     UUID         NOT NULL,

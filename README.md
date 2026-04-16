@@ -8,8 +8,8 @@ Add `quarkus-ledger` to your app and get:
 - **SHA-256 hash chain** — Certificate Transparency tamper evidence, verifiable offline
 - **Peer attestations** — actors stamp verdicts (SOUND / FLAGGED / ENDORSED / CHALLENGED) with confidence scores
 - **EigenTrust reputation** — nightly score computation from attestation history, exponential decay weighting
-- **Decision context snapshots** — point-in-time state capture for GDPR Article 22 / EU AI Act Article 12
-- **Provenance tracking** — record which external system originated a domain object
+- **Supplements** — optional cross-cutting extensions (`ComplianceSupplement`, `ProvenanceSupplement`, `ObservabilitySupplement`) attached via `entry.attach(supplement)`, lazily loaded, zero overhead when unused
+- **GDPR Art.22 compliance** — `ComplianceSupplement` carries `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable`, and `decisionContext` for automated decision auditability
 
 The base `LedgerEntry` entity uses JPA JOINED inheritance. You extend it with a domain-specific subclass that adds your own fields. The base tables are always present; your subclass table joins on `id`.
 
@@ -66,7 +66,7 @@ Also add the deployment artifact to your deployment module if you are building a
 </dependency>
 ```
 
-The extension adds `ledger` to your Quarkus feature list at startup and creates three base tables via Flyway (migrations V1000–V1001):
+The extension adds `ledger` to your Quarkus feature list at startup and creates three base tables via Flyway (migrations V1000–V1002), plus supplement tables when supplements are used:
 
 | Table | Purpose |
 |---|---|
@@ -142,9 +142,11 @@ boolean intact = LedgerHashChain.verify(entries); // true if untampered
 
 | Doc | Contents |
 |---|---|
-| [Integration Guide](docs/integration-guide.md) | Step-by-step: subclass, migration, repository, capture, queries, configuration |
+| [Integration Guide](docs/integration-guide.md) | Step-by-step: subclass, migration, repository, capture, supplements, queries, configuration |
 | [Examples](docs/examples.md) | Complete worked example — order processing domain |
-| [Runnable Example](examples/order-processing/) | `mvn quarkus:dev` — live order API with ledger, hash chain, attestations |
+| [Runnable Example — Order Processing](examples/order-processing/) | `mvn quarkus:dev` — order lifecycle with ledger, hash chain, attestations |
+| [Runnable Example — GDPR Art.22](examples/art22-decision-snapshot/) | `mvn quarkus:dev` — AI decision service with full Art.22 compliance supplement |
+| [Auditability Assessment](docs/AUDITABILITY.md) | 8-axiom self-assessment against ACM FAIR 2025 framework |
 
 ---
 
@@ -156,8 +158,8 @@ All keys are under `quarkus.ledger`:
 |---|---|---|
 | `quarkus.ledger.enabled` | `true` | Master switch |
 | `quarkus.ledger.hash-chain.enabled` | `true` | SHA-256 tamper evidence |
-| `quarkus.ledger.decision-context.enabled` | `true` | State snapshot on each entry |
-| `quarkus.ledger.evidence.enabled` | `false` | Structured evidence fields |
+| `quarkus.ledger.decision-context.enabled` | `true` | Gate for populating `ComplianceSupplement.decisionContext` |
+| `quarkus.ledger.evidence.enabled` | `false` | Gate for populating `ComplianceSupplement.evidence` |
 | `quarkus.ledger.attestations.enabled` | `true` | Peer attestation API |
 | `quarkus.ledger.trust-score.enabled` | `false` | Nightly EigenTrust computation |
 | `quarkus.ledger.trust-score.decay-half-life-days` | `90` | Recency decay half-life |

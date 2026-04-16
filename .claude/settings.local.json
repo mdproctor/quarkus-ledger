@@ -47,7 +47,9 @@
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test)",
       "Bash(grep -v \"^--$\")",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn install -pl runtime -DskipTests -q)",
-      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn install -pl runtime -DskipTests)"
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn install -pl runtime -DskipTests)",
+      "Bash(xargs ls *)",
+      "Bash(grep *)"
     ]
   }
 }

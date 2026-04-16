@@ -288,8 +288,9 @@ append-only immutable ledger. An entry cannot be modified without breaking the h
 chain. An actor cannot be "forgotten" without invalidating their entire chain history.
 
 **Current state:**
-Gap. `actorId`, `actorRole`, `planRef`, and decision context are stored permanently
-with no retention limit and no anonymisation mechanism. The hash chain's immutability
+Gap. `actorId` and `actorRole` (core fields) plus any data stored in attached supplements
+(`ComplianceSupplement.decisionContext`, `ComplianceSupplement.planRef`, etc.) are stored
+permanently with no retention limit and no anonymisation mechanism. The hash chain's immutability
 guarantee is structurally incompatible with erasure of individual entries. There is no
 design for how these requirements would be reconciled.
 
@@ -339,30 +340,25 @@ for EU AI Act high-risk AI requirements is **2 August 2026**. Penalties reach
 €15M or 3% of global turnover. A ledger that is "basically compliant" but cannot
 produce the specific artefacts a regulator asks for provides weak protection.
 
-**Current state:**
-Partial. The design document mentions GDPR Art. 22 and EU AI Act Art. 12. `planRef`
-and decision context fields exist. The hash chain satisfies the tamper-evidence
-requirement. These are genuine strengths.
+**Current state — ✅ Addressed for GDPR Art.22 (#7), ⚠️ Partial for EU AI Act Art.12 (#9 pending)**
 
-However, regulatory alignment is aspirational in the current design:
-- No structured fields for Art. 22 explainability (decision inputs, algorithm reference,
-  confidence score, contestation mechanism)
-- No 6-month retention enforcement for Art. 12
-- No reconstructability proof (an auditor cannot be shown a verifiable, complete record
-  for a time window without direct DB access)
-- No documentation mapping specific regulatory requirements to specific ledger features
+GDPR Art.22 structured decision fields are now delivered via `ComplianceSupplement`:
+`algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable`, and
+`decisionContext`. All fields are nullable — existing consumers unaffected. See
+`examples/art22-decision-snapshot/` for a runnable GDPR Art.22 compliant example.
 
-**Gap:**
-The gap is not in the data model's intent but in its specificity and the absence of
-operational compliance plumbing. A legal team asked "prove your AI decisions are
-Article 12 compliant" cannot be pointed at anything concrete today.
+The hash chain satisfies the tamper-evidence requirement. Supplement fields are
+deliberately excluded from the canonical form.
+
+**Remaining gap (EU AI Act Art.12):**
+- No 6-month retention enforcement (`quarkus.ledger.retention.*` config not yet implemented)
+- No reconstructability proof (an auditor-facing query API does not yet exist)
+- No documentation mapping Art.12 requirements to specific ledger features
 
 **How to incorporate (without breaking existing consumers):**
-- **GDPR Art. 22:** Add structured optional fields to `LedgerEntry` for decision inputs,
-  algorithm reference, confidence score, and contestation URI. All nullable — existing
-  consumers that don't populate them are unaffected. Roadmap item #1.
 - **EU AI Act Art. 12:** Add `quarkus.ledger.retention.*` config (disabled by default),
-  auditor-facing query API, and a compliance documentation section. Roadmap item #4.
+  auditor-facing query API (`findByActorId`, `findByTimeRange`), and compliance
+  documentation. Roadmap item #9 (open issue).
 
 ---
 
