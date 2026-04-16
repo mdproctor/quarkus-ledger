@@ -19,7 +19,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
  * <p>
  * Uses a package-private concrete subclass {@code TestLedgerEntry} since {@link LedgerEntry}
  * is abstract. All fields exercised in the canonical form are base-class fields:
- * {@code subjectId|seqNum|entryType|actorId|actorRole|planRef|occurredAt}.
+ * {@code subjectId|seqNum|entryType|actorId|actorRole|occurredAt}.
  */
 class LedgerHashChainTest {
 
@@ -42,7 +42,7 @@ class LedgerHashChainTest {
         e.entryType = LedgerEntryType.EVENT;
         e.actorId = "system";
         e.actorRole = "Initiator";
-        e.planRef = null;
+        // planRef removed — now lives in ComplianceSupplement
         e.occurredAt = Instant.parse("2026-04-14T10:00:00Z");
         return e;
     }
@@ -258,5 +258,20 @@ class LedgerHashChainTest {
     @Test
     void genesisHash_returnsGENESIS() {
         assertThat(LedgerHashChain.genesisHash()).isEqualTo("GENESIS");
+    }
+
+    // ── canonical form — supplement fields excluded ───────────────────────────
+
+    @Test
+    void compute_supplementFieldsDoNotAffectDigest() {
+        // Canonical form covers only core LedgerEntry fields.
+        // Supplement data is not tamper-evidence — it is enrichment.
+        // Two entries identical in core fields must produce the same digest
+        // regardless of what supplements are attached.
+        final UUID id = UUID.randomUUID();
+        final TestLedgerEntry e1 = entry(id, 1);
+        final TestLedgerEntry e2 = entry(id, 1);
+        assertThat(LedgerHashChain.compute(null, e1))
+                .isEqualTo(LedgerHashChain.compute(null, e2));
     }
 }

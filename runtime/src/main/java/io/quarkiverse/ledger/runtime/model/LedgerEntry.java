@@ -1,40 +1,67 @@
 package io.quarkiverse.ledger.runtime.model;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
+import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
+import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
+import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /**
  * Abstract base for all ledger entries.
  *
+ * <h2>Core fields</h2>
  * <p>
- * Uses JPA JOINED inheritance — the {@code ledger_entry} table holds all common fields.
- * Domain-specific subclasses (e.g. {@code WorkItemLedgerEntry} in Tarkus,
- * {@code AgentMessageLedgerEntry} in Qhorus) extend this class and add a sibling table
- * joined on {@code id}.
+ * {@code LedgerEntry} holds exactly the fields that are relevant for every entry,
+ * every consumer, every time: the subject aggregate, sequence position, actor identity,
+ * timestamp, and the tamper-evident hash chain. Nothing else.
  *
+ * <h2>Supplements</h2>
  * <p>
- * The {@code subjectId} field is the aggregate identifier — the domain object this entry
- * belongs to (e.g. a WorkItem UUID, a Channel UUID). Sequence numbering and hash chaining
- * are scoped per subject.
+ * Optional cross-cutting concerns are handled by
+ * {@link io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement} subclasses
+ * attached via {@link #attach(LedgerSupplement)}:
+ * <ul>
+ * <li>{@link ComplianceSupplement} — GDPR Art.22 decision snapshot, governance</li>
+ * <li>{@link ProvenanceSupplement} — workflow source entity</li>
+ * <li>{@link ObservabilitySupplement} — OTel tracing, causality</li>
+ * </ul>
+ * If a consumer never calls {@code attach()}, no supplement tables are written
+ * and the lazy {@code supplements} list is never initialised — zero overhead.
  *
+ * <h2>JPA JOINED inheritance</h2>
  * <p>
- * The {@code decisionContext} field carries a JSON snapshot of observable state at the moment
- * of the transition — required by GDPR Article 22 and EU AI Act Article 12 for point-in-time
- * auditability.
+ * Domain-specific subclasses (e.g. {@code WorkItemLedgerEntry} in Tarkus) extend
+ * this class and add a sibling table joined on {@code id}. Supplements are orthogonal
+ * to subclasses — any subclass can attach any supplement.
+ *
+ * <h2>Hash chain</h2>
+ * <p>
+ * The canonical form for SHA-256 chaining uses only the six core fields:
+ * {@code subjectId|seqNum|entryType|actorId|actorRole|occurredAt}.
+ * Supplement fields are deliberately excluded — they are enrichment, not tamper-evidence
+ * targets. Subclass-specific fields are also excluded.
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -42,13 +69,15 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 @Table(name = "ledger_entry")
 public abstract class LedgerEntry extends PanacheEntityBase {
 
+    // ── Core identity ─────────────────────────────────────────────────────────
+
     /** Primary key — UUID assigned on first persist. */
     @Id
     public UUID id;
 
     /**
-     * The aggregate this entry belongs to — the domain object whose lifecycle is being recorded.
-     * Scopes the sequence number and hash chain. Set by the domain-specific subclass on creation.
+     * The aggregate this entry belongs to — the domain object whose lifecycle
+     * is being recorded. Scopes the sequence number and hash chain.
      */
     @Column(name = "subject_id", nullable = false)
     public UUID subjectId;
@@ -57,10 +86,12 @@ public abstract class LedgerEntry extends PanacheEntityBase {
     @Column(name = "sequence_number", nullable = false)
     public int sequenceNumber;
 
-    /** Whether this entry is a command (intent), an event (fact), or an attestation record. */
+    /** Whether this entry is a command (intent), event (fact), or attestation record. */
     @Enumerated(EnumType.STRING)
     @Column(name = "entry_type", nullable = false)
     public LedgerEntryType entryType;
+
+    // ── Actor ─────────────────────────────────────────────────────────────────
 
     /** Identity of the actor who triggered this transition. */
     @Column(name = "actor_id")
@@ -75,56 +106,17 @@ public abstract class LedgerEntry extends PanacheEntityBase {
     @Column(name = "actor_role")
     public String actorRole;
 
-    /**
-     * Reference to the policy or procedure version that governed this action.
-     * Null when the actor did not supply a plan reference.
-     */
-    @Column(name = "plan_ref")
-    public String planRef;
+    // ── Timing ────────────────────────────────────────────────────────────────
 
-    /** The actor's stated basis for the decision. Null when not provided. */
-    @Column(columnDefinition = "TEXT")
-    public String rationale;
+    /** When this entry was recorded — set automatically on first persist. */
+    @Column(name = "occurred_at", nullable = false)
+    public Instant occurredAt;
 
-    /**
-     * JSON snapshot of observable state at the moment of this transition.
-     * Content is domain-specific; populated when decision-context capture is enabled.
-     * Addresses GDPR Article 22 and EU AI Act Article 12 explainability requirements.
-     */
-    @Column(name = "decision_context", columnDefinition = "TEXT")
-    public String decisionContext;
-
-    /** Structured evidence supplied by the actor. Null unless evidence capture is enabled. */
-    @Column(columnDefinition = "TEXT")
-    public String evidence;
-
-    /** Optional free-text or JSON detail — delegation targets, rejection reasons, etc. */
-    @Column(columnDefinition = "TEXT")
-    public String detail;
-
-    /** FK to the ledger entry that causally produced this entry. Null for direct transitions. */
-    @Column(name = "caused_by_entry_id")
-    public UUID causedByEntryId;
-
-    /** OpenTelemetry trace ID linking this entry to a distributed trace. */
-    @Column(name = "correlation_id")
-    public String correlationId;
-
-    /** Identifier of the external entity that originated this subject (e.g. a workflow instance). */
-    @Column(name = "source_entity_id")
-    public String sourceEntityId;
-
-    /** Type of the external entity — e.g. {@code "Flow:WorkflowInstance"}. */
-    @Column(name = "source_entity_type")
-    public String sourceEntityType;
-
-    /** The system that owns the external entity — e.g. {@code "quarkus-flow"}. */
-    @Column(name = "source_entity_system")
-    public String sourceEntitySystem;
+    // ── Hash chain ────────────────────────────────────────────────────────────
 
     /**
      * SHA-256 digest of the previous entry for this subject.
-     * {@code "GENESIS"} for the first entry. Null when hash chain is disabled.
+     * {@code null} for the first entry (no previous entry exists).
      */
     @Column(name = "previous_hash")
     public String previousHash;
@@ -135,9 +127,78 @@ public abstract class LedgerEntry extends PanacheEntityBase {
      */
     public String digest;
 
-    /** When this entry was recorded — set automatically on first persist. */
-    @Column(name = "occurred_at", nullable = false)
-    public Instant occurredAt;
+    // ── Supplements ───────────────────────────────────────────────────────────
+
+    /**
+     * Lazily-loaded supplements attached to this entry.
+     * Never initialised unless a supplement is attached or explicitly accessed.
+     * Use {@link #attach(LedgerSupplement)}, {@link #compliance()},
+     * {@link #provenance()}, and {@link #observability()} for type-safe access.
+     */
+    @OneToMany(mappedBy = "ledgerEntry", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<LedgerSupplement> supplements = new ArrayList<>();
+
+    /**
+     * Denormalised JSON snapshot of all attached supplements.
+     * Written automatically by {@link #attach(LedgerSupplement)}.
+     * Enables fast single-entry reads without joining supplement tables.
+     * Format: {@code {"COMPLIANCE":{...},"OBSERVABILITY":{...}}}.
+     */
+    @Column(name = "supplement_json", columnDefinition = "TEXT")
+    public String supplementJson;
+
+    // ── Supplement helpers ────────────────────────────────────────────────────
+
+    /**
+     * Attach a supplement to this entry, replacing any existing supplement of the
+     * same type. Also refreshes {@link #supplementJson} to keep it in sync.
+     *
+     * @param supplement the supplement to attach; must not be null
+     */
+    public void attach(final LedgerSupplement supplement) {
+        supplement.ledgerEntry = this;
+        supplements.removeIf(s -> s.getClass() == supplement.getClass());
+        supplements.add(supplement);
+        supplementJson = LedgerSupplementSerializer.toJson(supplements);
+    }
+
+    /**
+     * Returns the {@link ComplianceSupplement} attached to this entry, if any.
+     *
+     * @return the compliance supplement, or empty if none is attached
+     */
+    public Optional<ComplianceSupplement> compliance() {
+        return supplements.stream()
+                .filter(ComplianceSupplement.class::isInstance)
+                .map(ComplianceSupplement.class::cast)
+                .findFirst();
+    }
+
+    /**
+     * Returns the {@link ProvenanceSupplement} attached to this entry, if any.
+     *
+     * @return the provenance supplement, or empty if none is attached
+     */
+    public Optional<ProvenanceSupplement> provenance() {
+        return supplements.stream()
+                .filter(ProvenanceSupplement.class::isInstance)
+                .map(ProvenanceSupplement.class::cast)
+                .findFirst();
+    }
+
+    /**
+     * Returns the {@link ObservabilitySupplement} attached to this entry, if any.
+     *
+     * @return the observability supplement, or empty if none is attached
+     */
+    public Optional<ObservabilitySupplement> observability() {
+        return supplements.stream()
+                .filter(ObservabilitySupplement.class::isInstance)
+                .map(ObservabilitySupplement.class::cast)
+                .findFirst();
+    }
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     /** Assigns a UUID primary key and sets {@code occurredAt} before the entity is inserted. */
     @PrePersist

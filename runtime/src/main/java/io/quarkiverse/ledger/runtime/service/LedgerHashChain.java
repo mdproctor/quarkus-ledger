@@ -21,7 +21,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  * <p>
  * Canonical content uses only base {@link LedgerEntry} fields — domain-specific subclass
  * fields are excluded to keep the chain domain-agnostic:
- * {@code subjectId|seqNum|entryType|actorId|actorRole|planRef|occurredAt}
+ * {@code subjectId|seqNum|entryType|actorId|actorRole|occurredAt}
  */
 public final class LedgerHashChain {
 
@@ -46,7 +46,6 @@ public final class LedgerHashChain {
                 entry.entryType != null ? entry.entryType.name() : "",
                 entry.actorId != null ? entry.actorId : "",
                 entry.actorRole != null ? entry.actorRole : "",
-                entry.planRef != null ? entry.planRef : "",
                 // Truncate to milliseconds for consistent canonical form regardless of DB precision
                 entry.occurredAt != null ? entry.occurredAt.truncatedTo(ChronoUnit.MILLIS).toString() : "");
         final String input = (previousHash != null ? previousHash : GENESIS) + "|" + canonical;
