@@ -30,8 +30,13 @@ public class ObservabilitySupplement extends LedgerSupplement {
     public String correlationId;
 
     /**
-     * FK to the LedgerEntry that causally produced this entry.
-     * Null for entries with no known causal predecessor.
+     * FK to the {@link io.quarkiverse.ledger.runtime.model.LedgerEntry} that
+     * causally produced this entry. Null for entries with no known causal predecessor.
+     *
+     * <p>
+     * Use this when an orchestrator (e.g. Claudony) triggers work in Tarkus which
+     * triggers a message in Qhorus — the Qhorus entry's {@code causedByEntryId}
+     * points to the Tarkus entry, enabling full cross-system causal chain reconstruction.
      */
     @Column(name = "caused_by_entry_id")
     public UUID causedByEntryId;

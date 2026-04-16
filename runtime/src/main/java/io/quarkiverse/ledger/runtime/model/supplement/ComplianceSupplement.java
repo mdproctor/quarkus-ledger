@@ -89,7 +89,9 @@ public class ComplianceSupplement extends LedgerSupplement {
 
     /**
      * The producing system's stated confidence in this decision, in the range
-     * 0.0 (no confidence) to 1.0 (certainty). Null when not applicable.
+     * 0.0 (no confidence) to 1.0 (certainty). Null when not applicable (e.g.
+     * deterministic rule engines). Satisfies the GDPR requirement to disclose
+     * the significance and envisaged consequences of the decision.
      */
     @Column(name = "confidence_score")
     public Double confidenceScore;
@@ -97,6 +99,7 @@ public class ComplianceSupplement extends LedgerSupplement {
     /**
      * URI where the data subject can request human review or formally challenge
      * this decision, satisfying the contestation right under GDPR Art.22(3).
+     * Example: {@code "https://example.com/decisions/{entryId}/challenge"}.
      */
     @Column(name = "contestation_uri", length = 2000)
     public String contestationUri;
