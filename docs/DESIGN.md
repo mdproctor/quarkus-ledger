@@ -61,6 +61,57 @@ from base entries — trust scoring works across all consumers.
 
 ---
 
+## Supplements
+
+A **supplement** is an optional, lazily-loaded extension to a `LedgerEntry` that carries
+a named group of cross-cutting fields. Supplements live in separate joined tables and are
+never written unless the consumer explicitly attaches one — consumers that do not use
+supplements incur zero schema or runtime cost.
+
+### Why supplements?
+
+`LedgerEntry` is the shared base for every consumer in the ecosystem. Adding optional
+fields directly to the base entity creates a wide-table anti-pattern: every consumer
+sees fields that are irrelevant to their use case, with no signal about which fields
+belong together or when to populate them. Supplements solve this by grouping optional
+fields by concern and moving them out of the core entity entirely.
+
+### Built-in supplements
+
+| Supplement | Table | Fields | Use when |
+|---|---|---|---|
+| `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording automated decisions subject to GDPR Art.22 or EU AI Act Art.12 |
+| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Entry is driven by an external workflow system |
+| `ObservabilitySupplement` | `ledger_supplement_observability` | `correlationId`, `causedByEntryId` | Linking entries to OTel traces or cross-system causal chains |
+
+### Attaching a supplement
+
+```java
+ComplianceSupplement cs = new ComplianceSupplement();
+cs.algorithmRef = "risk-model-v3";
+cs.confidenceScore = 0.91;
+cs.contestationUri = "https://example.com/challenge/" + entry.id;
+cs.humanOverrideAvailable = true;
+entry.attach(cs); // also refreshes entry.supplementJson
+```
+
+### Reading supplement data
+
+**Fast path (single entry, no join):** Read `entry.supplementJson` — a JSON blob
+written by `attach()` containing all attached supplements. No additional query.
+
+**Typed access (lazy join):** Use the typed accessors — `entry.compliance()`,
+`entry.provenance()`, `entry.observability()`. Triggers a single SELECT on the
+supplement table only when accessed.
+
+### Zero-complexity guarantee
+
+If a consumer never calls `attach()`, no supplement table rows are written and the
+lazy `supplements` list is never initialised. Consumers already integrated with
+`quarkus-ledger` require zero changes.
+
+---
+
 ## Key Design Decisions
 
 ### `subjectId` — the generic aggregate identifier
@@ -82,9 +133,11 @@ current consumer has needed this — all provide their own typed repo.
 
 ### Flyway version numbering convention
 
-- V1000–V1001: base schema (defined here — reserved)
-- V1–V999: consumer domain tables (safe range for application schemas)
-- V1002+: consumer subclass join tables (must run after V1000 due to FK constraint)
+| Range | Owner | Purpose |
+|---|---|---|
+| V1000–V1002 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
+| V1003+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 
 This ordering is not optional. The subclass join table has
 `FOREIGN KEY ... REFERENCES ledger_entry (id)`. A subclass migration numbered below
@@ -93,7 +146,11 @@ classpath migrations globally and sorts by version number.
 
 ### Hash chain canonical form
 
-`subjectId|seqNum|entryType|actorId|actorRole|planRef|occurredAt`
+`subjectId|seqNum|entryType|actorId|actorRole|occurredAt`
+
+`planRef` was removed from the canonical form — it now lives in `ComplianceSupplement`.
+Supplement fields are deliberately excluded from the chain: the chain covers the immutable
+core audit record; compliance metadata is enrichment, not a tamper-evidence target.
 
 Deliberately excludes subclass-specific fields (`commandType`, `eventType`, `toolName`,
 etc.). The chain covers provenance and timing; domain labels do not participate in

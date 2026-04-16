@@ -409,6 +409,36 @@ boolean intact = LedgerHashChain.verify(entries);
 ```
 
 The canonical form hashes only base-class fields:
-`subjectId|seqNum|entryType|actorId|actorRole|planRef|occurredAt`
+`subjectId|seqNum|entryType|actorId|actorRole|occurredAt`
 
-Subclass-specific fields (like `commandType`, `eventType`) are intentionally excluded — the chain covers provenance and timing, not domain labels.
+Subclass-specific fields (like `commandType`, `eventType`) and supplement fields are
+intentionally excluded — the chain covers provenance and timing, not domain labels or
+compliance enrichment.
+
+---
+
+## Supplements — Optional Extensions
+
+Supplements add cross-cutting fields to any ledger entry without polluting the core
+entity. See `docs/DESIGN.md` § Supplements for the full reference.
+
+### Quick start — GDPR Art.22 compliance
+
+```java
+// In your capture service, after building the entry:
+ComplianceSupplement cs = new ComplianceSupplement();
+cs.algorithmRef       = "my-model-v2";
+cs.confidenceScore    = 0.87;
+cs.contestationUri    = "https://yourapp.com/decisions/" + entry.id + "/challenge";
+cs.humanOverrideAvailable = true;
+cs.decisionContext    = objectMapper.writeValueAsString(inputSnapshot);
+entry.attach(cs);  // persists with entry; no separate persist() call needed
+```
+
+The `supplementJson` field is populated automatically by `attach()` — no extra
+step required for single-entry reads.
+
+### Runnable example
+
+`examples/art22-decision-snapshot/` — a full Quarkus app demonstrating a GDPR
+Art.22 compliant AI decision service. See its `README.md` for regulatory context.
