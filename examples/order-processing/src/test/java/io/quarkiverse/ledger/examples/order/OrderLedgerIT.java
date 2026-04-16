@@ -103,8 +103,8 @@ class OrderLedgerIT {
                 .when().get(BASE + "/" + orderId + "/ledger")
                 .then()
                 .statusCode(200)
-                .body("[0].decisionContext", notNullValue())
-                .body("[0].decisionContext", containsString("PLACED"));
+                .body("[0].supplementJson", notNullValue())
+                .body("[0].supplementJson", containsString("PLACED"));
     }
 
     @Test
@@ -119,7 +119,7 @@ class OrderLedgerIT {
                 .then()
                 .statusCode(200)
                 .body("[1].commandType", equalTo("CancelOrder"))
-                .body("[1].rationale", equalTo("Changed mind"));
+                .body("[1].supplementJson", containsString("Changed mind"));
     }
 
     @Test
@@ -143,6 +143,33 @@ class OrderLedgerIT {
                 .statusCode(200)
                 .body("[0].attestations", hasSize(1))
                 .body("[0].attestations[0].attestorId", equalTo("compliance-bot"));
+    }
+
+    @Test
+    void placeOrder_supplementJson_containsDecisionContext() {
+        final String orderId = placeOrder("it-supp-1", "99.00");
+
+        given()
+                .when().get(BASE + "/" + orderId + "/ledger")
+                .then()
+                .statusCode(200)
+                .body("[0].supplementJson", notNullValue())
+                .body("[0].supplementJson", containsString("decisionContext"))
+                .body("[0].supplementJson", containsString("PLACED"));
+    }
+
+    @Test
+    void cancelOrder_supplementJson_containsRationale() {
+        final String orderId = placeOrder("it-supp-2", "25.00");
+        given().queryParam("actor", "it-supp-2").queryParam("reason", "No longer needed")
+                .when().put(BASE + "/" + orderId + "/cancel")
+                .then().statusCode(200);
+
+        given()
+                .when().get(BASE + "/" + orderId + "/ledger")
+                .then()
+                .statusCode(200)
+                .body("[1].supplementJson", containsString("No longer needed"));
     }
 
     private String placeOrder(final String customerId, final String total) {
