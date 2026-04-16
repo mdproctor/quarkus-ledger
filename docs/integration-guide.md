@@ -99,19 +99,18 @@ public class OrderLedgerEntry extends LedgerEntry {
 | `actorId` | String | Who performed this action |
 | `actorType` | ActorType | HUMAN, AGENT, or SYSTEM |
 | `actorRole` | String | Functional role (e.g. "Approver", "Resolver") |
-| `planRef` | String | Policy/procedure reference governing this action |
-| `rationale` | String | Actor's stated basis for the decision |
-| `decisionContext` | String | JSON snapshot of state at transition time |
-| `evidence` | String | Structured supporting evidence |
-| `detail` | String | Free-text or JSON transition detail |
-| `causedByEntryId` | UUID | FK to the entry that caused this one |
-| `correlationId` | String | OTel trace ID for cross-system correlation |
-| `sourceEntityId` | String | External entity that originated the subject |
-| `sourceEntityType` | String | Type of the external entity |
-| `sourceEntitySystem` | String | System owning the external entity |
 | `previousHash` | String | SHA-256 digest of the preceding entry |
 | `digest` | String | SHA-256 digest of this entry's canonical content |
 | `occurredAt` | Instant | When this entry was recorded (auto-set) |
+| `supplementJson` | String | JSON snapshot of all attached supplements (auto-set by `attach()`) |
+
+Optional fields are handled via supplements — see [§ Supplements](#supplements--optional-extensions) below.
+
+| Supplement | Fields | Attach when |
+|---|---|---|
+| `ComplianceSupplement` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording decisions subject to GDPR Art.22 or EU AI Act Art.12 |
+| `ProvenanceSupplement` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Subject is driven by an external workflow |
+| `ObservabilitySupplement` | `correlationId`, `causedByEntryId` | Linking to OTel traces or cross-system causality |
 
 ---
 

@@ -62,8 +62,11 @@ collapses. A trust system built on mutable logs is not a trust system.
 Strong. `LedgerHashChain` computes a SHA-256 chain per `subjectId`:
 
 ```
-hash = SHA-256(subjectId | seqNum | entryType | actorId | actorRole | planRef | occurredAt | prevHash)
+hash = SHA-256(subjectId | seqNum | entryType | actorId | actorRole | occurredAt | prevHash)
 ```
+
+Note: `planRef` was removed from the canonical form (V1002) — it now lives in
+`ComplianceSupplement`. Supplement fields are deliberately excluded from the chain.
 
 Each entry's hash covers the previous entry's hash, so any modification to any entry
 in the chain invalidates all subsequent hashes. The canonical form is deliberately
