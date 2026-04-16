@@ -78,8 +78,10 @@ public interface LedgerConfig {
 
         /**
          * When {@code true}, a JSON snapshot of observable state is captured at each transition
-         * and stored in {@code LedgerEntry.decisionContext}.
+         * and stored in {@code ComplianceSupplement.decisionContext}.
          * Addresses GDPR Article 22 and EU AI Act Article 12 explainability requirements.
+         * Attach a {@link io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement}
+         * to the entry and populate its {@code decisionContext} field.
          *
          * @return {@code true} if decision context snapshots are enabled (default)
          */
@@ -91,7 +93,8 @@ public interface LedgerConfig {
     interface EvidenceConfig {
 
         /**
-         * When {@code true}, structured evidence fields are accepted and stored per ledger entry.
+         * When {@code true}, structured evidence is accepted and stored in
+         * {@code ComplianceSupplement.evidence} on each ledger entry.
          * Off by default — enabling without caller cooperation produces null evidence fields.
          *
          * @return {@code true} if evidence capture is enabled; {@code false} by default
