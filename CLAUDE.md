@@ -160,3 +160,11 @@ Tarkus and Qhorus are siblings — neither depends on the other. Both depend on
 - **Before implementation begins** — check if an active issue exists. If not, run issue-workflow Phase 1 before writing any code.
 - **Before any commit** — run issue-workflow Phase 3 to confirm issue linkage.
 - **All commits should reference an issue** — `Refs #N` (ongoing) or `Closes #N` (done).
+
+---
+
+## Writing Style Guide
+
+**The writing style guide at `~/claude-workspace/writing-styles/blog-technical.md` is mandatory for all blog and diary entries.** Load it in full before drafting. Complete the pre-draft voice classification (I / we / Claude-named) before generating any prose. Do not show a draft without verifying it against the style guide.
+
+**Blog directory:** `blog/`
