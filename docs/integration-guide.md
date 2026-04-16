@@ -266,7 +266,9 @@ public class OrderService {
         entry.occurredAt    = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
         if (ledgerConfig.decisionContext().enabled()) {
-            entry.decisionContext = buildDecisionContext(orderId);
+            final ComplianceSupplement cs = new ComplianceSupplement();
+            cs.decisionContext = buildDecisionContext(orderId);
+            entry.attach(cs);
         }
 
         if (ledgerConfig.hashChain().enabled()) {
@@ -357,9 +359,11 @@ When an external system (a workflow engine, orchestrator, or messaging layer) cr
 
 ```java
 // After creating the first ledger entry (sequenceNumber = 1):
-entry.sourceEntityId     = "workflow-instance-abc";
-entry.sourceEntityType   = "Flow:WorkflowInstance";
-entry.sourceEntitySystem = "quarkus-flow";
+final ProvenanceSupplement ps = new ProvenanceSupplement();
+ps.sourceEntityId     = "workflow-instance-abc";
+ps.sourceEntityType   = "Flow:WorkflowInstance";
+ps.sourceEntitySystem = "quarkus-flow";
+entry.attach(ps);
 ```
 
 This enables cross-system audit queries: given a workflow instance ID, find all domain objects it created and their full audit trails.

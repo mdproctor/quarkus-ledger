@@ -61,7 +61,9 @@ public class DecisionResource {
                         "algorithmRef", cs.algorithmRef != null ? cs.algorithmRef : "",
                         "confidenceScore", cs.confidenceScore != null ? cs.confidenceScore : 0.0,
                         "contestationUri", cs.contestationUri != null ? cs.contestationUri : "",
-                        "humanOverrideAvailable", Boolean.TRUE.equals(cs.humanOverrideAvailable)));
+                        "humanOverrideAvailable", Boolean.TRUE.equals(cs.humanOverrideAvailable),
+                        // GDPR Arts.13-15: meaningful information about inputs used
+                        "decisionContext", cs.decisionContext != null ? cs.decisionContext : ""));
     }
 
     public static class DecisionRequest {

@@ -195,9 +195,11 @@ public class OrderLedgerCapture {
         entry.occurredAt     = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
         if (config.decisionContext().enabled()) {
-            entry.decisionContext = String.format(
+            final ComplianceSupplement cs = new ComplianceSupplement();
+            cs.decisionContext = String.format(
                 "{\"status\":\"%s\",\"total\":%s,\"customerId\":\"%s\"}",
                 currentState.status, currentState.total, currentState.customerId);
+            entry.attach(cs);
         }
 
         if (config.hashChain().enabled()) {
@@ -395,8 +397,9 @@ class OrderLedgerTest {
 
         List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
         OrderLedgerEntry cancel = entries.get(1);
-        assertNotNull(cancel.decisionContext);
-        assertTrue(cancel.decisionContext.contains("CANCELLED"));
+        // Decision context is stored in ComplianceSupplement, accessible via supplementJson
+        assertNotNull(cancel.supplementJson);
+        assertTrue(cancel.supplementJson.contains("CANCELLED"));
     }
 }
 ```

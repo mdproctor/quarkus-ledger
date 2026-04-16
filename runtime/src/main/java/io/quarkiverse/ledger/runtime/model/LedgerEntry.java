@@ -3,6 +3,7 @@ package io.quarkiverse.ledger.runtime.model;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -153,12 +154,38 @@ public abstract class LedgerEntry extends PanacheEntityBase {
      * Attach a supplement to this entry, replacing any existing supplement of the
      * same type. Also refreshes {@link #supplementJson} to keep it in sync.
      *
+     * <p>
+     * <strong>Important:</strong> After attaching, do not mutate the supplement's fields
+     * directly without calling {@link #refreshSupplementJson()} — direct field mutation
+     * leaves {@code supplementJson} stale. Prefer re-attaching a new supplement instance
+     * when fields need to change.
+     *
      * @param supplement the supplement to attach; must not be null
      */
     public void attach(final LedgerSupplement supplement) {
+        Objects.requireNonNull(supplement, "supplement must not be null");
         supplement.ledgerEntry = this;
         supplements.removeIf(s -> s.getClass() == supplement.getClass());
         supplements.add(supplement);
+        supplementJson = LedgerSupplementSerializer.toJson(supplements);
+    }
+
+    /**
+     * Refreshes {@link #supplementJson} from the current state of the
+     * {@link #supplements} list.
+     *
+     * <p>
+     * Call this after mutating a supplement's fields in-place (e.g. when adding
+     * {@code rationale} to an already-attached {@link ComplianceSupplement}):
+     *
+     * <pre>{@code
+     * entry.compliance().ifPresent(cs -> {
+     *     cs.rationale = reason;
+     *     entry.refreshSupplementJson();
+     * });
+     * }</pre>
+     */
+    public void refreshSupplementJson() {
         supplementJson = LedgerSupplementSerializer.toJson(supplements);
     }
 
