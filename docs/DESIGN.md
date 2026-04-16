@@ -44,7 +44,7 @@ table joining on `id`.
 ```
 ledger_entry (base — V1000)
   ├── work_item_ledger_entry     ← quarkus-tarkus (V100 in Tarkus)
-  └── agent_message_ledger_entry ← quarkus-qhorus (V1002 in Qhorus)
+  └── agent_message_ledger_entry ← quarkus-qhorus (V1003+ in Qhorus)
 ```
 
 `LedgerAttestation` references `ledger_entry.id` directly — attestations work
@@ -191,9 +191,10 @@ CaseHub integration requirements before adding anything to the base.
 ### Medium-term
 
 **Quarkiverse submission** — structurally ready (quarkiverse-parent, CI workflows,
-full docs, 33 unit tests, runnable example). Needs a stability decision on the public
-API (`LedgerEntry` field names, `LedgerHashChain` canonical form) before submitting.
-Neither has changed externally since creation.
+full docs, 62 tests across runtime + two examples). Needs a stability decision on the
+public API (`LedgerEntry` core fields, `LedgerHashChain` canonical form, supplement API)
+before submitting. The supplement architecture stabilises the surface — `attach()`,
+`compliance()`, `provenance()`, `observability()` are the public entry points.
 
 **OTel trace ID auto-wiring** — automatically populate `correlationId` from the active
 OTel span context. Could be provided as a base helper that capture services call, or
@@ -223,10 +224,11 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | Phase | Status | What |
 |---|---|---|
 | **Initial extraction** | ✅ Done | Abstract LedgerEntry, LedgerAttestation, ActorTrustScore, LedgerHashChain, TrustScoreComputer, TrustScoreJob, SPI, LedgerConfig, Flyway V1000/V1001, jandex, @Alternative, @ConfigRoot |
-| **Unit tests** | ✅ Done | 33 tests — LedgerHashChain (17) + TrustScoreComputer (16) |
+| **Unit tests** | ✅ Done | 42 unit tests — LedgerHashChain (18) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) |
 | **Tarkus migration** | ✅ Done | WorkItemLedgerEntry, WorkItemLedgerEntryRepository, Tarkus-ledger 69 tests passing |
-| **Documentation** | ✅ Done | README, integration guide, examples.md |
-| **Runnable example** | ✅ Done | examples/order-processing/ — 8 IT tests, mvn quarkus:dev |
+| **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
+| **Runnable examples** | ✅ Done | examples/order-processing/ (10 IT), examples/art22-decision-snapshot/ (3 IT) |
+| **LedgerSupplement architecture** | ✅ Done | ComplianceSupplement, ProvenanceSupplement, ObservabilitySupplement; LedgerEntry slimmed to 10 core fields; Flyway V1002; 7 supplement IT tests; GDPR Art.22 example |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

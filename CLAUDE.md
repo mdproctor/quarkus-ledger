@@ -32,7 +32,7 @@ Domain logic is NOT in this extension — it lives in consumers via JPA JOINED s
 
 Each consumer defines its own subclass and its own Flyway migration for the subclass table.
 The base tables (`ledger_entry`, `ledger_attestation`, `actor_trust_score`) are defined here
-in V1/V2 and always present when `quarkus-ledger` is on the classpath.
+in V1000, V1001, and V1002 and always present when `quarkus-ledger` is on the classpath.
 
 ---
 
@@ -64,9 +64,11 @@ the domain-specific `work_item_id` that was in the original Tarkus ledger. Consu
 registered subclass tables on query. `LedgerAttestation` holds a FK to the base table —
 attestations work regardless of which subclass produced the entry.
 
-**Hash chain canonical form (base fields only)**
-`subjectId|seqNum|entryType|actorId|actorRole|planRef|occurredAt`
-Domain-specific subclass fields are excluded — canonical form stays domain-agnostic.
+**Hash chain canonical form (core fields only)**
+`subjectId|seqNum|entryType|actorId|actorRole|occurredAt`
+Domain-specific subclass fields and supplement fields are excluded — canonical form stays
+domain-agnostic. `planRef` was moved to `ComplianceSupplement` in V1002 and removed from
+the canonical form.
 
 **REST endpoints are domain-specific**
 `quarkus-ledger` provides model, SPI, services, and JPA implementations only. Tarkus and
@@ -96,9 +98,16 @@ quarkus-ledger/
 │           ├── LedgerHashChain.java         — SHA-256 chain utility (pure static)
 │           ├── TrustScoreComputer.java      — EigenTrust algorithm (pure Java)
 │           └── TrustScoreJob.java           — @Scheduled nightly recomputation
+│       └── supplement/
+│           ├── LedgerSupplement.java        — abstract base (JOINED inheritance)
+│           ├── ComplianceSupplement.java    — GDPR Art.22, governance fields
+│           ├── ProvenanceSupplement.java    — workflow source entity
+│           ├── ObservabilitySupplement.java — OTel correlation, causality
+│           └── LedgerSupplementSerializer.java — JSON serialiser for supplementJson
 │   └── src/main/resources/db/migration/
-│       ├── V1__ledger_base_schema.sql       — ledger_entry + ledger_attestation tables
-│       └── V2__actor_trust_score.sql        — actor_trust_score table
+│       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables
+│       ├── V1001__actor_trust_score.sql     — actor_trust_score table
+│       └── V1002__ledger_supplement.sql     — supplement tables + drops moved columns
 └── deployment/
     └── src/main/java/io/quarkiverse/ledger/deployment/
         └── LedgerProcessor.java             — @BuildStep: FeatureBuildItem

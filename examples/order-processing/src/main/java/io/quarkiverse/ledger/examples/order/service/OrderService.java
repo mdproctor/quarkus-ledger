@@ -19,7 +19,6 @@ import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
 import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
 
 /**
@@ -96,8 +95,7 @@ public class OrderService {
             entry.compliance().ifPresentOrElse(
                     cs -> {
                         cs.rationale = reason;
-                        // Refresh supplementJson after mutating the supplement in-place
-                        entry.supplementJson = LedgerSupplementSerializer.toJson(entry.supplements);
+                        entry.refreshSupplementJson(); // required after in-place field mutation
                     },
                     () -> {
                         final ComplianceSupplement cs = new ComplianceSupplement();
