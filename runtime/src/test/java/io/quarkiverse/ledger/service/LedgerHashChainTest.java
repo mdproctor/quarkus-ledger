@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
 
 /**
@@ -266,12 +267,22 @@ class LedgerHashChainTest {
     void compute_supplementFieldsDoNotAffectDigest() {
         // Canonical form covers only core LedgerEntry fields.
         // Supplement data is not tamper-evidence — it is enrichment.
-        // Two entries identical in core fields must produce the same digest
-        // regardless of what supplements are attached.
+        // An entry with a fully-populated ComplianceSupplement must produce
+        // the same digest as an identical bare entry with no supplements.
         final UUID id = UUID.randomUUID();
-        final TestLedgerEntry e1 = entry(id, 1);
-        final TestLedgerEntry e2 = entry(id, 1);
-        assertThat(LedgerHashChain.compute(null, e1))
-                .isEqualTo(LedgerHashChain.compute(null, e2));
+        final TestLedgerEntry bare = entry(id, 1);
+
+        final TestLedgerEntry withSupplement = entry(id, 1);
+        final ComplianceSupplement cs = new ComplianceSupplement();
+        cs.algorithmRef = "gpt-4o";
+        cs.confidenceScore = 0.99;
+        cs.contestationUri = "https://example.com/challenge";
+        cs.humanOverrideAvailable = true;
+        cs.planRef = "policy-v9";
+        cs.rationale = "Threshold exceeded";
+        withSupplement.attach(cs);
+
+        assertThat(LedgerHashChain.compute(null, bare))
+                .isEqualTo(LedgerHashChain.compute(null, withSupplement));
     }
 }
