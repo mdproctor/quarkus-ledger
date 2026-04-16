@@ -19,6 +19,24 @@ The base `LedgerEntry` entity uses JPA JOINED inheritance. You extend it with a 
 
 ---
 
+## Ecosystem Context
+
+`quarkus-ledger` is the shared audit foundation for the Quarkus Native AI Ecosystem:
+
+```
+quarkus-ledger        (audit/provenance — this project)
+    ↑         ↑         ↑
+ tarkus    qhorus    casehub    (each adds its own LedgerEntry subclass)
+```
+
+It was extracted from `quarkus-tarkus` to avoid duplication across projects.
+The extension is intentionally thin — REST endpoints, MCP tools, and CDI capture
+services are the consumer's responsibility. Each domain knows its own path structure,
+auth model, and event system. See [`docs/DESIGN.md`](docs/DESIGN.md) for the full
+architecture and design rationale.
+
+---
+
 ## Requirements
 
 - Java 21+
