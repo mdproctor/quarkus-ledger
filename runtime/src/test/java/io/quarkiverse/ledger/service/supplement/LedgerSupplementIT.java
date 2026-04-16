@@ -64,6 +64,7 @@ class LedgerSupplementIT {
 
         final ComplianceSupplement loaded = found.compliance().orElseThrow();
         assertThat(loaded.planRef).isEqualTo("policy-v3");
+        assertThat(loaded.rationale).isEqualTo("Risk threshold exceeded");
         assertThat(loaded.algorithmRef).isEqualTo("classifier-v2");
         assertThat(loaded.confidenceScore).isEqualTo(0.91);
         assertThat(loaded.contestationUri).isEqualTo("https://example.com/challenge");
