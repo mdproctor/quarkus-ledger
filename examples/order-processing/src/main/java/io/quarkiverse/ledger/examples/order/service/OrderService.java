@@ -18,6 +18,8 @@ import io.quarkiverse.ledger.examples.order.model.OrderStatus;
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
 import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
 
 /**
@@ -90,7 +92,18 @@ public class OrderService {
 
         if (ledgerConfig.enabled()) {
             final OrderLedgerEntry entry = record(order, "cancel", actor);
-            entry.rationale = reason;
+            // Attach or update ComplianceSupplement with rationale
+            entry.compliance().ifPresentOrElse(
+                    cs -> {
+                        cs.rationale = reason;
+                        // Refresh supplementJson after mutating the supplement in-place
+                        entry.supplementJson = LedgerSupplementSerializer.toJson(entry.supplements);
+                    },
+                    () -> {
+                        final ComplianceSupplement cs = new ComplianceSupplement();
+                        cs.rationale = reason;
+                        entry.attach(cs);
+                    });
         }
         return order;
     }
@@ -122,13 +135,14 @@ public class OrderService {
         entry.actorType = ActorType.HUMAN;
         entry.actorRole = meta[2];
         entry.orderStatus = order.status.name();
-        // Set explicitly before hash computation — @PrePersist is too late
         entry.occurredAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
         if (ledgerConfig.decisionContext().enabled()) {
-            entry.decisionContext = String.format(
+            final ComplianceSupplement cs = new ComplianceSupplement();
+            cs.decisionContext = String.format(
                     "{\"status\":\"%s\",\"total\":%s,\"customerId\":\"%s\"}",
                     order.status, order.total, order.customerId);
+            entry.attach(cs);
         }
 
         if (ledgerConfig.hashChain().enabled()) {
