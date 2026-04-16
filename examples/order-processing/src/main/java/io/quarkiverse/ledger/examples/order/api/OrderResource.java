@@ -200,8 +200,7 @@ public class OrderResource {
             String orderStatus,
             String actorId,
             String actorRole,
-            String decisionContext,
-            String rationale,
+            String supplementJson,
             String previousHash,
             String digest,
             java.time.Instant occurredAt,
@@ -209,7 +208,7 @@ public class OrderResource {
 
         LedgerEntryView(final OrderLedgerEntry e, final List<LedgerAttestation> attestations) {
             this(e.id, e.sequenceNumber, e.commandType, e.eventType, e.orderStatus,
-                    e.actorId, e.actorRole, e.decisionContext, e.rationale,
+                    e.actorId, e.actorRole, e.supplementJson,
                     e.previousHash, e.digest, e.occurredAt, attestations);
         }
     }
