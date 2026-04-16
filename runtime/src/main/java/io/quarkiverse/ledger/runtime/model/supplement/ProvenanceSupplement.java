@@ -9,10 +9,15 @@ import jakarta.persistence.Table;
  * Supplement carrying workflow provenance — the external entity that originated
  * this ledger entry's subject.
  *
+ * <p>
+ * Use this supplement when a subject is created or driven by an external workflow
+ * system (e.g. a {@code quarkus-flow} workflow instance). The three fields together
+ * identify the source entity precisely enough to correlate across systems:
+ *
  * <pre>{@code
  * ProvenanceSupplement ps = new ProvenanceSupplement();
- * ps.sourceEntityId = workflowInstance.id.toString();
- * ps.sourceEntityType = "Flow:WorkflowInstance";
+ * ps.sourceEntityId     = workflowInstance.id.toString();
+ * ps.sourceEntityType   = "Flow:WorkflowInstance";
  * ps.sourceEntitySystem = "quarkus-flow";
  * entry.attach(ps);
  * }</pre>
