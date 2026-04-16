@@ -38,7 +38,7 @@ every consumer; it must never surprise them.
 | 5. Accessibility | ⚠️ Partial | EU AI Act Article 12 audit query API (#4) |
 | 6. Resource Proportionality | ⚠️ Partial | Retention config (#4), risk-tiered logging (not yet planned) |
 | 7. Privacy Compatibility | ❌ Gap | Pseudonymisation strategy (not yet designed) |
-| 8. Governance Alignment | ⚠️ Partial | GDPR Art. 22 enrichment (#1) + EU AI Act Art. 12 (#4) |
+| 8. Governance Alignment | ✅ Addressed | ComplianceSupplement (#7) + EU AI Act Art. 12 (#4) |
 
 ---
 
@@ -316,13 +316,18 @@ Flag for the next roadmap review.
 
 ---
 
-### 8. Governance Alignment ⚠️ Partial
+### 8. Governance Alignment ✅ Addressed (#7)
 
 **What it means:**
 The audit system is explicitly aligned with the relevant regulatory frameworks —
 not just compatible in principle, but documented and implemented in a way that satisfies
 specific legal requirements. Governance alignment is where the other seven axioms
 become legally meaningful.
+
+**Addressed:** `ComplianceSupplement` (delivered in #7) provides structured optional fields
+for GDPR Art.22 explainability — `algorithmRef`, `confidenceScore`, `contestationUri`,
+`humanOverrideAvailable`, and `decisionContext`. All fields are nullable; consumers that
+do not populate them incur zero overhead.
 
 **Why it matters for agentic AI:**
 EU AI Act Article 12 (record-keeping) and GDPR Article 22 (automated decision-making)
@@ -369,7 +374,7 @@ that closing each gap satisfies the zero-complexity constraint for existing cons
 | No cross-subject causality (Axiom 3) | Causality field `causedBy` (roadmap #5) | ✅ Nullable field, null by default |
 | No auditor query API (Axiom 5) | EU AI Act Art. 12 compliance surface (#4) | ✅ SPI extension, additive |
 | No retention policy (Axiom 6) | EU AI Act Art. 12 compliance surface (#4) | ✅ Config, disabled by default |
-| No Art. 22 decision fields (Axiom 8) | GDPR Art. 22 enrichment (#1) | ✅ Nullable fields, null by default |
+| No Art. 22 decision fields (Axiom 8) | GDPR Art. 22 enrichment (#1) | ✅ ComplianceSupplement — all fields nullable, zero boilerplate |
 | No coverage enforcement (Axiom 2) | `@Auditable` CDI interceptor (not yet planned) | ✅ Opt-in annotation |
 | Privacy / right-to-erasure (Axiom 7) | Pseudonymisation design (not yet planned) | ❌ Requires consumer changes |
 
