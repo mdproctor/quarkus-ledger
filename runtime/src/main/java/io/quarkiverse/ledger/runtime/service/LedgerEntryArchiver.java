@@ -57,6 +57,10 @@ public final class LedgerEntryArchiver {
             map.put("previousHash", entry.previousHash);
         if (entry.digest != null)
             map.put("digest", entry.digest);
+        if (entry.correlationId != null)
+            map.put("correlationId", entry.correlationId);
+        if (entry.causedByEntryId != null)
+            map.put("causedByEntryId", entry.causedByEntryId.toString());
         if (entry.supplementJson != null)
             map.put("supplementJson", entry.supplementJson);
 

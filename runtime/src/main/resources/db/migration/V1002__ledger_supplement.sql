@@ -17,8 +17,6 @@ ALTER TABLE ledger_entry DROP COLUMN IF EXISTS rationale;
 ALTER TABLE ledger_entry DROP COLUMN IF EXISTS evidence;
 ALTER TABLE ledger_entry DROP COLUMN IF EXISTS detail;
 ALTER TABLE ledger_entry DROP COLUMN IF EXISTS decision_context;
-ALTER TABLE ledger_entry DROP COLUMN IF EXISTS correlation_id;
-ALTER TABLE ledger_entry DROP COLUMN IF EXISTS caused_by_entry_id;
 ALTER TABLE ledger_entry DROP COLUMN IF EXISTS source_entity_id;
 ALTER TABLE ledger_entry DROP COLUMN IF EXISTS source_entity_type;
 ALTER TABLE ledger_entry DROP COLUMN IF EXISTS source_entity_system;
@@ -71,13 +69,3 @@ CREATE TABLE ledger_supplement_provenance (
         REFERENCES ledger_supplement (id)
 );
 
--- ── ObservabilitySupplement ───────────────────────────────────────────────────
-
-CREATE TABLE ledger_supplement_observability (
-    id                 UUID          NOT NULL,
-    correlation_id     VARCHAR(255),
-    caused_by_entry_id UUID,
-    CONSTRAINT pk_ledger_supplement_observability PRIMARY KEY (id),
-    CONSTRAINT fk_observability_base FOREIGN KEY (id)
-        REFERENCES ledger_supplement (id)
-);

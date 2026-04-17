@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
 
 /**
@@ -88,28 +87,17 @@ class LedgerSupplementSerializerTest {
     }
 
     @Test
-    void toJson_observabilitySupplement_serialisedCorrectly() {
-        final ObservabilitySupplement os = new ObservabilitySupplement();
-        os.correlationId = "trace-abc123";
-
-        final String json = LedgerSupplementSerializer.toJson(List.of(os));
-
-        assertThat(json).contains("\"OBSERVABILITY\"");
-        assertThat(json).contains("\"correlationId\":\"trace-abc123\"");
-    }
-
-    @Test
     void toJson_multipleSupplements_allPresent() {
         final ComplianceSupplement cs = new ComplianceSupplement();
         cs.algorithmRef = "v1";
-        final ObservabilitySupplement os = new ObservabilitySupplement();
-        os.correlationId = "trace-xyz";
+        final ProvenanceSupplement ps = new ProvenanceSupplement();
+        ps.sourceEntitySystem = "quarkus-flow";
 
-        final String json = LedgerSupplementSerializer.toJson(List.of(cs, os));
+        final String json = LedgerSupplementSerializer.toJson(List.of(cs, ps));
 
         assertThat(json).contains("\"COMPLIANCE\"");
-        assertThat(json).contains("\"OBSERVABILITY\"");
+        assertThat(json).contains("\"PROVENANCE\"");
         assertThat(json).contains("algorithmRef");
-        assertThat(json).contains("correlationId");
+        assertThat(json).contains("quarkus-flow");
     }
 }

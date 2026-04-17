@@ -7,8 +7,9 @@
 --   sequence_number — per-subject ordering (1-based)
 --   hash chain   — previous_hash + digest implement Certificate Transparency tamper detection
 --
--- Note: Optional fields (plan_ref, rationale, decision_context, etc.) are present here
+-- Note: Optional supplement fields (plan_ref, rationale, decision_context, etc.) are present here
 -- for schema compatibility. V1002 migrates these to supplement tables and drops them.
+-- correlation_id and caused_by_entry_id are KEPT on this table — they are core fields.
 --
 -- Subclass tables (e.g. work_item_ledger_entry, agent_message_ledger_entry) are defined in
 -- the Flyway migrations of the consuming extension and join to this table on id.
@@ -41,6 +42,7 @@ CREATE TABLE ledger_entry (
 CREATE INDEX idx_ledger_entry_subject_seq ON ledger_entry (subject_id, sequence_number);
 CREATE INDEX idx_ledger_entry_subject_id  ON ledger_entry (subject_id);
 CREATE INDEX idx_ledger_entry_correlation ON ledger_entry (correlation_id);
+CREATE INDEX idx_ledger_entry_caused_by   ON ledger_entry (caused_by_entry_id);
 CREATE INDEX idx_ledger_entry_actor       ON ledger_entry (actor_id);
 
 CREATE TABLE ledger_attestation (
