@@ -3,6 +3,7 @@ package io.quarkiverse.ledger.runtime.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
@@ -28,14 +29,57 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 public final class TrustScoreComputer {
 
     private final int halfLifeDays;
+    private final ForgivenessParams forgiveness;
 
     /**
-     * Construct a computer with the given exponential-decay half-life.
+     * Parameters for the optional forgiveness mechanism.
+     *
+     * <p>
+     * The forgiveness factor {@code F = recencyForgiveness × frequencyLeniency}
+     * is applied to negative decisions only:
+     * {@code adjustedScore = decisionScore + F × (1.0 - decisionScore)}.
+     *
+     * <ul>
+     * <li>{@code recencyForgiveness = 2^(-ageInDays / halfLifeDays)} — old failures fade</li>
+     * <li>{@code frequencyLeniency = 1.0} if negative decisions ≤ threshold, else {@code 0.5}</li>
+     * </ul>
+     *
+     * <p>
+     * Use {@link #disabled()} for the default no-forgiveness path. The
+     * {@link TrustScoreComputer#TrustScoreComputer(int)} single-param constructor delegates
+     * to it — all existing behaviour is preserved when forgiveness is disabled.
+     *
+     * @param enabled whether forgiveness is active
+     * @param frequencyThreshold negative decisions ≤ this receive full leniency; above → half
+     * @param halfLifeDays forgiveness recency decay half-life in days
+     */
+    public record ForgivenessParams(boolean enabled, int frequencyThreshold, int halfLifeDays) {
+
+        /** Returns a params instance that disables forgiveness entirely. */
+        public static ForgivenessParams disabled() {
+            return new ForgivenessParams(false, 0, 0);
+        }
+    }
+
+    /**
+     * Construct a computer with the given exponential-decay half-life and forgiveness disabled.
      *
      * @param halfLifeDays half-life in days; values {@code <= 0} default to 90
      */
     public TrustScoreComputer(final int halfLifeDays) {
+        this(halfLifeDays, ForgivenessParams.disabled());
+    }
+
+    /**
+     * Construct a computer with the given decay half-life and forgiveness configuration.
+     *
+     * @param halfLifeDays half-life in days; values {@code <= 0} default to 90
+     * @param forgiveness forgiveness parameters; use {@link ForgivenessParams#disabled()} to
+     *        reproduce the original behaviour exactly
+     */
+    public TrustScoreComputer(final int halfLifeDays, final ForgivenessParams forgiveness) {
         this.halfLifeDays = halfLifeDays > 0 ? halfLifeDays : 90;
+        this.forgiveness = Objects.requireNonNull(forgiveness, "forgiveness must not be null");
     }
 
     /**
