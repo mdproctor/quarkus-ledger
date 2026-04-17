@@ -145,5 +145,52 @@ public interface LedgerConfig {
          */
         @WithDefault("false")
         boolean routingEnabled();
+
+        /**
+         * Forgiveness mechanism — modulates penalties for negative decisions based on
+         * their age and the actor's overall negative decision frequency.
+         *
+         * <p>
+         * When disabled (the default), {@link io.quarkiverse.ledger.runtime.service.TrustScoreComputer}
+         * produces identical results to before this feature was introduced.
+         *
+         * @return forgiveness sub-configuration
+         */
+        ForgivenessConfig forgiveness();
+
+        /** Forgiveness mechanism settings for trust score computation. */
+        interface ForgivenessConfig {
+
+            /**
+             * When {@code true}, the forgiveness mechanism modulates the penalty of negative
+             * decisions based on their age and the actor's negative decision frequency.
+             * Off by default — enabling without {@code trust-score.enabled=true} has no effect.
+             *
+             * @return {@code true} if forgiveness is active; {@code false} by default
+             */
+            @WithDefault("false")
+            boolean enabled();
+
+            /**
+             * Number of negative decisions at or below which the actor receives full
+             * frequency leniency ({@code 1.0}). Above this threshold, leniency is halved
+             * ({@code 0.5}), distinguishing one-off failures from repeat patterns.
+             *
+             * @return frequency threshold (default 3)
+             */
+            @WithDefault("3")
+            int frequencyThreshold();
+
+            /**
+             * Half-life in days for the forgiveness recency decay. A failure this many days
+             * in the past contributes 50% of its original penalty; at double the half-life,
+             * 25%. Shorter values forgive faster. Independent of
+             * {@link TrustScoreConfig#decayHalfLifeDays()}.
+             *
+             * @return forgiveness half-life in days (default 30)
+             */
+            @WithDefault("30")
+            int halfLifeDays();
+        }
     }
 }

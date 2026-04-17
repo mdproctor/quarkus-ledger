@@ -66,7 +66,12 @@ public class TrustScoreJob {
      */
     @Transactional
     public void runComputation() {
-        final TrustScoreComputer computer = new TrustScoreComputer(config.trustScore().decayHalfLifeDays());
+        final TrustScoreComputer computer = new TrustScoreComputer(
+                config.trustScore().decayHalfLifeDays(),
+                new TrustScoreComputer.ForgivenessParams(
+                        config.trustScore().forgiveness().enabled(),
+                        config.trustScore().forgiveness().frequencyThreshold(),
+                        config.trustScore().forgiveness().halfLifeDays()));
         final Instant now = Instant.now();
 
         final List<LedgerEntry> allEvents = ledgerRepo.findAllEvents();
