@@ -155,7 +155,7 @@ public abstract class LedgerEntry extends PanacheEntityBase {
      * Lazily-loaded supplements attached to this entry.
      * Never initialised unless a supplement is attached or explicitly accessed.
      * Use {@link #attach(LedgerSupplement)}, {@link #compliance()},
-     * {@link #provenance()}, and {@link #observability()} for type-safe access.
+     * and {@link #provenance()} for type-safe access.
      */
     @OneToMany(mappedBy = "ledgerEntry", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     public List<LedgerSupplement> supplements = new ArrayList<>();
@@ -164,7 +164,7 @@ public abstract class LedgerEntry extends PanacheEntityBase {
      * Denormalised JSON snapshot of all attached supplements.
      * Written automatically by {@link #attach(LedgerSupplement)}.
      * Enables fast single-entry reads without joining supplement tables.
-     * Format: {@code {"COMPLIANCE":{...},"OBSERVABILITY":{...}}}.
+     * Format: {@code {"COMPLIANCE":{...},"PROVENANCE":{...}}}.
      */
     @Column(name = "supplement_json", columnDefinition = "TEXT")
     public String supplementJson;
