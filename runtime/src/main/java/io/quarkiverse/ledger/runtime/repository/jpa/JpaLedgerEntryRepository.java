@@ -1,5 +1,6 @@
 package io.quarkiverse.ledger.runtime.repository.jpa;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -88,5 +89,31 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         }
         final List<LedgerAttestation> all = LedgerAttestation.list("ledgerEntryId IN ?1", entryIds);
         return all.stream().collect(Collectors.groupingBy(a -> a.ledgerEntryId));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerEntry> findByActorId(final String actorId,
+            final Instant from, final Instant to) {
+        return LedgerEntry.list(
+                "actorId = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
+                actorId, from, to);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerEntry> findByActorRole(final String actorRole,
+            final Instant from, final Instant to) {
+        return LedgerEntry.list(
+                "actorRole = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
+                actorRole, from, to);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerEntry> findByTimeRange(final Instant from, final Instant to) {
+        return LedgerEntry.list(
+                "occurredAt >= ?1 AND occurredAt <= ?2 ORDER BY occurredAt ASC",
+                from, to);
     }
 }
