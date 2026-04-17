@@ -80,6 +80,7 @@ peer attestations, and supplement-specific assertions.
 | V1000 | from `quarkus-ledger` jar | `ledger_entry` + `ledger_attestation` base tables |
 | V1001 | from `quarkus-ledger` jar | `actor_trust_score` table |
 | V1002 | from `quarkus-ledger` jar | supplement tables (`ledger_supplement` + subclass tables) |
-| V1003 | `V1003__order_ledger_entry.sql` | `order_ledger_entry` join table |
+| V1003 | from `quarkus-ledger` jar | `ledger_entry_archive` table |
+| V1004 | `V1004__order_ledger_entry.sql` | `order_ledger_entry` join table |
 
-V1003 must be > V1002 so the supplement infrastructure and base `ledger_entry` table both exist before the FK constraint.
+V1004 must be > V1003 so the base tables exist before the FK constraint.
