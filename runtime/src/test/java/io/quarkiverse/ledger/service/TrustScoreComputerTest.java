@@ -321,4 +321,28 @@ class TrustScoreComputerTest {
 
         assertThat(s0.trustScore()).isCloseTo(s90.trustScore(), within(0.01));
     }
+
+    // ── forgiveness — disabled mode is identical to baseline ─────────────────
+
+    @Test
+    void forgiveness_disabled_identicalToBaseline() {
+        // ForgivenessParams.disabled() must produce byte-for-byte identical results
+        // to the original single-param constructor on the same input.
+        final TrustScoreComputer withForgiveness = new TrustScoreComputer(90,
+                TrustScoreComputer.ForgivenessParams.disabled());
+
+        final TestLedgerEntry d1 = decision("alice", now.minus(10, ChronoUnit.DAYS));
+        final TestLedgerEntry d2 = decision("alice", now.minus(20, ChronoUnit.DAYS));
+        final LedgerAttestation flagged = attestation(d2.id, AttestationVerdict.FLAGGED);
+
+        final TrustScoreComputer.ActorScore baseline = computer.compute(
+                List.of(d1, d2), Map.of(d2.id, List.of(flagged)), now);
+        final TrustScoreComputer.ActorScore forgivenessDisabled = withForgiveness.compute(
+                List.of(d1, d2), Map.of(d2.id, List.of(flagged)), now);
+
+        assertThat(forgivenessDisabled.trustScore())
+                .isCloseTo(baseline.trustScore(), within(0.0001));
+        assertThat(forgivenessDisabled.decisionCount()).isEqualTo(baseline.decisionCount());
+        assertThat(forgivenessDisabled.overturnedCount()).isEqualTo(baseline.overturnedCount());
+    }
 }
