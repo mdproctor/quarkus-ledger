@@ -70,6 +70,12 @@ Domain-specific subclass fields and supplement fields are excluded — canonical
 domain-agnostic. `planRef` was moved to `ComplianceSupplement` in V1002 and removed from
 the canonical form.
 
+**`correlationId` and `causedByEntryId` are core fields**
+Both OTel trace linking and causal relationships are structural — present on every entry where
+relevant. They live on `LedgerEntry` directly (not in supplements). `findCausedBy(UUID entryId)`
+traverses causal chains one hop at a time. The test for core vs supplement: is the field
+relevant to every consumer, every entry, every time? If yes → core. If no → supplement.
+
 **REST endpoints are domain-specific**
 `quarkus-ledger` provides model, SPI, services, and JPA implementations only. Tarkus and
 Qhorus each define their own REST/MCP endpoints on top.
@@ -102,7 +108,6 @@ quarkus-ledger/
 │           ├── LedgerSupplement.java        — abstract base (JOINED inheritance)
 │           ├── ComplianceSupplement.java    — GDPR Art.22, governance fields
 │           ├── ProvenanceSupplement.java    — workflow source entity
-│           ├── ObservabilitySupplement.java — OTel correlation, causality
 │           └── LedgerSupplementSerializer.java — JSON serialiser for supplementJson
 │   └── src/main/resources/db/migration/
 │       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables

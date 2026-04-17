@@ -191,6 +191,20 @@ class OrderLedgerIT {
                 .body("actorId", everyItem(equalTo(actor)));
     }
 
+    @Test
+    void placeOrder_correlationId_fieldExistsInResponse() {
+        // correlationId is now a core field on LedgerEntry — the column exists in the schema.
+        // OrderService does not populate it in this example (no OTel wired up),
+        // but the field must be present in the API response (null is valid).
+        final String orderId = placeOrder("it-otel-1", "75.00");
+
+        given()
+                .when().get(BASE + "/" + orderId + "/ledger")
+                .then()
+                .statusCode(200)
+                .body("[0]", org.hamcrest.Matchers.hasKey("correlationId"));
+    }
+
     private String placeOrder(final String customerId, final String total) {
         return given()
                 .contentType("application/json")
