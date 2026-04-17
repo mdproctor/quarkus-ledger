@@ -64,9 +64,6 @@ public final class LedgerSupplementSerializer {
         if (supplement instanceof ProvenanceSupplement) {
             return "PROVENANCE";
         }
-        if (supplement instanceof ObservabilitySupplement) {
-            return "OBSERVABILITY";
-        }
         throw new IllegalArgumentException("Unknown supplement type: " + supplement.getClass().getName());
     }
 
@@ -86,11 +83,6 @@ public final class LedgerSupplementSerializer {
             putIfNotNull(map, "sourceEntityId", p.sourceEntityId);
             putIfNotNull(map, "sourceEntityType", p.sourceEntityType);
             putIfNotNull(map, "sourceEntitySystem", p.sourceEntitySystem);
-        } else if (supplement instanceof final ObservabilitySupplement o) {
-            putIfNotNull(map, "correlationId", o.correlationId);
-            if (o.causedByEntryId != null) {
-                map.put("causedByEntryId", o.causedByEntryId.toString());
-            }
         }
         return map;
     }

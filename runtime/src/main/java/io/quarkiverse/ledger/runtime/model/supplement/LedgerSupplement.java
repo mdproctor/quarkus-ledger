@@ -28,17 +28,16 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
  * attaches one — consumers that do not use supplements incur zero schema or runtime cost.
  *
  * <p>
- * Three built-in supplements are provided:
+ * Two built-in supplements are provided:
  * <ul>
  * <li>{@link ComplianceSupplement} — GDPR Art.22 decision snapshot, EU AI Act Art.12,
  * governance reference, rationale</li>
  * <li>{@link ProvenanceSupplement} — workflow source entity tracking</li>
- * <li>{@link ObservabilitySupplement} — OpenTelemetry trace correlation, causality</li>
  * </ul>
  *
  * <p>
  * Supplements are accessed via the typed helper methods on {@link LedgerEntry}:
- * {@code entry.compliance()}, {@code entry.provenance()}, {@code entry.observability()}.
+ * {@code entry.compliance()} and {@code entry.provenance()}.
  * Use {@code entry.attach(supplement)} to add or replace a supplement; this also
  * keeps {@code entry.supplementJson} in sync automatically.
  *

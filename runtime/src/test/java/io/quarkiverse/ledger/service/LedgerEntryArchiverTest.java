@@ -106,6 +106,39 @@ class LedgerEntryArchiverTest {
     }
 
     @Test
+    void toJson_correlationId_included() {
+        final TestEntry e = entry("agent-1");
+        e.correlationId = "trace-abc123";
+
+        final String json = LedgerEntryArchiver.toJson(e, List.of());
+
+        assertThat(json).contains("\"correlationId\":\"trace-abc123\"");
+    }
+
+    @Test
+    void toJson_causedByEntryId_included() {
+        final TestEntry e = entry("agent-1");
+        final UUID parentId = UUID.randomUUID();
+        e.causedByEntryId = parentId;
+
+        final String json = LedgerEntryArchiver.toJson(e, List.of());
+
+        assertThat(json).contains("\"causedByEntryId\":\"" + parentId + "\"");
+    }
+
+    @Test
+    void toJson_nullObservabilityFields_omitted() {
+        final TestEntry e = entry("agent-1");
+        e.correlationId = null;
+        e.causedByEntryId = null;
+
+        final String json = LedgerEntryArchiver.toJson(e, List.of());
+
+        assertThat(json).doesNotContain("correlationId");
+        assertThat(json).doesNotContain("causedByEntryId");
+    }
+
+    @Test
     void toJson_isValidJson_parseable() throws Exception {
         final TestEntry e = entry("agent-1");
         e.supplementJson = "{\"COMPLIANCE\":{\"planRef\":\"policy-v1\"}}";

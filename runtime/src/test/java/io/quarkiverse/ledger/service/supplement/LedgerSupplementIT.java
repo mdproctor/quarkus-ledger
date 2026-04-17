@@ -12,7 +12,6 @@ import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -76,22 +75,22 @@ class LedgerSupplementIT {
 
     @Test
     @Transactional
-    void supplementJson_containsAllAttachedSupplements() {
+    void supplementJson_containsTwoSupplementTypes() {
         final TestEntry entry = bareEntry();
 
         final ComplianceSupplement cs = new ComplianceSupplement();
         cs.algorithmRef = "v1";
         entry.attach(cs);
 
-        final ObservabilitySupplement os = new ObservabilitySupplement();
-        os.correlationId = "trace-abc";
-        entry.attach(os);
+        final ProvenanceSupplement ps = new ProvenanceSupplement();
+        ps.sourceEntitySystem = "quarkus-flow";
+        entry.attach(ps);
         entry.persist();
 
         final TestEntry found = TestEntry.findById(entry.id);
         assertThat(found.supplementJson).contains("\"COMPLIANCE\"");
-        assertThat(found.supplementJson).contains("\"OBSERVABILITY\"");
-        assertThat(found.supplementJson).contains("trace-abc");
+        assertThat(found.supplementJson).contains("\"PROVENANCE\"");
+        assertThat(found.supplementJson).contains("quarkus-flow");
     }
 
     // ── happy path: ProvenanceSupplement ─────────────────────────────────────
@@ -112,25 +111,6 @@ class LedgerSupplementIT {
                 .provenance().orElseThrow();
         assertThat(loaded.sourceEntityId).isEqualTo("wf-42");
         assertThat(loaded.sourceEntitySystem).isEqualTo("quarkus-flow");
-    }
-
-    // ── happy path: ObservabilitySupplement ──────────────────────────────────
-
-    @Test
-    @Transactional
-    void observabilitySupplement_persistsAndLoads() {
-        final TestEntry entry = bareEntry();
-
-        final ObservabilitySupplement os = new ObservabilitySupplement();
-        os.correlationId = "trace-xyz";
-        os.causedByEntryId = UUID.randomUUID();
-        entry.attach(os);
-        entry.persist();
-
-        final ObservabilitySupplement loaded = TestEntry.<TestEntry> findById(entry.id)
-                .observability().orElseThrow();
-        assertThat(loaded.correlationId).isEqualTo("trace-xyz");
-        assertThat(loaded.causedByEntryId).isEqualTo(os.causedByEntryId);
     }
 
     // ── attach replaces existing supplement of same type ──────────────────────

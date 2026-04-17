@@ -25,7 +25,6 @@ import jakarta.persistence.Table;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
@@ -46,7 +45,6 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
  * <ul>
  * <li>{@link ComplianceSupplement} — GDPR Art.22 decision snapshot, governance</li>
  * <li>{@link ProvenanceSupplement} — workflow source entity</li>
- * <li>{@link ObservabilitySupplement} — OTel tracing, causality</li>
  * </ul>
  * If a consumer never calls {@code attach()}, no supplement tables are written
  * and the lazy {@code supplements} list is never initialised — zero overhead.
@@ -127,6 +125,29 @@ public abstract class LedgerEntry extends PanacheEntityBase {
      * Null when hash chain is disabled ({@code quarkus.ledger.hash-chain.enabled=false}).
      */
     public String digest;
+
+    // ── Observability & causality ─────────────────────────────────────────────
+
+    /**
+     * OpenTelemetry trace ID linking this entry to a distributed trace.
+     * Use the W3C trace context format (32-char hex string).
+     * Set from the active OTel span context at capture time.
+     */
+    @Column(name = "correlation_id", length = 255)
+    public String correlationId;
+
+    /**
+     * FK to the ledger entry that causally produced this entry.
+     * Null for entries with no known causal predecessor.
+     *
+     * <p>
+     * Enables cross-system causal chain traversal via
+     * {@link io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
+     * When Claudony orchestrates Tarkus → Qhorus, each downstream entry's
+     * {@code causedByEntryId} points to its upstream cause.
+     */
+    @Column(name = "caused_by_entry_id")
+    public UUID causedByEntryId;
 
     // ── Supplements ───────────────────────────────────────────────────────────
 
@@ -210,18 +231,6 @@ public abstract class LedgerEntry extends PanacheEntityBase {
         return supplements.stream()
                 .filter(ProvenanceSupplement.class::isInstance)
                 .map(ProvenanceSupplement.class::cast)
-                .findFirst();
-    }
-
-    /**
-     * Returns the {@link ObservabilitySupplement} attached to this entry, if any.
-     *
-     * @return the observability supplement, or empty if none is attached
-     */
-    public Optional<ObservabilitySupplement> observability() {
-        return supplements.stream()
-                .filter(ObservabilitySupplement.class::isInstance)
-                .map(ObservabilitySupplement.class::cast)
                 .findFirst();
     }
 
