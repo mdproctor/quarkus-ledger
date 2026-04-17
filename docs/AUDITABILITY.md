@@ -35,10 +35,10 @@ every consumer; it must never surprise them.
 | 2. Coverage | ⚠️ Partial | CDI interceptors (not yet planned) |
 | 3. Temporal Coherence | ⚠️ Partial | Causality field `causedBy` (#5 roadmap) |
 | 4. Verifiability | ⚠️ Partial | Hash chain verification endpoint (medium-term) |
-| 5. Accessibility | ⚠️ Partial | EU AI Act Article 12 audit query API (#4) |
-| 6. Resource Proportionality | ⚠️ Partial | Retention config (#4), risk-tiered logging (not yet planned) |
+| 5. Accessibility | ✅ Addressed | EU AI Act Art.12 audit query API (#9) |
+| 6. Resource Proportionality | ✅ Addressed | Retention config (#9) |
 | 7. Privacy Compatibility | ❌ Gap | Pseudonymisation strategy (not yet designed) |
-| 8. Governance Alignment | ✅ Addressed | ComplianceSupplement (#7) + EU AI Act Art. 12 (#4) |
+| 8. Governance Alignment | ✅ Addressed | ComplianceSupplement (#7) + EU AI Act Art. 12 (#9) |
 
 ---
 
@@ -198,7 +198,7 @@ audit query API (#4).
 
 ---
 
-### 5. Accessibility ⚠️ Partial
+### 5. Accessibility ✅ Addressed (#9)
 
 **What it means:**
 Auditors can retrieve and interpret audit records without needing to understand the
@@ -221,21 +221,16 @@ There is no query by `actorId` across subjects, no time-range query, no query by
 `actorRole`, and no API that presents a coherent audit view without knowing which
 `subjectId` to look for.
 
-**Gap:**
-An auditor reconstructing "everything agent X did in the last 6 months across all
-subjects" cannot do so from the current SPI without writing custom queries against the
-database. The EU AI Act Article 12 requirement for reconstructability of AI decisions
-is unmet at the API level.
+**Status:** ✅ Addressed (#9)
 
-**How to incorporate (without breaking existing consumers):**
-Extend `LedgerEntryRepository` SPI with auditor-oriented queries: `findByActorId()`,
-`findByTimeRange()`, `findByActorRole()`. These are additive — existing consumers using
-only `findBySubjectId()` are unaffected. Part of the EU AI Act Article 12 compliance
-surface (roadmap #4).
+**Addressed by (#9):**
+`findByActorId()`, `findByActorRole()`, and `findByTimeRange()` now provide auditor-facing
+reconstructability without knowledge of system internals. All return entries in
+`occurredAt ASC` order using `Instant` params for timezone-safe querying.
 
 ---
 
-### 6. Resource Proportionality ⚠️ Partial
+### 6. Resource Proportionality ✅ Addressed (#9)
 
 **What it means:**
 The cost of auditing — storage, compute, network — is proportional to the risk level
@@ -259,16 +254,11 @@ identically regardless of their risk level. There is no retention configuration,
 risk tiering, and no way to tell the ledger that certain entry types warrant extended
 retention or additional fidelity.
 
-**Gap:**
-No risk-tiered logging. No retention policy. EU AI Act Article 12 specifies a minimum
-6-month operational log retention and 10-year conformity documentation retention —
-neither is enforced or configurable today.
+**Status:** ✅ Addressed (#9)
 
-**How to incorporate (without breaking existing consumers):**
-`quarkus.ledger.retention.operational-days=180` with a sensible default (or disabled
-by default). If unconfigured, behaviour is unchanged — no retention enforcement, no
-surprise deletions. Consumers that need compliance enforcement opt in via config.
-Roadmap item #4.
+**Addressed by (#9):**
+`quarkus.ledger.retention.*` config (disabled by default) enforces the EU AI Act Art.12
+180-day minimum with archive-before-delete. Zero behaviour change when unconfigured.
 
 ---
 
@@ -340,7 +330,7 @@ for EU AI Act high-risk AI requirements is **2 August 2026**. Penalties reach
 €15M or 3% of global turnover. A ledger that is "basically compliant" but cannot
 produce the specific artefacts a regulator asks for provides weak protection.
 
-**Current state — ✅ Addressed for GDPR Art.22 (#7), ⚠️ Partial for EU AI Act Art.12 (#9 pending)**
+**Current state — ✅ Addressed for GDPR Art.22 (#7), ✅ Addressed for EU AI Act Art.12 (#9)**
 
 GDPR Art.22 structured decision fields are now delivered via `ComplianceSupplement`:
 `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable`, and
@@ -350,15 +340,11 @@ GDPR Art.22 structured decision fields are now delivered via `ComplianceSuppleme
 The hash chain satisfies the tamper-evidence requirement. Supplement fields are
 deliberately excluded from the canonical form.
 
-**Remaining gap (EU AI Act Art.12):**
-- No 6-month retention enforcement (`quarkus.ledger.retention.*` config not yet implemented)
-- No reconstructability proof (an auditor-facing query API does not yet exist)
-- No documentation mapping Art.12 requirements to specific ledger features
-
-**How to incorporate (without breaking existing consumers):**
-- **EU AI Act Art. 12:** Add `quarkus.ledger.retention.*` config (disabled by default),
-  auditor-facing query API (`findByActorId`, `findByTimeRange`), and compliance
-  documentation. Roadmap item #9 (open issue).
+**EU AI Act Art.12 (#9) — ✅ Complete:**
+- ✅ 6-month retention enforcement via `quarkus.ledger.retention.*` config (disabled by default)
+- ✅ Reconstructability API: `findByActorId()`, `findByActorRole()`, `findByTimeRange()`
+- ✅ Documentation mapping Art.12 requirements: `docs/compliance/EU-AI-ACT-ART12.md`
+- ✅ Runnable example: `examples/art12-compliance/`
 
 ---
 
@@ -371,8 +357,8 @@ that closing each gap satisfies the zero-complexity constraint for existing cons
 |---|---|---|
 | No verification endpoint (Axiom 4) | Hash chain verification helper (medium-term) | ✅ Additive CDI bean |
 | No cross-subject causality (Axiom 3) | Causality field `causedBy` (roadmap #5) | ✅ Nullable field, null by default |
-| No auditor query API (Axiom 5) | EU AI Act Art. 12 compliance surface (#4) | ✅ SPI extension, additive |
-| No retention policy (Axiom 6) | EU AI Act Art. 12 compliance surface (#4) | ✅ Config, disabled by default |
+| No auditor query API (Axiom 5) | EU AI Act Art.12 compliance surface (#9) | ✅ findByActorId/Role/TimeRange — Instant params, ASC order |
+| No retention policy (Axiom 6) | EU AI Act Art.12 compliance surface (#9) | ✅ retention.* config, disabled by default |
 | No Art. 22 decision fields (Axiom 8) | GDPR Art. 22 enrichment (#1) | ✅ ComplianceSupplement — all fields nullable, zero boilerplate |
 | No coverage enforcement (Axiom 2) | `@Auditable` CDI interceptor (not yet planned) | ✅ Opt-in annotation |
 | Privacy / right-to-erasure (Axiom 7) | Pseudonymisation design (not yet planned) | ❌ Requires consumer changes |

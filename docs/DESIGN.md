@@ -196,6 +196,17 @@ Formula: `F = 2^(-ageInDays / halfLifeDays) × frequencyLeniency`,
 `adjustedScore = decisionScore + F × (1.0 - decisionScore)`.
 Clean decisions (score = 1.0) are unaffected. See `adr/0001-forgiveness-mechanism-omits-severity-dimension.md` for the decision to exclude severity as a dimension.
 
+**Retention sub-config (`quarkus.ledger.retention.*`):**
+
+| Key | Default | Description |
+|---|---|---|
+| `retention.enabled` | `false` | Enable retention enforcement — off by default, zero behaviour change when disabled |
+| `retention.operational-days` | `180` | Retention window in days (EU AI Act Art.12 minimum: 6 months) |
+| `retention.archive-before-delete` | `true` | Write full entry JSON to `ledger_entry_archive` before deletion |
+
+Archive-then-delete: verify chain integrity → write to `ledger_entry_archive` → delete attestations → JPA-cascade delete entry. A subject with a broken hash chain is skipped.
+Audit queries: `findByActorId(actorId, from, to)`, `findByActorRole(role, from, to)`, `findByTimeRange(from, to)` — all use `Instant` params for timezone-safe querying.
+
 ---
 
 ## What Is Deliberately Out of Scope
@@ -258,9 +269,10 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Unit tests** | ✅ Done | 42 unit tests — LedgerHashChain (18) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) |
 | **Tarkus migration** | ✅ Done | WorkItemLedgerEntry, WorkItemLedgerEntryRepository, Tarkus-ledger 69 tests passing |
 | **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
-| **Runnable examples** | ✅ Done | examples/order-processing/ (10 IT), examples/art22-decision-snapshot/ (3 IT) |
+| **Runnable examples** | ✅ Done | examples/order-processing/ (11 IT), examples/art22-decision-snapshot/ (3 IT), examples/art12-compliance/ (3 IT) |
 | **LedgerSupplement architecture** | ✅ Done | ComplianceSupplement, ProvenanceSupplement, ObservabilitySupplement; LedgerEntry slimmed to 10 core fields; Flyway V1002; 7 supplement IT tests; GDPR Art.22 example |
 | **Forgiveness mechanism** | ✅ Done | Two-parameter (recency + frequency) forgiveness in `TrustScoreComputer`; `quarkus.ledger.trust-score.forgiveness.*`; 22 unit tests + 3 IT tests |
+| **EU AI Act Art.12 compliance** | ✅ Done | Archive-then-delete retention job (`LedgerRetentionJob`), V1003 archive table, audit query SPI (`findByActorId`, `findByActorRole`, `findByTimeRange`), `docs/compliance/EU-AI-ACT-ART12.md`, `examples/art12-compliance/` |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
