@@ -167,6 +167,37 @@ warnings and cannot override defaults via `application.properties`.
 
 ---
 
+## Configuration
+
+The extension is configured under the `quarkus.ledger` prefix via `application.properties` or environment variables.
+
+**Core settings (`quarkus.ledger.*`):**
+
+| Key | Default | Description |
+|---|---|---|
+| `enabled` | `true` | Master switch; disables all ledger operations when false |
+| `hash-chain.enabled` | `true` | Enable SHA-256 hash chaining for tamper detection |
+| `decision-context.enabled` | `true` | Capture decision context snapshots (GDPR Art.22 / EU AI Act Art.12) |
+| `evidence.enabled` | `false` | Accept and store structured evidence in `ComplianceSupplement.evidence` |
+| `attestations.enabled` | `true` | Enable peer attestation endpoints |
+| `trust-score.enabled` | `false` | Enable nightly EigenTrust reputation computation (requires historical data) |
+| `trust-score.decay-half-life-days` | `90` | Exponential decay half-life for historical decision weighting |
+| `trust-score.routing-enabled` | `false` | Influence routing via CDI events based on trust scores |
+
+**Forgiveness sub-config (`quarkus.ledger.trust-score.forgiveness.*`):**
+
+| Key | Default | Description |
+|---|---|---|
+| `forgiveness.enabled` | `false` | Enable forgiveness — off by default, zero behaviour change when disabled |
+| `forgiveness.frequency-threshold` | `3` | Negative decisions ≤ this receive full leniency (1.0); above → half leniency (0.5) |
+| `forgiveness.half-life-days` | `30` | Forgiveness recency decay half-life in days (independent of `decay-half-life-days`) |
+
+Formula: `F = 2^(-ageInDays / halfLifeDays) × frequencyLeniency`,
+`adjustedScore = decisionScore + F × (1.0 - decisionScore)`.
+Clean decisions (score = 1.0) are unaffected. See `adr/0001-forgiveness-mechanism-omits-severity-dimension.md` for the decision to exclude severity as a dimension.
+
+---
+
 ## What Is Deliberately Out of Scope
 
 These are excluded by design — consumers implement their own:
@@ -229,6 +260,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
 | **Runnable examples** | ✅ Done | examples/order-processing/ (10 IT), examples/art22-decision-snapshot/ (3 IT) |
 | **LedgerSupplement architecture** | ✅ Done | ComplianceSupplement, ProvenanceSupplement, ObservabilitySupplement; LedgerEntry slimmed to 10 core fields; Flyway V1002; 7 supplement IT tests; GDPR Art.22 example |
+| **Forgiveness mechanism** | ✅ Done | Two-parameter (recency + frequency) forgiveness in `TrustScoreComputer`; `quarkus.ledger.trust-score.forgiveness.*`; 22 unit tests + 3 IT tests |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
