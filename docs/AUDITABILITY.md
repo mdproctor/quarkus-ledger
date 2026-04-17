@@ -33,7 +33,7 @@ every consumer; it must never surprise them.
 |---|---|---|
 | 1. Integrity | ✅ Strong | — (already met) |
 | 2. Coverage | ⚠️ Partial | CDI interceptors (not yet planned) |
-| 3. Temporal Coherence | ⚠️ Partial | Causality field `causedBy` (#5 roadmap) |
+| 3. Temporal Coherence | ✅ Addressed | `causedByEntryId` core field + `findCausedBy()` (#10) |
 | 4. Verifiability | ⚠️ Partial | Hash chain verification endpoint (medium-term) |
 | 5. Accessibility | ✅ Addressed | EU AI Act Art.12 audit query API (#9) |
 | 6. Resource Proportionality | ✅ Addressed | Retention config (#9) |
@@ -124,7 +124,7 @@ and discoverable only after an audit question cannot be answered.
 
 ---
 
-### 3. Temporal Coherence ⚠️ Partial
+### 3. Temporal Coherence ✅ Addressed (#10)
 
 **What it means:**
 Events in the audit log are ordered consistently and reflect the actual order in which
@@ -154,11 +154,11 @@ that happened as a result of this orchestration step") cannot be answered from t
 ledger alone. The causal chain exists in the application but is invisible to the
 audit trail.
 
-**How to incorporate (without breaking existing consumers):**
-A nullable `causedBy UUID` field on `LedgerEntry` (FK to `ledger_entry.id`) — defaulting
-to `null`, requiring no consumer changes unless they want to express causality. Consumers
-that currently write entries without a causal link simply leave it null. This is roadmap
-item #5.
+**Addressed by (#10):**
+`causedByEntryId` is a core nullable field on `LedgerEntry` — consumers set it
+directly when an entry is causally triggered by another. `correlationId` is also
+core, linking entries to OTel distributed traces. `findCausedBy(UUID)` enables
+one-hop traversal; recursive chain reconstruction is application-level.
 
 ---
 

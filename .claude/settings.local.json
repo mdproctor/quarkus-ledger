@@ -62,7 +62,23 @@
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=TrustScoreForgivenessIT)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -q)",
       "Bash(jar tf *)",
-      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerSupplementIT)"
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerSupplementIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerEntryArchiverTest -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerEntryArchiverTest)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=RetentionEligibilityCheckerTest -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=RetentionEligibilityCheckerTest)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) /opt/homebrew/bin/mvn test -pl runtime -Dtest=LedgerRetentionJobIT -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) /opt/homebrew/bin/mvn test -pl runtime -Dtest=LedgerRetentionJobIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) /opt/homebrew/bin/mvn test -pl runtime -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) /opt/homebrew/bin/mvn test -pl runtime)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=AuditQueryIT -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=AuditQueryIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) /opt/homebrew/bin/mvn clean test -pl runtime -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) /opt/homebrew/bin/mvn clean test -pl runtime)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -pl runtime -Dtest=CausalityQueryIT -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -pl runtime -Dtest=CausalityQueryIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -pl runtime)",
+      "Bash(python3 -c \"import secrets; print\\(secrets.token_hex\\(3\\)\\)\")"
     ]
   }
 }

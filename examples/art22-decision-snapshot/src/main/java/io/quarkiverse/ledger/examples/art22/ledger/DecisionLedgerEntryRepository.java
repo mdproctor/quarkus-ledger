@@ -1,5 +1,6 @@
 package io.quarkiverse.ledger.examples.art22.ledger;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -82,5 +83,34 @@ public class DecisionLedgerEntryRepository implements LedgerEntryRepository {
         return LedgerAttestation.<LedgerAttestation> list("ledgerEntryId IN ?1", entryIds)
                 .stream()
                 .collect(Collectors.groupingBy(a -> a.ledgerEntryId));
+    }
+
+    @Override
+    public List<LedgerEntry> findByActorId(final String actorId,
+            final Instant from, final Instant to) {
+        return LedgerEntry.list(
+                "actorId = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
+                actorId, from, to);
+    }
+
+    @Override
+    public List<LedgerEntry> findByActorRole(final String actorRole,
+            final Instant from, final Instant to) {
+        return LedgerEntry.list(
+                "actorRole = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
+                actorRole, from, to);
+    }
+
+    @Override
+    public List<LedgerEntry> findByTimeRange(final Instant from, final Instant to) {
+        return LedgerEntry.list(
+                "occurredAt >= ?1 AND occurredAt <= ?2 ORDER BY occurredAt ASC",
+                from, to);
+    }
+
+    @Override
+    public List<LedgerEntry> findCausedBy(final UUID entryId) {
+        return LedgerEntry.list(
+                "causedByEntryId = ?1 ORDER BY occurredAt ASC", entryId);
     }
 }
