@@ -59,6 +59,47 @@ public interface LedgerConfig {
      */
     TrustScoreConfig trustScore();
 
+    /**
+     * Retention enforcement — archives and removes ledger entries that have exceeded
+     * their mandatory retention window, satisfying EU AI Act Article 12 record-keeping.
+     *
+     * @return retention sub-configuration
+     */
+    RetentionConfig retention();
+
+    /** Retention enforcement settings. */
+    interface RetentionConfig {
+
+        /**
+         * When {@code true}, a nightly job archives and deletes entries older than
+         * {@link #operationalDays()}. Off by default — zero behaviour change when disabled.
+         *
+         * @return {@code true} if retention enforcement is active; {@code false} by default
+         */
+        @WithDefault("false")
+        boolean enabled();
+
+        /**
+         * Minimum retention window in days. Entries older than this are candidates for
+         * archival. EU AI Act Article 12 requires at least 180 days (6 months).
+         *
+         * @return retention window in days (default 180)
+         */
+        @WithDefault("180")
+        int operationalDays();
+
+        /**
+         * When {@code true}, each entry is written to {@code ledger_entry_archive}
+         * before being deleted from {@code ledger_entry}. The archive record is
+         * self-contained for reconstruction. Disabling skips the archive step and
+         * deletes directly.
+         *
+         * @return {@code true} if archive-before-delete is enabled (default)
+         */
+        @WithDefault("true")
+        boolean archiveBeforeDelete();
+    }
+
     /** Hash chain tamper-evidence settings. */
     interface HashChainConfig {
 
