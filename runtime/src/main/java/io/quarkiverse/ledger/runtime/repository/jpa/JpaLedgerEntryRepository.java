@@ -116,4 +116,11 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
                 "occurredAt >= ?1 AND occurredAt <= ?2 ORDER BY occurredAt ASC",
                 from, to);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerEntry> findCausedBy(final UUID entryId) {
+        return LedgerEntry.list(
+                "causedByEntryId = ?1 ORDER BY occurredAt ASC", entryId);
+    }
 }

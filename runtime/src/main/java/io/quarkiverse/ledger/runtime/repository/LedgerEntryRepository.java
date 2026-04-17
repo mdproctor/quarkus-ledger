@@ -126,4 +126,14 @@ public interface LedgerEntryRepository {
      * @return ordered list of entries; empty if none match
      */
     List<LedgerEntry> findByTimeRange(Instant from, Instant to);
+
+    /**
+     * Return all ledger entries causally triggered by the given entry,
+     * ordered by {@code occurredAt} ascending. One hop only — recursive
+     * traversal is the caller's responsibility.
+     *
+     * @param entryId the entry whose direct effects to retrieve
+     * @return ordered list; empty if none
+     */
+    List<LedgerEntry> findCausedBy(UUID entryId);
 }
