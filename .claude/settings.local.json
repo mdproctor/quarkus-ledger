@@ -59,7 +59,10 @@
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=TrustScoreComputerTest -q -f /Users/mdproctor/claude/quarkus-ledger/pom.xml)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=TrustScoreComputerTest -f /Users/mdproctor/claude/quarkus-ledger/pom.xml)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=TrustScoreForgivenessIT -q)",
-      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=TrustScoreForgivenessIT)"
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=TrustScoreForgivenessIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -q)",
+      "Bash(jar tf *)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerSupplementIT)"
     ]
   }
 }
