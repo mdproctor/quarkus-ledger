@@ -1,5 +1,6 @@
 package io.quarkiverse.ledger.runtime.repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,4 +82,48 @@ public interface LedgerEntryRepository {
      * @return map from entry ID to its attestations; empty map if {@code entryIds} is empty
      */
     Map<UUID, List<LedgerAttestation>> findAttestationsForEntries(Set<UUID> entryIds);
+
+    /**
+     * Return all ledger entries for the given actor whose {@code occurredAt} falls
+     * within [{@code from}, {@code to}] inclusive, ordered by {@code occurredAt} ascending.
+     *
+     * <p>
+     * Provides the auditor-facing reconstructability required by EU AI Act Art.12 and
+     * GDPR Art.22: "show everything actor X did between dates Y and Z."
+     *
+     * <p>
+     * Uses {@link Instant} rather than {@code LocalDateTime} — {@code occurredAt} is stored
+     * as {@code Instant} throughout the codebase; {@code LocalDateTime} would require implicit
+     * timezone conversion, creating a silent correctness hazard for distributed systems.
+     *
+     * @param actorId the actor identity to filter by
+     * @param from start of the time range (inclusive)
+     * @param to end of the time range (inclusive)
+     * @return ordered list of entries; empty if none match
+     */
+    List<LedgerEntry> findByActorId(String actorId, Instant from, Instant to);
+
+    /**
+     * Return all ledger entries for the given actor role whose {@code occurredAt} falls
+     * within [{@code from}, {@code to}] inclusive, ordered by {@code occurredAt} ascending.
+     *
+     * @param actorRole the functional role to filter by (e.g. {@code "Classifier"})
+     * @param from start of the time range (inclusive)
+     * @param to end of the time range (inclusive)
+     * @return ordered list of entries; empty if none match
+     */
+    List<LedgerEntry> findByActorRole(String actorRole, Instant from, Instant to);
+
+    /**
+     * Return all ledger entries whose {@code occurredAt} falls within
+     * [{@code from}, {@code to}] inclusive, ordered by {@code occurredAt} ascending.
+     *
+     * <p>
+     * Use for bulk audit exports and retention window queries.
+     *
+     * @param from start of the time range (inclusive)
+     * @param to end of the time range (inclusive)
+     * @return ordered list of entries; empty if none match
+     */
+    List<LedgerEntry> findByTimeRange(Instant from, Instant to);
 }
