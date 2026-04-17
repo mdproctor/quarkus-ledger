@@ -32,7 +32,7 @@ Domain logic is NOT in this extension — it lives in consumers via JPA JOINED s
 
 Each consumer defines its own subclass and its own Flyway migration for the subclass table.
 The base tables (`ledger_entry`, `ledger_attestation`, `actor_trust_score`) are defined here
-in V1000, V1001, and V1002 and always present when `quarkus-ledger` is on the classpath.
+in V1000, V1001, V1002, and V1003 and always present when `quarkus-ledger` is on the classpath.
 
 ---
 
@@ -107,7 +107,8 @@ quarkus-ledger/
 │   └── src/main/resources/db/migration/
 │       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables
 │       ├── V1001__actor_trust_score.sql     — actor_trust_score table
-│       └── V1002__ledger_supplement.sql     — supplement tables + drops moved columns
+│       ├── V1002__ledger_supplement.sql     — supplement tables + drops moved columns
+│       └── V1003__ledger_entry_archive.sql  — ledger_entry_archive table
 └── deployment/
     └── src/main/java/io/quarkiverse/ledger/deployment/
         └── LedgerProcessor.java             — @BuildStep: FeatureBuildItem
