@@ -1,50 +1,42 @@
 # Quarkus Ledger — Session Handover
-**Date:** 2026-04-16
+**Date:** 2026-04-17
 
 ## Current State
 
-- **Tests:** 62 total — 42 runtime unit/IT + 10 order-processing IT + 3 art22 IT, all passing
-- **Examples:** `examples/order-processing/` (10 IT), `examples/art22-decision-snapshot/` (3 IT)
-- **Open issues:** #8 (forgiveness mechanism), #9 (EU AI Act Art.12) — epic #6 still open
+- **Tests:** 92 runtime + 12 order-processing + 3 art22 + 3 art12 = 110 total, all passing
+- **Open issues:** #11 (Merkle tree upgrade) — only open issue
 - **Version:** 1.0.0-SNAPSHOT
-- **Flyway:** V1000–V1002 base schema (V1002 = supplement tables)
+- **Flyway:** V1000–V1003 base (V1000/V1002 now correctly committed to git)
 
 ## What Landed This Session
 
-**LedgerSupplement architecture (Closes #7):**
-- `LedgerEntry` slimmed to 10 core fields — 10 optional fields moved to supplement entities
-- `ComplianceSupplement` — GDPR Art.22 (algorithmRef, confidenceScore, contestationUri,
-  humanOverrideAvailable, decisionContext) + governance (planRef, rationale, evidence, detail)
-- `ProvenanceSupplement` — sourceEntityId/Type/System
-- `ObservabilitySupplement` — correlationId, causedByEntryId
-- `LedgerSupplementSerializer` — JSON serialiser for `supplementJson` column
-- `LedgerEntry.attach()` + `refreshSupplementJson()` + typed accessors
-- Hash chain canonical form: `planRef` removed (now 6 fields)
-- Flyway V1002: supplement tables; consumer subclass migrations must use V1003+
-- New example: `examples/art22-decision-snapshot/` — GDPR Art.22 runnable app
-- Full doc pass: DESIGN.md supplement chapter, AUDITABILITY.md Axiom 8 ✅, integration guide,
-  CLAUDE.md, README, examples.md all updated
+**Research + compliance sprint (issues #7, #8, #9, #10 — all closed):**
+- LedgerSupplement architecture — 3 supplement types, supplements down to 2 this session
+- Forgiveness mechanism — two-parameter (recency × frequency), ADR 0001 written
+- EU AI Act Art.12 — retention job (archive-then-delete), 3 audit query methods
+- Causality query API — `causedByEntryId` + `correlationId` moved to `LedgerEntry` core; `ObservabilitySupplement` deleted; `findCausedBy(UUID)` SPI method
+
+**Key architectural decision this session:**
+Core vs supplement test — "is this field relevant to every consumer, every entry, every time?" If yes → core. `correlationId` (OTel) and `causedByEntryId` (causality) both passed → moved to core → ObservabilitySupplement had no fields left → deleted.
+
+**Critical bug fixed:** V1000, V1001, V1002 Flyway SQL files were never committed to git. Now committed.
 
 ## Immediate Next Step
 
-Issues #8 and #9 are next in epic #6:
-- **#8** — Forgiveness mechanism in EigenTrust (`TrustScoreComputer`)
-- **#9** — EU AI Act Art.12 compliance surface (retention config + audit query API)
+Start on **issue #11 — Merkle tree upgrade**.
 
-Both are independent. Start with #8 (smaller, self-contained algorithm change).
+Brainstorming not yet done for #11. Begin with brainstorm → spec → plan → subagent-driven execution. The spec is at `docs/superpowers/specs/2026-04-17-causality-query-api-design.md` for reference on prior spec format.
+
+Issue #11 context: linear hash chain requires O(N) to verify any single entry. Merkle tree gives O(log N) inclusion proofs. Closes Axiom 4 (Verifiability). Architecture play before Quarkiverse submission. See `docs/RESEARCH.md` item #8 for research sources (RFC 9162, Russ Cox's transparent logs essay, Sunlight).
 
 ## References
 
 | What | Path |
 |---|---|
 | Design doc | `docs/DESIGN.md` |
-| Auditability gap analysis | `docs/AUDITABILITY.md` |
+| Auditability gap analysis (Axiom 4 still open) | `docs/AUDITABILITY.md` |
 | Research priority matrix | `docs/RESEARCH.md` |
-| Integration guide | `docs/integration-guide.md` |
-| Worked examples | `docs/examples.md` |
-| Order processing example | `examples/order-processing/` |
-| GDPR Art.22 example | `examples/art22-decision-snapshot/` |
-| Supplement spec | `docs/superpowers/specs/2026-04-16-ledger-supplement-architecture-design.md` |
-| Epic #6 | https://github.com/mdproctor/quarkus-ledger/issues/6 |
-| Issue #8 (forgiveness) | https://github.com/mdproctor/quarkus-ledger/issues/8 |
-| Issue #9 (Art.12) | https://github.com/mdproctor/quarkus-ledger/issues/9 |
+| Issue #11 | https://github.com/mdproctor/quarkus-ledger/issues/11 |
+| ADR 0001 (forgiveness severity exclusion) | `adr/0001-forgiveness-mechanism-omits-severity-dimension.md` |
+| Latest blog entry | `blog/2026-04-17-mdp02-two-fields-in-the-wrong-place.md` |
+| Supplement spec | `docs/superpowers/specs/2026-04-17-causality-query-api-design.md` |
