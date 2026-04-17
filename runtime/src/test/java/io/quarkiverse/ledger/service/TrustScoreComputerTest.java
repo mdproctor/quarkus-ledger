@@ -345,4 +345,120 @@ class TrustScoreComputerTest {
         assertThat(forgivenessDisabled.decisionCount()).isEqualTo(baseline.decisionCount());
         assertThat(forgivenessDisabled.overturnedCount()).isEqualTo(baseline.overturnedCount());
     }
+
+    @Test
+    void forgiveness_cleanDecisions_unaffected() {
+        // Clean decisions (score = 1.0) must not be changed — forgiveness branch not entered
+        final TrustScoreComputer withForgiveness = new TrustScoreComputer(90,
+                new TrustScoreComputer.ForgivenessParams(true, 3, 30));
+
+        final TestLedgerEntry d1 = decision("alice", now.minus(1, ChronoUnit.DAYS));
+        final TestLedgerEntry d2 = decision("alice", now.minus(2, ChronoUnit.DAYS));
+
+        final TrustScoreComputer.ActorScore baseline = computer.compute(List.of(d1, d2), Map.of(), now);
+        final TrustScoreComputer.ActorScore forgiven = withForgiveness.compute(List.of(d1, d2), Map.of(), now);
+
+        assertThat(forgiven.trustScore()).isCloseTo(baseline.trustScore(), within(0.0001));
+    }
+
+    @Test
+    void forgiveness_singleTransientFailure_recovers() {
+        // One flagged decision + subsequent clean history → forgiveness raises score above baseline
+        final TrustScoreComputer withForgiveness = new TrustScoreComputer(90,
+                new TrustScoreComputer.ForgivenessParams(true, 3, 30));
+
+        final TestLedgerEntry failure = decision("alice", now.minus(30, ChronoUnit.DAYS));
+        final LedgerAttestation flagged = attestation(failure.id, AttestationVerdict.FLAGGED);
+        final TestLedgerEntry clean1 = decision("alice", now.minus(5, ChronoUnit.DAYS));
+        final TestLedgerEntry clean2 = decision("alice", now.minus(3, ChronoUnit.DAYS));
+        final TestLedgerEntry clean3 = decision("alice", now.minus(1, ChronoUnit.DAYS));
+
+        final Map<UUID, List<LedgerAttestation>> attestations = Map.of(failure.id, List.of(flagged));
+        final List<LedgerEntry> decisions = List.of(failure, clean1, clean2, clean3);
+
+        final TrustScoreComputer.ActorScore baseline = computer.compute(decisions, attestations, now);
+        final TrustScoreComputer.ActorScore forgiven = withForgiveness.compute(decisions, attestations, now);
+
+        assertThat(forgiven.trustScore()).isGreaterThan(baseline.trustScore());
+        assertThat(forgiven.trustScore()).isLessThanOrEqualTo(1.0);
+    }
+
+    @Test
+    void forgiveness_oldFailure_substantiallyForgiven() {
+        // A failure 60 days ago with halfLife=30 → recencyForgiveness ≈ 0.25
+        // Score should be visibly higher than without forgiveness
+        final TrustScoreComputer withForgiveness = new TrustScoreComputer(90,
+                new TrustScoreComputer.ForgivenessParams(true, 3, 30));
+
+        final TestLedgerEntry oldFailure = decision("alice", now.minus(60, ChronoUnit.DAYS));
+        final LedgerAttestation flagged = attestation(oldFailure.id, AttestationVerdict.FLAGGED);
+
+        final Map<UUID, List<LedgerAttestation>> attestations = Map.of(oldFailure.id, List.of(flagged));
+
+        final TrustScoreComputer.ActorScore baseline = computer.compute(List.of(oldFailure), attestations, now);
+        final TrustScoreComputer.ActorScore forgiven = withForgiveness.compute(List.of(oldFailure), attestations, now);
+
+        // recencyForgiveness = 2^(-60/30) = 0.25, frequencyLeniency = 1.0 (1 ≤ 3)
+        // adjustedScore = 0.0 + 0.25 × 1.0 = 0.25 — substantially higher than baseline 0.0
+        assertThat(forgiven.trustScore()).isGreaterThan(baseline.trustScore() + 0.15);
+    }
+
+    @Test
+    void forgiveness_repeatOffender_lessForgiven() {
+        // 5 negative decisions exceeds frequencyThreshold=3 → frequencyLeniency = 0.5
+        // Agent with 2 negatives must be forgiven MORE than agent with 5 negatives (same age)
+        final TrustScoreComputer withForgiveness = new TrustScoreComputer(90,
+                new TrustScoreComputer.ForgivenessParams(true, 3, 30));
+        final Instant failureTime = now.minus(20, ChronoUnit.DAYS);
+
+        // Few negatives: 2 flagged decisions (below threshold)
+        final TestLedgerEntry fail1 = decision("agent-a", failureTime);
+        final TestLedgerEntry fail2 = decision("agent-a", failureTime.minusSeconds(60));
+        final LedgerAttestation f1 = attestation(fail1.id, AttestationVerdict.FLAGGED);
+        final LedgerAttestation f2 = attestation(fail2.id, AttestationVerdict.FLAGGED);
+        final TrustScoreComputer.ActorScore fewNegatives = withForgiveness.compute(
+                List.of(fail1, fail2),
+                Map.of(fail1.id, List.of(f1), fail2.id, List.of(f2)),
+                now);
+
+        // Many negatives: 5 flagged decisions (above threshold)
+        final TestLedgerEntry fail3 = decision("agent-b", failureTime);
+        final TestLedgerEntry fail4 = decision("agent-b", failureTime.minusSeconds(60));
+        final TestLedgerEntry fail5 = decision("agent-b", failureTime.minusSeconds(120));
+        final TestLedgerEntry fail6 = decision("agent-b", failureTime.minusSeconds(180));
+        final TestLedgerEntry fail7 = decision("agent-b", failureTime.minusSeconds(240));
+        final LedgerAttestation f3 = attestation(fail3.id, AttestationVerdict.FLAGGED);
+        final LedgerAttestation f4 = attestation(fail4.id, AttestationVerdict.FLAGGED);
+        final LedgerAttestation f5 = attestation(fail5.id, AttestationVerdict.FLAGGED);
+        final LedgerAttestation f6 = attestation(fail6.id, AttestationVerdict.FLAGGED);
+        final LedgerAttestation f7 = attestation(fail7.id, AttestationVerdict.FLAGGED);
+        final TrustScoreComputer.ActorScore manyNegatives = withForgiveness.compute(
+                List.of(fail3, fail4, fail5, fail6, fail7),
+                Map.of(fail3.id, List.of(f3), fail4.id, List.of(f4),
+                        fail5.id, List.of(f5), fail6.id, List.of(f6), fail7.id, List.of(f7)),
+                now);
+
+        // Agent with few negatives must receive more benefit from forgiveness
+        assertThat(fewNegatives.trustScore()).isGreaterThan(manyNegatives.trustScore());
+    }
+
+    @Test
+    void forgiveness_recentFailure_partiallyForgiven() {
+        // A failure that just happened → recencyForgiveness ≈ 1.0 → full F applied
+        // Score is raised from 0.0 toward 1.0 (not left at 0.0)
+        final TrustScoreComputer withForgiveness = new TrustScoreComputer(90,
+                new TrustScoreComputer.ForgivenessParams(true, 3, 30));
+
+        final TestLedgerEntry recentFailure = decision("alice", now.minus(1, ChronoUnit.HOURS));
+        final LedgerAttestation flagged = attestation(recentFailure.id, AttestationVerdict.FLAGGED);
+
+        final TrustScoreComputer.ActorScore baseline = computer.compute(
+                List.of(recentFailure), Map.of(recentFailure.id, List.of(flagged)), now);
+        final TrustScoreComputer.ActorScore forgiven = withForgiveness.compute(
+                List.of(recentFailure), Map.of(recentFailure.id, List.of(flagged)), now);
+
+        // baseline = 0.0; with forgiveness enabled and recency ≈ 1.0, score must be > 0.0
+        assertThat(forgiven.trustScore()).isGreaterThan(baseline.trustScore());
+        assertThat(forgiven.trustScore()).isGreaterThan(0.5); // recencyF ≈ 1.0, frequencyF = 1.0 → F ≈ 1.0
+    }
 }

@@ -118,6 +118,14 @@ public final class TrustScoreComputer {
             return new ActorScore(0.5, 0, 0, 0, 0, 0);
         }
 
+        // Count negative decisions once — used by frequencyLeniency in forgiveness.
+        // A decision is "negative" if it has at least one FLAGGED or CHALLENGED attestation.
+        final long negativeDecisions = decisions.stream()
+                .filter(e -> attestationsByEntryId.getOrDefault(e.id, List.of()).stream()
+                        .anyMatch(a -> a.verdict == AttestationVerdict.FLAGGED
+                                || a.verdict == AttestationVerdict.CHALLENGED))
+                .count();
+
         double weightedPositive = 0.0;
         double weightedTotal = 0.0;
         int overturnedCount = 0;
@@ -156,7 +164,19 @@ public final class TrustScoreComputer {
                 decisionScore = 0.0;
             }
 
-            weightedPositive += weight * decisionScore;
+            // Forgiveness: raise the effective score for negative decisions based on
+            // recency (old failures fade) and frequency (one-offs forgiven more than patterns).
+            // Clean decisions (score = 1.0) are not affected — the branch is not entered.
+            final double effectiveScore;
+            if (forgiveness.enabled() && decisionScore < 1.0) {
+                final double recencyF = Math.pow(2.0, -(double) ageInDays / forgiveness.halfLifeDays());
+                final double freqF = negativeDecisions <= forgiveness.frequencyThreshold() ? 1.0 : 0.5;
+                effectiveScore = decisionScore + (recencyF * freqF) * (1.0 - decisionScore);
+            } else {
+                effectiveScore = decisionScore;
+            }
+
+            weightedPositive += weight * effectiveScore;
             weightedTotal += weight;
         }
 
