@@ -104,7 +104,6 @@ Reference implementations:
 - Java 21+
 - Quarkus 3.x
 - Hibernate ORM with Panache
-- Flyway
 
 ---
 
@@ -138,22 +137,6 @@ Also add a JDBC driver. H2 is included as optional for dev/test — add it expli
 
 ---
 
-## Base tables (created automatically)
-
-| Migration | Table | Purpose |
-|---|---|---|
-| V1000 | `ledger_entry` | Base audit record — core fields + discriminator |
-| V1000 | `ledger_attestation` | Peer verdicts — FK to `ledger_entry.id` |
-| V1001 | `actor_trust_score` | Nightly EigenTrust scores per actor |
-| V1002 | `ledger_supplement` | Supplement base table |
-| V1002 | `ledger_supplement_compliance` | Compliance fields |
-| V1002 | `ledger_supplement_provenance` | Provenance fields |
-| V1002 | `ledger_supplement_observability` | OTel / causality fields |
-
-**Flyway version numbering convention:** V1000–V1002 are reserved by this extension. Your domain tables go in V1–V999; your subclass join tables go in V1003+.
-
----
-
 ## Quick start — 4 steps
 
 **1. Define your subclass:**
@@ -167,16 +150,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 }
 ```
 
-**2. Add a Flyway migration (V1003 or later):**
-```sql
-CREATE TABLE order_ledger_entry (
-    id              UUID NOT NULL,
-    order_id        UUID NOT NULL,
-    transition_type VARCHAR(100),
-    CONSTRAINT pk_order_ledger_entry PRIMARY KEY (id),
-    CONSTRAINT fk_order_ledger_entry FOREIGN KEY (id) REFERENCES ledger_entry (id)
-);
-```
+**2. Add a migration for your subclass table** (using whichever schema tool your app uses).
 
 **3. Write to the ledger:**
 ```java
@@ -252,7 +226,7 @@ All keys are under `quarkus.ledger`:
 | Doc | Contents |
 |---|---|
 | [Integration Guide](docs/integration-guide.md) | Step-by-step: subclass, migration, repository, capture, supplements, queries, configuration |
-| [Design Document](docs/DESIGN.md) | Architecture decisions, supplement rationale, Flyway conventions, roadmap |
+| [Design Document](docs/DESIGN.md) | Architecture decisions, supplement rationale, roadmap |
 | [Auditability Assessment](docs/AUDITABILITY.md) | 8-axiom self-assessment against ACM FAIR 2025 framework |
 | [Examples](docs/examples.md) | Complete worked example — order processing domain |
 | [Runnable Example — Order Processing](examples/order-processing/) | `mvn quarkus:dev` — order lifecycle with ledger, hash chain, attestations |
