@@ -25,6 +25,12 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  * <li>{@code TrustScore = sum(weight * decisionScore) / sum(weight)}</li>
  * <li>Clamped to [0.0, 1.0]; neutral prior 0.5 when no history</li>
  * </ul>
+ *
+ * <p>
+ * An optional forgiveness mechanism (disabled by default) can reduce the penalty of
+ * negative decisions based on their age ({@code forgiveness.halfLifeDays}) and the
+ * actor's overall negative-decision frequency ({@code forgiveness.frequencyThreshold}).
+ * See {@link ForgivenessParams} for the formula.
  */
 public final class TrustScoreComputer {
 
