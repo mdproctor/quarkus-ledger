@@ -232,12 +232,13 @@ public class OrderResource {
             String previousHash,
             String digest,
             java.time.Instant occurredAt,
+            String correlationId,
             List<LedgerAttestation> attestations) {
 
         LedgerEntryView(final OrderLedgerEntry e, final List<LedgerAttestation> attestations) {
             this(e.id, e.sequenceNumber, e.commandType, e.eventType, e.orderStatus,
                     e.actorId, e.actorRole, e.supplementJson,
-                    e.previousHash, e.digest, e.occurredAt, attestations);
+                    e.previousHash, e.digest, e.occurredAt, e.correlationId, attestations);
         }
     }
 
