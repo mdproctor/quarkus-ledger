@@ -44,7 +44,7 @@ table joining on `id`.
 ```
 ledger_entry (base — V1000)
   ├── work_item_ledger_entry     ← quarkus-tarkus (V100 in Tarkus)
-  └── agent_message_ledger_entry ← quarkus-qhorus (V1003+ in Qhorus)
+  └── agent_message_ledger_entry ← quarkus-qhorus (V1004+ in Qhorus)
 ```
 
 `LedgerAttestation` references `ledger_entry.id` directly — attestations work
@@ -135,9 +135,9 @@ current consumer has needed this — all provide their own typed repo.
 
 | Range | Owner | Purpose |
 |---|---|---|
-| V1000–V1002 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1000–V1003 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
 | V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
-| V1003+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
+| V1004+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 
 This ordering is not optional. The subclass join table has
 `FOREIGN KEY ... REFERENCES ledger_entry (id)`. A subclass migration numbered below

@@ -41,11 +41,11 @@ ledger_entry (base — created by quarkus-ledger V1000)
 </dependency>
 ```
 
-Flyway picks up `quarkus-ledger`'s migrations (V1000, V1001, V1002) automatically from the classpath. Your own migrations start from a lower number (e.g. V1–V9) or a distinct high range (e.g. V2000+). Do not use V1000–V1002.
+Flyway picks up `quarkus-ledger`'s migrations (V1000, V1001, V1002, V1003) automatically from the classpath. Your own migrations start from a lower number (e.g. V1–V9) or a distinct high range (e.g. V2000+). Do not use V1000–V1003.
 
 > **Critical:** your subclass migration must run **after** quarkus-ledger's V1000 (which creates `ledger_entry`), because the subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)`. If you number your subclass migration V5 and the base schema is V1000, Flyway will try to create the FK before the parent table exists and fail with `Table "LEDGER_ENTRY" not found`.
 >
-> Safe numbering: use V1–V999 for your domain tables and **V1003+ for any subclass join tables** (V1000–V1002 are reserved by `quarkus-ledger`). See the [example](../examples/order-processing/) where `V1003__order_ledger_entry.sql` follows this rule.
+> Safe numbering: use V1–V999 for your domain tables and **V1004+ for any subclass join tables** (V1000–V1003 are reserved by `quarkus-ledger`). See the [example](../examples/order-processing/) where `V1004__order_ledger_entry.sql` follows this rule.
 
 ---
 
@@ -116,10 +116,10 @@ Optional fields are handled via supplements — see [§ Supplements](#supplement
 
 ## Step 3 — Write the Flyway migration
 
-Number your subclass migration **after V1002** (the last quarkus-ledger migration). The subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)` — if it runs before V1000 creates `ledger_entry`, the migration fails. V1003 is the safe starting point for the first subclass table.
+Number your subclass migration **after V1003** (the last quarkus-ledger migration). The subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)` — if it runs before V1000 creates `ledger_entry`, the migration fails. V1004 is the safe starting point for the first subclass table.
 
 ```sql
--- V1003__order_ledger_entry.sql
+-- V1004__order_ledger_entry.sql
 -- OrderLedgerEntry subclass table (JPA JOINED inheritance)
 CREATE TABLE order_ledger_entry (
     id           UUID         NOT NULL,
