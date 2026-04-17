@@ -104,7 +104,6 @@ Reference implementations:
 - Java 21+
 - Quarkus 3.x
 - Hibernate ORM with Panache
-- Flyway
 
 ---
 
@@ -138,23 +137,6 @@ Also add a JDBC driver. H2 is included as optional for dev/test — add it expli
 
 ---
 
-## Base tables (created automatically)
-
-When the extension starts, Flyway creates these tables automatically:
-
-| Table | Purpose |
-|---|---|
-| `ledger_entry` | Base audit record — core fields + discriminator |
-| `ledger_attestation` | Peer verdicts |
-| `actor_trust_score` | Nightly EigenTrust scores per actor |
-| `ledger_supplement_compliance` | Compliance supplement fields |
-| `ledger_supplement_provenance` | Provenance supplement fields |
-| `ledger_supplement_observability` | OTel / causality supplement fields |
-
-Your app adds one more table for your domain subclass (see Quick Start step 2).
-
----
-
 ## Quick start — 4 steps
 
 **1. Define your subclass:**
@@ -168,16 +150,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 }
 ```
 
-**2. Add a Flyway migration for your subclass table:**
-```sql
-CREATE TABLE order_ledger_entry (
-    id              UUID NOT NULL,
-    order_id        UUID NOT NULL,
-    transition_type VARCHAR(100),
-    CONSTRAINT pk_order_ledger_entry PRIMARY KEY (id),
-    CONSTRAINT fk_order_ledger_entry FOREIGN KEY (id) REFERENCES ledger_entry (id)
-);
-```
+**2. Add a migration for your subclass table** (using whichever schema tool your app uses).
 
 **3. Write to the ledger:**
 ```java
