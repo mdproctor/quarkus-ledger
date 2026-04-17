@@ -3,9 +3,11 @@ package io.quarkiverse.ledger.examples.order.api;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -186,6 +188,32 @@ public class OrderResource {
         ledgerRepo.saveAttestation(attestation);
 
         return Response.status(Response.Status.CREATED).build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Audit queries
+    // -------------------------------------------------------------------------
+
+    /**
+     * Return all ledger entries for a given actor within a time window.
+     *
+     * <p>
+     * Example: {@code GET /orders/audit?actorId=alice&from=2020-01-01T00:00:00Z&to=2099-12-31T23:59:59Z}
+     */
+    @GET
+    @Path("/audit")
+    @Produces(APPLICATION_JSON)
+    public List<Object> auditByActor(
+            @QueryParam("actorId") final String actorId,
+            @QueryParam("from") final String from,
+            @QueryParam("to") final String to) {
+        return ledgerRepo.findByActorId(actorId, Instant.parse(from), Instant.parse(to))
+                .stream()
+                .map(e -> (Object) Map.of(
+                        "id", String.valueOf(e.id),
+                        "actorId", e.actorId != null ? e.actorId : "",
+                        "occurredAt", e.occurredAt != null ? e.occurredAt.toString() : ""))
+                .collect(Collectors.toList());
     }
 
     // -------------------------------------------------------------------------

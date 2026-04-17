@@ -3,6 +3,8 @@ package io.quarkiverse.ledger.examples.order;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import java.util.List;
 
@@ -170,6 +172,23 @@ class OrderLedgerIT {
                 .then()
                 .statusCode(200)
                 .body("[1].supplementJson", containsString("No longer needed"));
+    }
+
+    @Test
+    void findByActorId_returnsAllOrdersForActor() {
+        final String actor = "it-audit-actor-1";
+        placeOrder(actor, "10.00");
+        placeOrder(actor, "20.00");
+        placeOrder(actor, "30.00");
+        placeOrder("it-audit-actor-2", "99.00");
+
+        given()
+                .when().get(BASE + "/audit?actorId=" + actor
+                        + "&from=2020-01-01T00:00:00Z&to=2099-12-31T23:59:59Z")
+                .then()
+                .statusCode(200)
+                .body("$", hasSize(greaterThanOrEqualTo(3)))
+                .body("actorId", everyItem(equalTo(actor)));
     }
 
     private String placeOrder(final String customerId, final String total) {
