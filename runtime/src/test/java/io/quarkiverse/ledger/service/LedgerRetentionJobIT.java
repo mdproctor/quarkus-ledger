@@ -17,7 +17,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.LedgerRetentionJob;
 import io.quarkiverse.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
@@ -38,12 +38,15 @@ class LedgerRetentionJobIT {
     @Inject
     LedgerRetentionJob retentionJob;
 
+    @Inject
+    LedgerEntryRepository repo;
+
     @Test
     @Transactional
     void oldEntries_archivedAndDeleted() {
         final UUID subjectId = UUID.randomUUID();
-        final TestEntry first = chainedEntry(subjectId, 1, now().minus(60, ChronoUnit.DAYS), null);
-        chainedEntry(subjectId, 2, now().minus(45, ChronoUnit.DAYS), first.digest);
+        chainedEntry(subjectId, 1, now().minus(60, ChronoUnit.DAYS));
+        chainedEntry(subjectId, 2, now().minus(45, ChronoUnit.DAYS));
 
         retentionJob.runRetention();
 
@@ -55,7 +58,7 @@ class LedgerRetentionJobIT {
     @Transactional
     void newEntries_notDeleted() {
         final UUID subjectId = UUID.randomUUID();
-        chainedEntry(subjectId, 1, now().minus(5, ChronoUnit.DAYS), null);
+        chainedEntry(subjectId, 1, now().minus(5, ChronoUnit.DAYS));
 
         retentionJob.runRetention();
 
@@ -67,7 +70,7 @@ class LedgerRetentionJobIT {
     @Transactional
     void archiveRecord_containsEntryJson() {
         final UUID subjectId = UUID.randomUUID();
-        chainedEntry(subjectId, 1, now().minus(40, ChronoUnit.DAYS), null);
+        chainedEntry(subjectId, 1, now().minus(40, ChronoUnit.DAYS));
 
         retentionJob.runRetention();
 
@@ -83,7 +86,7 @@ class LedgerRetentionJobIT {
     @Transactional
     void attestations_deletedBeforeEntry_noFkViolation() {
         final UUID subjectId = UUID.randomUUID();
-        final TestEntry e = chainedEntry(subjectId, 1, now().minus(40, ChronoUnit.DAYS), null);
+        final TestEntry e = chainedEntry(subjectId, 1, now().minus(40, ChronoUnit.DAYS));
         seedAttestation(e.id, subjectId, AttestationVerdict.SOUND);
 
         // FK ordering wrong → would throw constraint violation
@@ -97,8 +100,8 @@ class LedgerRetentionJobIT {
     @Transactional
     void mixedAges_subjectNotArchived() {
         final UUID subjectId = UUID.randomUUID();
-        final TestEntry old = chainedEntry(subjectId, 1, now().minus(60, ChronoUnit.DAYS), null);
-        chainedEntry(subjectId, 2, now().minus(5, ChronoUnit.DAYS), old.digest);
+        chainedEntry(subjectId, 1, now().minus(60, ChronoUnit.DAYS));
+        chainedEntry(subjectId, 2, now().minus(5, ChronoUnit.DAYS));
 
         retentionJob.runRetention();
 
@@ -110,7 +113,7 @@ class LedgerRetentionJobIT {
     @Transactional
     void brokenChain_subjectSkipped() {
         final UUID subjectId = UUID.randomUUID();
-        final TestEntry e = chainedEntry(subjectId, 1, now().minus(50, ChronoUnit.DAYS), null);
+        final TestEntry e = chainedEntry(subjectId, 1, now().minus(50, ChronoUnit.DAYS));
         // Tamper: corrupt the digest so chain verification fails
         e.digest = "000000000000000000000000000000000000000000000000000000000000dead";
         e.persist();
@@ -122,7 +125,7 @@ class LedgerRetentionJobIT {
     }
 
     private TestEntry chainedEntry(final UUID subjectId, final int seq,
-            final Instant occurredAt, final String previousHash) {
+            final Instant occurredAt) {
         final TestEntry e = new TestEntry();
         e.subjectId = subjectId;
         e.sequenceNumber = seq;
@@ -131,9 +134,7 @@ class LedgerRetentionJobIT {
         e.actorType = ActorType.AGENT;
         e.actorRole = "Classifier";
         e.occurredAt = occurredAt;
-        e.digest = LedgerHashChain.compute(previousHash, e);
-        e.persist();
-        return e;
+        return (TestEntry) repo.save(e);
     }
 
     private void seedAttestation(final UUID entryId, final UUID subjectId,
