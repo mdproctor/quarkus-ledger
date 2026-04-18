@@ -49,6 +49,9 @@ public class LedgerRetentionJob {
     @Inject
     LedgerConfig config;
 
+    @Inject
+    LedgerVerificationService verificationService;
+
     /**
      * Scheduled entry point — runs every 24 hours.
      * Delegates to {@link #runRetention()} when retention is enabled.
@@ -106,7 +109,7 @@ public class LedgerRetentionJob {
                 .toList();
 
         // 1. Verify chain integrity — skip subject if broken
-        if (!LedgerHashChain.verify(sorted)) {
+        if (!verificationService.verify(subjectId)) {
             throw new IllegalStateException(
                     "Hash chain integrity check failed for subject " + subjectId);
         }
