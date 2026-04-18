@@ -110,6 +110,12 @@ public final class LedgerMerkleTree {
     /**
      * Generate an inclusion proof for the entry at 0-based index {@code k} in a tree of size {@code n}.
      * {@code leafHashes} must be the {@code digest} values of all entries in sequence order.
+     *
+     * <p>
+     * <strong>Note:</strong> The {@code treeRoot} field in the returned {@link InclusionProof} is
+     * intentionally empty ({@code ""}). Callers must supply the authoritative root — typically retrieved
+     * from the stored frontier via {@link #treeRoot(java.util.List)} — and wrap the result in a new
+     * {@link InclusionProof} with that root before verification or storage.
      */
     public static InclusionProof inclusionProof(
             final UUID entryId,
@@ -120,14 +126,8 @@ public final class LedgerMerkleTree {
         final List<ProofStep> steps = new ArrayList<>();
         computeProof(k, n, leafHashes, steps);
         final String leafHash = leafHashes.get(k);
-        // Compute root from all leaf hashes
-        List<LedgerMerkleFrontier> frontier = new ArrayList<>();
-        final UUID dummy = UUID.randomUUID();
-        for (final String lh : leafHashes) {
-            frontier = append(lh, frontier, dummy);
-        }
-        final String root = treeRoot(frontier);
-        return new InclusionProof(entryId, k, n, leafHash, List.copyOf(steps), root);
+        // treeRoot is intentionally empty — callers supply the authoritative root
+        return new InclusionProof(entryId, k, n, leafHash, List.copyOf(steps), "");
     }
 
     /** Verify an inclusion proof against a known tree root. No DB access required. */

@@ -93,6 +93,7 @@ quarkus-ledger/
 │       │   ├── LedgerEntry.java             — abstract base entity (JOINED inheritance)
 │       │   ├── LedgerAttestation.java       — peer attestation entity
 │       │   ├── ActorTrustScore.java         — nightly-computed reputation entity
+│       │   ├── LedgerMerkleFrontier.java    — Merkle frontier node entity (log₂(N) rows per subject)
 │       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION
 │       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM
 │       │   └── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
@@ -101,7 +102,9 @@ quarkus-ledger/
 │       │   ├── ActorTrustScoreRepository.java — SPI
 │       │   └── jpa/                         — Panache implementations
 │       └── service/
-│           ├── LedgerHashChain.java         — SHA-256 chain utility (pure static)
+│           ├── LedgerMerkleTree.java        — Merkle Mountain Range algorithm (pure static)
+│           ├── LedgerVerificationService.java — treeRoot / inclusionProof / verify (CDI bean)
+│           ├── LedgerMerklePublisher.java   — Ed25519 signed tlog-checkpoint (opt-in CDI bean)
 │           ├── TrustScoreComputer.java      — EigenTrust algorithm (pure Java)
 │           └── TrustScoreJob.java           — @Scheduled nightly recomputation
 │       └── supplement/
