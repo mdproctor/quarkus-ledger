@@ -67,6 +67,53 @@ public interface LedgerConfig {
      */
     RetentionConfig retention();
 
+    /**
+     * Merkle tree settings — inclusion proofs and optional external publishing.
+     *
+     * @return the merkle sub-configuration
+     */
+    MerkleConfig merkle();
+
+    /** Merkle Mountain Range and external publishing settings. */
+    interface MerkleConfig {
+
+        /**
+         * External publishing settings. Publishing is inactive when {@code url} is absent.
+         *
+         * @return the publish sub-configuration
+         */
+        MerklePublishConfig publish();
+
+        /** External checkpoint publishing settings. */
+        interface MerklePublishConfig {
+
+            /**
+             * POST endpoint to receive signed tlog-checkpoint on each frontier update.
+             * When absent, the publisher is inactive — zero overhead.
+             *
+             * @return the publish URL, if configured
+             */
+            java.util.Optional<String> url();
+
+            /**
+             * Path to an Ed25519 private key PEM file (PKCS#8 format).
+             * Required when {@link #url()} is present.
+             *
+             * @return path to the private key file
+             */
+            java.util.Optional<String> privateKey();
+
+            /**
+             * Opaque identifier for the public key. Included in each checkpoint so
+             * receivers can locate the corresponding public key for verification.
+             *
+             * @return the key identifier
+             */
+            @WithDefault("default")
+            String keyId();
+        }
+    }
+
     /** Retention enforcement settings. */
     interface RetentionConfig {
 
