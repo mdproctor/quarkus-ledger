@@ -34,7 +34,7 @@ every consumer; it must never surprise them.
 | 1. Integrity | ✅ Strong | — (already met) |
 | 2. Coverage | ⚠️ Partial | CDI interceptors (not yet planned) |
 | 3. Temporal Coherence | ✅ Addressed | `causedByEntryId` core field + `findCausedBy()` (#10) |
-| 4. Verifiability | ⚠️ Partial | Hash chain verification endpoint (medium-term) |
+| 4. Verifiability | ✅ Addressed | Merkle tree upgrade (#11) — O(log N) inclusion proofs + Ed25519 publishing |
 | 5. Accessibility | ✅ Addressed | EU AI Act Art.12 audit query API (#9) |
 | 6. Resource Proportionality | ✅ Addressed | Retention config (#9) |
 | 7. Privacy Compatibility | ❌ Gap | Pseudonymisation strategy (not yet designed) |
@@ -162,7 +162,7 @@ one-hop traversal; recursive chain reconstruction is application-level.
 
 ---
 
-### 4. Verifiability ⚠️ Partial
+### 4. Verifiability ✅ Addressed (#11)
 
 **What it means:**
 Any party — including one without access to the producing system's internals — can
@@ -183,18 +183,17 @@ verification, but it requires the caller to fetch the entries from the database 
 invoke the method directly. There is no HTTP endpoint, no service method exposed via
 CDI, and no documentation of how a third party would perform verification.
 
-**Gap:**
-Verification is an in-process operation only. An external auditor cannot verify the
-chain without: direct database access, knowledge of the `LedgerEntry` schema, and
-the ability to call the `verify()` method. The chain is tamper-evident internally but
-not independently verifiable externally.
+**Status:** ✅ Addressed (#11)
 
-**How to incorporate (without breaking existing consumers):**
-A `LedgerVerificationService` CDI bean (auto-activated, no consumer configuration)
-exposing `verify(subjectId)` and `verifyAll()` methods. Consumers can optionally expose
-this via a REST endpoint. This mirrors how `LedgerHashChain` is already structured —
-pure logic, no side effects. Not yet on the roadmap; would complement the Article 12
-audit query API (#4).
+**Addressed by (#11):**
+- `LedgerMerkleTree` — RFC 9162 Merkle Mountain Range. Leaf hash: `SHA-256(0x00 | canonicalFields)`.
+  Internal node: `SHA-256(0x01 | left | right)`. Stored frontier: ≤ log₂(N) rows per subject.
+- `LedgerVerificationService` — CDI bean. `treeRoot(subjectId)`, `inclusionProof(entryId)`,
+  `verify(subjectId)`. Auto-activated; no consumer configuration required.
+- `LedgerMerklePublisher` — opt-in Ed25519-signed tlog-checkpoint publishing.
+  Configure `quarkus.ledger.merkle.publish.url` to activate. Disabled by default.
+- An external auditor needs only: a published checkpoint + an `InclusionProof` record.
+  No DB access, no schema knowledge, no trust in the operator required.
 
 ---
 
@@ -355,7 +354,7 @@ that closing each gap satisfies the zero-complexity constraint for existing cons
 
 | Gap | Roadmap item | Zero-complexity? |
 |---|---|---|
-| No verification endpoint (Axiom 4) | Hash chain verification helper (medium-term) | ✅ Additive CDI bean |
+| No verification endpoint (Axiom 4) | Merkle tree upgrade (#11) | ✅ LedgerVerificationService CDI bean, auto-activated |
 | No cross-subject causality (Axiom 3) | Causality field `causedBy` (roadmap #5) | ✅ Nullable field, null by default |
 | No auditor query API (Axiom 5) | EU AI Act Art.12 compliance surface (#9) | ✅ findByActorId/Role/TimeRange — Instant params, ASC order |
 | No retention policy (Axiom 6) | EU AI Act Art.12 compliance surface (#9) | ✅ retention.* config, disabled by default |

@@ -157,6 +157,22 @@ etc.). The chain covers provenance and timing; domain labels do not participate 
 tamper detection. This keeps the chain domain-agnostic — the same `LedgerHashChain`
 utility works for any subclass.
 
+## Merkle Mountain Range
+
+Replaces the linear hash chain. Per-subject stored frontier gives O(log N) inclusion proofs.
+
+**Hash functions (RFC 9162 domain separation):**
+- Leaf: `SHA-256(0x00 | subjectId|seqNum|entryType|actorId|actorRole|occurredAt)`
+- Internal node: `SHA-256(0x01 | left_bytes | right_bytes)` — raw 32-byte values, not hex
+
+**Frontier:** `ledger_merkle_frontier` table stores at most `Integer.bitCount(N)` rows per subject after N entries. The tree root = fold frontier ASC by level.
+
+**`LedgerMerkleTree`** (pure static utility) — `leafHash()`, `internalHash()`, `append()`, `treeRoot()`, `inclusionProof()`, `verifyProof()`. No CDI, no side effects.
+
+**`LedgerVerificationService`** (`@ApplicationScoped`) — `treeRoot(UUID)`, `inclusionProof(UUID)`, `verify(UUID)`. Auto-activated.
+
+**External publishing** (opt-in) — `LedgerMerklePublisher` posts Ed25519-signed tlog-checkpoints to `quarkus.ledger.merkle.publish.url` on each frontier update. Disabled by default.
+
 ### `@ConfigRoot` alongside `@ConfigMapping`
 
 `LedgerConfig` carries both annotations. `@ConfigMapping` provides the SmallRye nested
