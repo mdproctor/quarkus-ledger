@@ -78,7 +78,22 @@
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -pl runtime -Dtest=CausalityQueryIT -q)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -pl runtime -Dtest=CausalityQueryIT)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -pl runtime)",
-      "Bash(python3 -c \"import secrets; print\\(secrets.token_hex\\(3\\)\\)\")"
+      "Bash(python3 -c \"import secrets; print\\(secrets.token_hex\\(3\\)\\)\")",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean compile -pl runtime -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerMerkleTreeTest)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test-compile -pl runtime -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerMerkleTreeTest -Dexclude='**/LedgerHashChainTest.java,**/LedgerRetentionJobIT.java')",
+      "mcp__intellij__create_new_file",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerVerificationServiceIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerVerificationServiceIT -Dexcludes=\"**/LedgerMerklePublisherTest.java\")",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dexcludes=\"**/LedgerMerklePublisherTest.java\")",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerMerklePublisherTest)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerRetentionJobIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean install -DskipTests -f /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-merkle/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn install)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl examples/merkle-verification)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn -f /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-merkle/examples/merkle-verification/pom.xml test)",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; cat \"{}\"')"
     ]
   }
 }

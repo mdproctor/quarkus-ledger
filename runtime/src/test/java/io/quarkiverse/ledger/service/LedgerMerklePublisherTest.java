@@ -20,26 +20,26 @@ class LedgerMerklePublisherTest {
 
     @Test
     void buildCheckpoint_firstLineIsOrigin() {
-        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 5, FAKE_ROOT, "key-01");
+        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 5, FAKE_ROOT);
         assertThat(cp.split("\n")[0]).isEqualTo("io.quarkiverse.ledger/v1");
     }
 
     @Test
     void buildCheckpoint_secondLineIsSubjectId() {
         UUID sub = UUID.randomUUID();
-        String cp = LedgerMerklePublisher.buildCheckpoint(sub, 5, FAKE_ROOT, "key-01");
+        String cp = LedgerMerklePublisher.buildCheckpoint(sub, 5, FAKE_ROOT);
         assertThat(cp.split("\n")[1]).isEqualTo(sub.toString());
     }
 
     @Test
     void buildCheckpoint_thirdLineIsTreeSize() {
-        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 42, FAKE_ROOT, "key-01");
+        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 42, FAKE_ROOT);
         assertThat(cp.split("\n")[2]).isEqualTo("42");
     }
 
     @Test
     void buildCheckpoint_fourthLineIsBase64Of32Bytes() {
-        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 1, FAKE_ROOT, "key-01");
+        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 1, FAKE_ROOT);
         String line4 = cp.split("\n")[3];
         byte[] decoded = Base64.getDecoder().decode(line4);
         assertThat(decoded).hasSize(32);
@@ -47,7 +47,7 @@ class LedgerMerklePublisherTest {
 
     @Test
     void buildCheckpoint_fifthLineIsEmpty() {
-        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 1, FAKE_ROOT, "key-01");
+        String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 1, FAKE_ROOT);
         String[] lines = cp.split("\n", -1);
         assertThat(lines).hasSizeGreaterThanOrEqualTo(5);
         assertThat(lines[4]).isEmpty();

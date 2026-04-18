@@ -14,6 +14,7 @@ import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
@@ -42,6 +43,9 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     @Inject
+    LedgerConfig ledgerConfig;
+
+    @Inject
     LedgerMerklePublisher merklePublisher;
 
     /** {@inheritDoc} */
@@ -53,29 +57,35 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         if (entry.occurredAt == null) {
             entry.occurredAt = java.time.Instant.now();
         }
-        entry.digest = LedgerMerkleTree.leafHash(entry);
+
+        if (ledgerConfig.hashChain().enabled()) {
+            entry.digest = LedgerMerkleTree.leafHash(entry);
+        }
         entry.persist();
 
-        final List<LedgerMerkleFrontier> currentFrontier = LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
+        if (ledgerConfig.hashChain().enabled()) {
+            final List<LedgerMerkleFrontier> currentFrontier = LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
 
-        final List<LedgerMerkleFrontier> newFrontier = LedgerMerkleTree.append(entry.digest, currentFrontier, entry.subjectId);
+            final List<LedgerMerkleFrontier> newFrontier = LedgerMerkleTree.append(entry.digest, currentFrontier,
+                    entry.subjectId);
 
-        final Set<Integer> newLevels = newFrontier.stream()
-                .map(n -> n.level)
-                .collect(Collectors.toSet());
-        for (final LedgerMerkleFrontier old : currentFrontier) {
-            if (!newLevels.contains(old.level)) {
-                LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, old.level);
+            final Set<Integer> newLevels = newFrontier.stream()
+                    .map(n -> n.level)
+                    .collect(Collectors.toSet());
+            for (final LedgerMerkleFrontier old : currentFrontier) {
+                if (!newLevels.contains(old.level)) {
+                    LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, old.level);
+                }
             }
-        }
 
-        for (final LedgerMerkleFrontier node : newFrontier) {
-            LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, node.level);
-            node.persist();
-        }
+            for (final LedgerMerkleFrontier node : newFrontier) {
+                LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, node.level);
+                node.persist();
+            }
 
-        final String newRoot = LedgerMerkleTree.treeRoot(newFrontier);
-        merklePublisher.publish(entry.subjectId, entry.sequenceNumber, newRoot);
+            final String newRoot = LedgerMerkleTree.treeRoot(newFrontier);
+            merklePublisher.publish(entry.subjectId, entry.sequenceNumber, newRoot);
+        }
 
         return entry;
     }
