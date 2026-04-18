@@ -20,3 +20,4 @@ target/
 *-runner.exe
 *.so
 *.dylib
+.worktrees/
