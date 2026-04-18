@@ -5,7 +5,7 @@
 --   subjectId    — the aggregate this entry belongs to (WorkItem UUID, Channel UUID, etc.)
 --   dtype        — JPA discriminator; identifies the concrete subclass (e.g. WORK_ITEM, AGENT_MESSAGE)
 --   sequence_number — per-subject ordering (1-based)
---   hash chain   — previous_hash + digest implement Certificate Transparency tamper detection
+--   digest       — Merkle leaf hash: SHA-256(0x00 | canonicalFields). Chain via ledger_merkle_frontier.
 --
 -- Note: Optional supplement fields (plan_ref, rationale, decision_context, etc.) are present here
 -- for schema compatibility. V1002 migrates these to supplement tables and drops them.
@@ -33,7 +33,6 @@ CREATE TABLE ledger_entry (
     source_entity_id     VARCHAR(255),
     source_entity_type   VARCHAR(255),
     source_entity_system VARCHAR(100),
-    previous_hash        VARCHAR(64),
     digest               VARCHAR(64),
     occurred_at          TIMESTAMP       NOT NULL,
     CONSTRAINT pk_ledger_entry PRIMARY KEY (id)
@@ -62,3 +61,14 @@ CREATE TABLE ledger_attestation (
 
 CREATE INDEX idx_ledger_attestation_entry   ON ledger_attestation (ledger_entry_id);
 CREATE INDEX idx_ledger_attestation_subject ON ledger_attestation (subject_id);
+
+CREATE TABLE ledger_merkle_frontier (
+    id          UUID        NOT NULL,
+    subject_id  UUID        NOT NULL,
+    level       INTEGER     NOT NULL,
+    hash        VARCHAR(64) NOT NULL,
+    CONSTRAINT pk_ledger_merkle_frontier PRIMARY KEY (id),
+    CONSTRAINT uq_merkle_frontier_subject_level UNIQUE (subject_id, level)
+);
+
+CREATE INDEX idx_merkle_frontier_subject ON ledger_merkle_frontier (subject_id);
