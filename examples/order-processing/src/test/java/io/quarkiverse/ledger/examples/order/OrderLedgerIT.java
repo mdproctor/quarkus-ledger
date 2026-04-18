@@ -80,7 +80,7 @@ class OrderLedgerIT {
     }
 
     @Test
-    void hashChain_secondEntryLinkedToFirst() {
+    void hashChain_bothEntriesHaveDistinctNonNullDigests() {
         final String orderId = placeOrder("it-dave-1", "30.00");
         given().when().put(BASE + "/" + orderId + "/ship?actor=warehouse").then().statusCode(200);
 
@@ -88,13 +88,10 @@ class OrderLedgerIT {
                 .when().get(BASE + "/" + orderId + "/ledger")
                 .then().statusCode(200)
                 .extract().jsonPath().getList("digest");
-        final List<String> prevHashes = given()
-                .when().get(BASE + "/" + orderId + "/ledger")
-                .then().statusCode(200)
-                .extract().jsonPath().getList("previousHash");
 
-        assertThat(prevHashes.get(0)).isNull();
-        assertThat(prevHashes.get(1)).isEqualTo(digests.get(0));
+        assertThat(digests.get(0)).isNotNull();
+        assertThat(digests.get(1)).isNotNull();
+        assertThat(digests.get(0)).isNotEqualTo(digests.get(1));
     }
 
     @Test

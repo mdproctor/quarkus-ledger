@@ -15,7 +15,8 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Application service for recording AI decisions and querying the audit log.
@@ -51,9 +52,11 @@ public class AuditService {
         cs.contestationUri = "https://decisions.example.com/challenge/" + subjectId;
         cs.humanOverrideAvailable = true;
         e.attach(cs);
-        e.previousHash = null;
-        e.digest = LedgerHashChain.compute(null, e);
+        e.digest = LedgerMerkleTree.leafHash(e);
         e.persist();
+        final java.util.List<LedgerMerkleFrontier> newFrontier =
+                LedgerMerkleTree.append(e.digest, java.util.List.of(), e.subjectId);
+        newFrontier.forEach(n -> n.persist());
         return e;
     }
 

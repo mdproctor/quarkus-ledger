@@ -12,7 +12,8 @@ import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Simulates an AI decision service that records each decision with a full
@@ -35,7 +36,6 @@ public class DecisionService {
         final List<DecisionLedgerEntry> existing = DecisionLedgerEntry
                 .list("subjectId = ?1 order by sequenceNumber desc", subjectUuid);
         final int nextSeq = existing.isEmpty() ? 1 : existing.get(0).sequenceNumber + 1;
-        final String previousHash = existing.isEmpty() ? null : existing.get(0).digest;
 
         final DecisionLedgerEntry entry = new DecisionLedgerEntry();
         entry.subjectId = subjectUuid;
@@ -58,10 +58,16 @@ public class DecisionService {
         cs.decisionContext = inputContext;
         entry.attach(cs);
 
-        entry.previousHash = previousHash;
-        entry.digest = LedgerHashChain.compute(previousHash, entry);
-
+        entry.digest = LedgerMerkleTree.leafHash(entry);
         entry.persist();
+
+        final List<LedgerMerkleFrontier> current =
+                LedgerMerkleFrontier.findBySubjectId(subjectUuid);
+        final List<LedgerMerkleFrontier> newFrontier =
+                LedgerMerkleTree.append(entry.digest, current, subjectUuid);
+        LedgerMerkleFrontier.delete("subjectId", subjectUuid);
+        newFrontier.forEach(n -> n.persist());
+
         return entry;
     }
 
