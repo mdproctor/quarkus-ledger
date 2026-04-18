@@ -11,11 +11,14 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
+import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Hibernate ORM / Panache implementation of {@link LedgerEntryRepository}.
@@ -38,8 +41,29 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     /** {@inheritDoc} */
     @Override
+    @Transactional
     public LedgerEntry save(final LedgerEntry entry) {
+        entry.digest = LedgerMerkleTree.leafHash(entry);
         entry.persist();
+
+        final List<LedgerMerkleFrontier> currentFrontier = LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
+
+        final List<LedgerMerkleFrontier> newFrontier = LedgerMerkleTree.append(entry.digest, currentFrontier, entry.subjectId);
+
+        final Set<Integer> newLevels = newFrontier.stream()
+                .map(n -> n.level)
+                .collect(Collectors.toSet());
+        for (final LedgerMerkleFrontier old : currentFrontier) {
+            if (!newLevels.contains(old.level)) {
+                LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, old.level);
+            }
+        }
+
+        for (final LedgerMerkleFrontier node : newFrontier) {
+            LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, node.level);
+            node.persist();
+        }
+
         return entry;
     }
 
