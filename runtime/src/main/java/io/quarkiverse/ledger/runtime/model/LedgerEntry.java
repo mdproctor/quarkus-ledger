@@ -57,10 +57,8 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
  *
  * <h2>Hash chain</h2>
  * <p>
- * The canonical form for SHA-256 chaining uses only the six core fields:
- * {@code subjectId|seqNum|entryType|actorId|actorRole|occurredAt}.
- * Supplement fields are deliberately excluded — they are enrichment, not tamper-evidence
- * targets. Subclass-specific fields are also excluded.
+ * The {@code digest} field holds the RFC 9162 leaf hash — {@code SHA-256(0x00 | canonical fields)}.
+ * Chain integrity is maintained by the Merkle Mountain Range in {@link LedgerMerkleFrontier}.
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -112,13 +110,6 @@ public abstract class LedgerEntry extends PanacheEntityBase {
     public Instant occurredAt;
 
     // ── Hash chain ────────────────────────────────────────────────────────────
-
-    /**
-     * SHA-256 digest of the previous entry for this subject.
-     * {@code null} for the first entry (no previous entry exists).
-     */
-    @Column(name = "previous_hash")
-    public String previousHash;
 
     /**
      * SHA-256 digest of this entry's canonical content chained from {@code previousHash}.
