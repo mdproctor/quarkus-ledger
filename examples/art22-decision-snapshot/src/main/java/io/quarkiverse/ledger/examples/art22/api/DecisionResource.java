@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.Response;
 import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
 import io.quarkiverse.ledger.examples.art22.service.DecisionService;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 @Path("/decisions")
 @Produces(MediaType.APPLICATION_JSON)
@@ -43,7 +43,9 @@ public class DecisionResource {
     @Path("/{subjectId}/ledger/verify")
     public Map<String, Object> verify(@PathParam("subjectId") final String subjectId) {
         final List<DecisionLedgerEntry> entries = decisionService.history(subjectId);
-        return Map.of("intact", LedgerHashChain.verify(entries), "entries", entries.size());
+        final boolean intact = entries.stream()
+                .allMatch(e -> e.digest != null && e.digest.equals(LedgerMerkleTree.leafHash(e)));
+        return Map.of("intact", intact, "entries", entries.size());
     }
 
     private Map<String, Object> toView(final DecisionLedgerEntry e) {
