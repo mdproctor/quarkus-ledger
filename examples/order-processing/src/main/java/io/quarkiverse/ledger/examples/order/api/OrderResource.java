@@ -28,7 +28,7 @@ import io.quarkiverse.ledger.examples.order.service.OrderService;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * REST API for the order-processing example.
@@ -148,7 +148,8 @@ public class OrderResource {
     @Path("/{id}/ledger/verify")
     public Map<String, Object> verifyChain(@PathParam("id") final UUID orderId) {
         final List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
-        final boolean intact = LedgerHashChain.verify(entries);
+        final boolean intact = entries.stream()
+                .allMatch(e -> e.digest != null && e.digest.equals(LedgerMerkleTree.leafHash(e)));
         return Map.of(
                 "intact", intact,
                 "entries", entries.size(),
@@ -229,7 +230,6 @@ public class OrderResource {
             String actorId,
             String actorRole,
             String supplementJson,
-            String previousHash,
             String digest,
             java.time.Instant occurredAt,
             String correlationId,
@@ -238,7 +238,7 @@ public class OrderResource {
         LedgerEntryView(final OrderLedgerEntry e, final List<LedgerAttestation> attestations) {
             this(e.id, e.sequenceNumber, e.commandType, e.eventType, e.orderStatus,
                     e.actorId, e.actorRole, e.supplementJson,
-                    e.previousHash, e.digest, e.occurredAt, e.correlationId, attestations);
+                    e.digest, e.occurredAt, e.correlationId, attestations);
         }
     }
 

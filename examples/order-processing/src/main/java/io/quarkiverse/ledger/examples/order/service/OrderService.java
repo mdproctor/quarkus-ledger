@@ -19,7 +19,8 @@ import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Order domain service.
@@ -120,7 +121,6 @@ public class OrderService {
 
         final Optional<OrderLedgerEntry> latest = ledgerRepo.findLatestByOrderId(order.id);
         final int nextSeq = latest.map(e -> e.sequenceNumber + 1).orElse(1);
-        final String previousHash = latest.map(e -> e.digest).orElse(null);
 
         final OrderLedgerEntry entry = new OrderLedgerEntry();
         entry.subjectId = order.id;
@@ -144,11 +144,20 @@ public class OrderService {
         }
 
         if (ledgerConfig.hashChain().enabled()) {
-            entry.previousHash = previousHash;
-            entry.digest = LedgerHashChain.compute(previousHash, entry);
+            entry.digest = LedgerMerkleTree.leafHash(entry);
         }
 
         ledgerRepo.save(entry);
+
+        if (ledgerConfig.hashChain().enabled()) {
+            final java.util.List<LedgerMerkleFrontier> current =
+                    LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
+            final java.util.List<LedgerMerkleFrontier> newFrontier =
+                    LedgerMerkleTree.append(entry.digest, current, entry.subjectId);
+            LedgerMerkleFrontier.delete("subjectId", entry.subjectId);
+            newFrontier.forEach(n -> n.persist());
+        }
+
         return entry;
     }
 }
