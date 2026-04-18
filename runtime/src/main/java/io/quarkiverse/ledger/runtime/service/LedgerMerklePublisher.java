@@ -48,7 +48,7 @@ public class LedgerMerklePublisher {
      */
     public static String buildCheckpoint(
             final UUID subjectId, final int treeSize,
-            final String treeRoot, final String keyId) {
+            final String treeRoot) {
 
         final byte[] rootBytes = hexToBytes(treeRoot);
         return "io.quarkiverse.ledger/v1\n"
@@ -80,7 +80,7 @@ public class LedgerMerklePublisher {
 
         try {
             final String keyId = publish.keyId();
-            final String checkpoint = buildCheckpoint(subjectId, treeSize, treeRoot, keyId);
+            final String checkpoint = buildCheckpoint(subjectId, treeSize, treeRoot);
             final PrivateKey privateKey = loadPrivateKey(publish.privateKey()
                     .orElseThrow(() -> new IllegalStateException(
                             "quarkus.ledger.merkle.publish.private-key required when url is set")));

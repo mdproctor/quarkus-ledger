@@ -31,6 +31,7 @@ public class LedgerVerificationService {
     /**
      * Generate an inclusion proof for the given entry.
      * Fetches all leaf hashes for the subject from the database (ordered by sequenceNumber).
+     * The returned proof carries the authoritative root from the stored frontier.
      */
     @Transactional
     public InclusionProof inclusionProof(final UUID entryId) {
@@ -47,10 +48,10 @@ public class LedgerVerificationService {
                 .toList();
 
         final int k = entry.sequenceNumber - 1;
+        final String root = treeRoot(entry.subjectId); // authoritative root from frontier
         final InclusionProof proof = LedgerMerkleTree.inclusionProof(
                 entryId, k, leafHashes.size(), leafHashes);
 
-        final String root = treeRoot(entry.subjectId);
         return new InclusionProof(entryId, k, leafHashes.size(),
                 proof.leafHash(), proof.siblings(), root);
     }

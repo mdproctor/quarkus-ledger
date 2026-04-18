@@ -152,10 +152,12 @@ public interface LedgerConfig {
 
         /**
          * When {@code true}, each {@link io.quarkiverse.ledger.runtime.model.LedgerEntry} carries
-         * a SHA-256 digest chained to the digest of the previous entry for the same subject.
-         * Implements the Certificate Transparency pattern for offline tamper detection.
+         * a Merkle leaf hash ({@code SHA-256(0x00 | canonical fields)}) and the per-subject
+         * Merkle Mountain Range frontier is updated on every save. Setting this to {@code false}
+         * skips leaf hash computation and frontier updates entirely — {@code LedgerEntry.digest}
+         * will be {@code null} and inclusion proofs cannot be generated.
          *
-         * @return {@code true} if hash chaining is enabled (default)
+         * @return {@code true} if Merkle leaf hash computation is enabled (default)
          */
         @WithDefault("true")
         boolean enabled();

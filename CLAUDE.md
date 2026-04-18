@@ -93,6 +93,7 @@ quarkus-ledger/
 │       │   ├── LedgerEntry.java             — abstract base entity (JOINED inheritance)
 │       │   ├── LedgerAttestation.java       — peer attestation entity
 │       │   ├── ActorTrustScore.java         — nightly-computed reputation entity
+│       │   ├── LedgerMerkleFrontier.java    — Merkle frontier node entity (log₂(N) rows per subject)
 │       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION
 │       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM
 │       │   └── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
@@ -101,7 +102,9 @@ quarkus-ledger/
 │       │   ├── ActorTrustScoreRepository.java — SPI
 │       │   └── jpa/                         — Panache implementations
 │       └── service/
-│           ├── LedgerHashChain.java         — SHA-256 chain utility (pure static)
+│           ├── LedgerMerkleTree.java        — Merkle Mountain Range algorithm (pure static)
+│           ├── LedgerVerificationService.java — treeRoot / inclusionProof / verify (CDI bean)
+│           ├── LedgerMerklePublisher.java   — Ed25519 signed tlog-checkpoint (opt-in CDI bean)
 │           ├── TrustScoreComputer.java      — EigenTrust algorithm (pure Java)
 │           └── TrustScoreJob.java           — @Scheduled nightly recomputation
 │       └── supplement/
@@ -163,6 +166,15 @@ quarkus-ledger       (audit/provenance — this project)
 
 Tarkus and Qhorus are siblings — neither depends on the other. Both depend on
 `quarkus-ledger`. Claudony composes them.
+
+---
+
+## Schema Convention
+
+**No existing installations** — there are no deployed instances of `quarkus-ledger` in production.
+All schema changes go directly into the base migration files (V1000–V1003) or into a new base
+migration file. Do NOT create incremental migration scripts to evolve the schema. Rewrite the
+relevant migration file in place. Treat every schema change as a clean-slate design decision.
 
 ---
 

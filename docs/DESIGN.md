@@ -154,7 +154,7 @@ core audit record; compliance metadata is enrichment, not a tamper-evidence targ
 
 Deliberately excludes subclass-specific fields (`commandType`, `eventType`, `toolName`,
 etc.). The chain covers provenance and timing; domain labels do not participate in
-tamper detection. This keeps the chain domain-agnostic — the same `LedgerHashChain`
+tamper detection. This keeps the chain domain-agnostic — the same `LedgerMerkleTree`
 utility works for any subclass.
 
 ## Merkle Mountain Range
@@ -250,7 +250,7 @@ CaseHub integration requirements before adding anything to the base.
 
 **Quarkiverse submission** — structurally ready (quarkiverse-parent, CI workflows,
 full docs, 62 tests across runtime + two examples). Needs a stability decision on the
-public API (`LedgerEntry` core fields, `LedgerHashChain` canonical form, supplement API)
+public API (`LedgerEntry` core fields, `LedgerMerkleTree` canonical form, supplement API)
 before submitting. The supplement architecture stabilises the surface — `attach()`,
 `compliance()`, `provenance()`, `observability()` are the public entry points.
 
@@ -258,7 +258,7 @@ before submitting. The supplement architecture stabilises the surface — `attac
 OTel span context. Could be provided as a base helper that capture services call, or
 wired directly in the extension using a CDI extension observer.
 
-**Hash chain verification helper** — `LedgerHashChain.verify()` works but consumers
+**Merkle verification helper** — `LedgerVerificationService.verify()` works but consumers
 must expose it themselves. A base utility (REST endpoint or service method) that
 consumers can opt into would reduce copy-paste.
 
@@ -281,8 +281,8 @@ in config but not implemented. When enabled it should fire CDI events that routi
 
 | Phase | Status | What |
 |---|---|---|
-| **Initial extraction** | ✅ Done | Abstract LedgerEntry, LedgerAttestation, ActorTrustScore, LedgerHashChain, TrustScoreComputer, TrustScoreJob, SPI, LedgerConfig, Flyway V1000/V1001, jandex, @Alternative, @ConfigRoot |
-| **Unit tests** | ✅ Done | 42 unit tests — LedgerHashChain (18) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) |
+| **Initial extraction** | ✅ Done | Abstract LedgerEntry, LedgerAttestation, ActorTrustScore, LedgerMerkleTree, TrustScoreComputer, TrustScoreJob, SPI, LedgerConfig, Flyway V1000/V1001, jandex, @Alternative, @ConfigRoot |
+| **Unit tests** | ✅ Done | 42 unit tests — LedgerMerkleTree (22, LedgerMerkleTreeTest) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) — then extended to 110 with Merkle, publisher, and IT tests |
 | **Tarkus migration** | ✅ Done | WorkItemLedgerEntry, WorkItemLedgerEntryRepository, Tarkus-ledger 69 tests passing |
 | **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
 | **Runnable examples** | ✅ Done | examples/order-processing/ (12 IT), examples/art22-decision-snapshot/ (3 IT), examples/art12-compliance/ (3 IT) |
