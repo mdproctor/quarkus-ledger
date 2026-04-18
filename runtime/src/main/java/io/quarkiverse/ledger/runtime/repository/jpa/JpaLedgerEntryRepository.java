@@ -43,6 +43,11 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     @Transactional
     public LedgerEntry save(final LedgerEntry entry) {
+        // Ensure occurredAt is set before computing the digest — @PrePersist fires
+        // during persist(), which is too late for leafHash() to see the correct value.
+        if (entry.occurredAt == null) {
+            entry.occurredAt = java.time.Instant.now();
+        }
         entry.digest = LedgerMerkleTree.leafHash(entry);
         entry.persist();
 
