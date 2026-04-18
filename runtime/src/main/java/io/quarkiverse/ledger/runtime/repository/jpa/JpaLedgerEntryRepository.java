@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
@@ -18,6 +19,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
@@ -38,6 +40,9 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 @ApplicationScoped
 @Alternative
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
+
+    @Inject
+    LedgerMerklePublisher merklePublisher;
 
     /** {@inheritDoc} */
     @Override
@@ -68,6 +73,9 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
             LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, node.level);
             node.persist();
         }
+
+        final String newRoot = LedgerMerkleTree.treeRoot(newFrontier);
+        merklePublisher.publish(entry.subjectId, entry.sequenceNumber, newRoot);
 
         return entry;
     }
