@@ -131,7 +131,6 @@ class LedgerRetentionJobIT {
         e.actorType = ActorType.AGENT;
         e.actorRole = "Classifier";
         e.occurredAt = occurredAt;
-        e.previousHash = previousHash;
         e.digest = LedgerHashChain.compute(previousHash, e);
         e.persist();
         return e;

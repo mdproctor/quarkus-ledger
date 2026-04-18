@@ -161,7 +161,6 @@ class LedgerHashChainTest {
     @Test
     void verify_singleEntry_withCorrectDigest_returnsTrue() {
         final TestLedgerEntry e = entry(UUID.randomUUID(), 1);
-        e.previousHash = null;
         e.digest = LedgerHashChain.compute(null, e);
 
         assertThat(LedgerHashChain.verify(List.of(e))).isTrue();
@@ -170,7 +169,6 @@ class LedgerHashChainTest {
     @Test
     void verify_singleEntry_withWrongDigest_returnsFalse() {
         final TestLedgerEntry e = entry(UUID.randomUUID(), 1);
-        e.previousHash = null;
         e.digest = "deadbeef00000000000000000000000000000000000000000000000000000000";
 
         assertThat(LedgerHashChain.verify(List.of(e))).isFalse();
@@ -185,13 +183,11 @@ class LedgerHashChainTest {
         final UUID id = UUID.randomUUID();
 
         final TestLedgerEntry e1 = entry(id, 1);
-        e1.previousHash = null;
         e1.digest = LedgerHashChain.compute(null, e1);
 
         final TestLedgerEntry e2 = entry(id, 2);
         e2.actorId = "alice";
         e2.actorRole = "Claimant";
-        e2.previousHash = e1.digest;
         e2.digest = LedgerHashChain.compute(e1.digest, e2);
 
         assertThat(LedgerHashChain.verify(List.of(e1, e2))).isTrue();
@@ -202,11 +198,9 @@ class LedgerHashChainTest {
         final UUID id = UUID.randomUUID();
 
         final TestLedgerEntry e1 = entry(id, 1);
-        e1.previousHash = null;
         e1.digest = LedgerHashChain.compute(null, e1);
 
         final TestLedgerEntry e2 = entry(id, 2);
-        e2.previousHash = e1.digest;
         e2.digest = LedgerHashChain.compute(e1.digest, e2);
 
         // Tamper: mutate e1 actorId without recomputing digest
@@ -220,12 +214,10 @@ class LedgerHashChainTest {
         final UUID id = UUID.randomUUID();
 
         final TestLedgerEntry e1 = entry(id, 1);
-        e1.previousHash = null;
         e1.digest = LedgerHashChain.compute(null, e1);
 
         final TestLedgerEntry e2 = entry(id, 2);
         e2.actorId = "alice";
-        e2.previousHash = e1.digest;
         e2.digest = LedgerHashChain.compute(e1.digest, e2);
 
         // Tamper: mutate e2 actorId without recomputing digest
@@ -243,7 +235,6 @@ class LedgerHashChainTest {
         for (int seq = 1; seq <= 4; seq++) {
             final TestLedgerEntry e = entry(id, seq);
             e.actorId = "actor-" + seq;
-            e.previousHash = prevHash;
             e.digest = LedgerHashChain.compute(prevHash, e);
             entries.add(e);
             prevHash = e.digest;

@@ -112,7 +112,7 @@ public abstract class LedgerEntry extends PanacheEntityBase {
     // ── Hash chain ────────────────────────────────────────────────────────────
 
     /**
-     * SHA-256 digest of this entry's canonical content chained from {@code previousHash}.
+     * RFC 9162 leaf hash: {@code SHA-256(0x00 | canonicalFields)}.
      * Null when hash chain is disabled ({@code quarkus.ledger.hash-chain.enabled=false}).
      */
     public String digest;

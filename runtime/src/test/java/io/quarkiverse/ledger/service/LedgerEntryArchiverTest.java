@@ -33,7 +33,6 @@ class LedgerEntryArchiverTest {
         e.actorType = ActorType.AGENT;
         e.actorRole = "Classifier";
         e.occurredAt = Instant.parse("2026-01-15T12:00:00Z");
-        e.previousHash = null;
         e.digest = "abc123";
         return e;
     }
@@ -57,12 +56,10 @@ class LedgerEntryArchiverTest {
     @Test
     void toJson_nullFieldsOmitted() {
         final TestEntry e = entry("agent-1");
-        e.previousHash = null;
         e.supplementJson = null;
 
         final String json = LedgerEntryArchiver.toJson(e, List.of());
 
-        assertThat(json).doesNotContain("previousHash");
         assertThat(json).doesNotContain("supplementJson");
     }
 

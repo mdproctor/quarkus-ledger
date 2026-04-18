@@ -14,9 +14,9 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  *
  * <p>
  * A subject is eligible only when <strong>every</strong> entry in its chain is older
- * than the configured retention window. This all-or-nothing rule preserves hash chain
- * integrity: archiving and deleting a partial chain would leave dangling
- * {@code previousHash} references in the entries that remain.
+ * than the configured retention window. This all-or-nothing rule preserves Merkle chain
+ * integrity: archiving and deleting a partial chain would break the inclusion proofs
+ * for the entries that remain.
  *
  * <p>
  * No CDI, no database — all inputs are passed as collections. Safe for unit testing.
