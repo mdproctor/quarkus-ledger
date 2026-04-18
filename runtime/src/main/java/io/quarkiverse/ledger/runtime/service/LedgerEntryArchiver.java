@@ -53,8 +53,6 @@ public final class LedgerEntryArchiver {
             map.put("actorRole", entry.actorRole);
         if (entry.occurredAt != null)
             map.put("occurredAt", entry.occurredAt.toString());
-        if (entry.previousHash != null)
-            map.put("previousHash", entry.previousHash);
         if (entry.digest != null)
             map.put("digest", entry.digest);
         if (entry.correlationId != null)
