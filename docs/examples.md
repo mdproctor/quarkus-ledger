@@ -143,7 +143,6 @@ package com.example.order.ledger;
 import com.example.order.model.Order;
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.*;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -176,9 +175,6 @@ public class OrderLedgerCapture {
         int nextSeq = repo.findLatestByOrderId(orderId)
                           .map(e -> e.sequenceNumber + 1)
                           .orElse(1);
-        String previousHash = repo.findLatestByOrderId(orderId)
-                                  .map(e -> e.digest)
-                                  .orElse(null);
 
         OrderLedgerEntry entry = new OrderLedgerEntry();
         entry.subjectId      = orderId;
@@ -202,11 +198,7 @@ public class OrderLedgerCapture {
             entry.attach(cs);
         }
 
-        if (config.hashChain().enabled()) {
-            entry.previousHash = previousHash;
-            entry.digest = LedgerHashChain.compute(previousHash, entry);
-        }
-
+        // Merkle leaf hash and frontier update handled automatically by repo.save()
         repo.save(entry);
     }
 }
@@ -264,7 +256,7 @@ package com.example.order.api;
 import com.example.order.ledger.OrderLedgerEntry;
 import com.example.order.ledger.OrderLedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -277,6 +269,7 @@ import java.util.UUID;
 public class OrderLedgerResource {
 
     @Inject OrderLedgerEntryRepository repo;
+    @Inject LedgerVerificationService verificationService;
 
     /** Return the full audit trail for an order. */
     @GET
@@ -284,13 +277,12 @@ public class OrderLedgerResource {
         return repo.findByOrderId(orderId);
     }
 
-    /** Verify chain integrity. Returns 200 with {intact: true/false}. */
+    /** Verify Merkle tree integrity. Returns 200 with {intact: true/false}. */
     @GET
     @Path("/verify")
     public Map<String, Object> verifyChain(@PathParam("id") UUID orderId) {
-        List<OrderLedgerEntry> entries = repo.findByOrderId(orderId);
-        boolean intact = LedgerHashChain.verify(entries);
-        return Map.of("intact", intact, "entryCount", entries.size());
+        boolean intact = verificationService.verify(orderId);
+        return Map.of("intact", intact);
     }
 
     /** Post a peer attestation on a specific ledger entry. */
@@ -339,7 +331,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.order.OrderService;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -349,6 +341,7 @@ class OrderLedgerTest {
 
     @Inject OrderService orderService;
     @Inject OrderLedgerEntryRepository ledgerRepo;
+    @Inject LedgerVerificationService verificationService;
 
     @Test
     void placeOrder_createsLedgerEntry() {
@@ -369,24 +362,17 @@ class OrderLedgerTest {
     }
 
     @Test
-    void fullLifecycle_hashChainIsValid() {
+    void fullLifecycle_merkleTreeIsValid() {
         UUID orderId = UUID.randomUUID();
         orderService.placeOrder(orderId, "customer-1");
         orderService.shipOrder(orderId, "fulfilment-agent");
 
         List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
         assertEquals(2, entries.size());
-        assertTrue(LedgerHashChain.verify(entries));
-    }
-
-    @Test
-    void secondEntry_previousHashLinkedToFirst() {
-        UUID orderId = UUID.randomUUID();
-        orderService.placeOrder(orderId, "customer-1");
-        orderService.shipOrder(orderId, "agent");
-
-        List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
-        assertEquals(entries.get(0).digest, entries.get(1).previousHash);
+        // Each entry has a Merkle leaf hash set automatically by save()
+        entries.forEach(e -> assertNotNull(e.digest));
+        // Merkle Mountain Range integrity check via LedgerVerificationService
+        assertTrue(verificationService.verify(orderId));
     }
 
     @Test
@@ -413,4 +399,4 @@ class OrderLedgerTest {
 | [quarkus-tarkus](https://github.com/mdproctor/quarkus-tarkus) | `WorkItemLedgerEntry` | Task lifecycle — create, claim, start, complete, reject, delegate |
 | [quarkus-qhorus](https://github.com/mdproctor/quarkus-qhorus) | `AgentMessageLedgerEntry` | AI agent telemetry — tool calls with duration, token count, context refs |
 
-Both include full integration test suites that exercise the hash chain, sequence numbering, decision context, attestations, and trust score computation.
+Both include full integration test suites that exercise Merkle tree verification, sequence numbering, decision context, attestations, and trust score computation.

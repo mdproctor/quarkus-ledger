@@ -6,7 +6,7 @@ This guide walks through everything needed to add `quarkus-ledger` to a Quarkus 
 
 ## How it works
 
-`quarkus-ledger` uses JPA JOINED inheritance. The base `ledger_entry` table holds all domain-agnostic fields (actor, sequence, hash chain, provenance, decision context). Your domain subclass adds a sibling table that joins on `id`.
+`quarkus-ledger` uses JPA JOINED inheritance. The base `ledger_entry` table holds all domain-agnostic fields (actor, sequence, Merkle leaf hash, provenance, decision context). Your domain subclass adds a sibling table that joins on `id`.
 
 ```
 ledger_entry (base — created by quarkus-ledger V1000)
@@ -84,7 +84,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 
 **Key rules:**
 
-- `subjectId` (from `LedgerEntry`) is the aggregate identifier. Set it to your domain object's UUID. Sequence numbering and hash chaining are scoped per `subjectId`.
+- `subjectId` (from `LedgerEntry`) is the aggregate identifier. Set it to your domain object's UUID. Sequence numbering and the Merkle Mountain Range are scoped per `subjectId`.
 - `@DiscriminatorValue` must be unique across all subclasses in the deployment.
 - The class does not need `@PrePersist` — it inherits the one on `LedgerEntry` that sets `id` and `occurredAt`.
 
@@ -99,8 +99,9 @@ public class OrderLedgerEntry extends LedgerEntry {
 | `actorId` | String | Who performed this action |
 | `actorType` | ActorType | HUMAN, AGENT, or SYSTEM |
 | `actorRole` | String | Functional role (e.g. "Approver", "Resolver") |
-| `previousHash` | String | SHA-256 digest of the preceding entry |
-| `digest` | String | SHA-256 digest of this entry's canonical content |
+| `correlationId` | String | OTel trace ID linking this entry to a distributed trace |
+| `causedByEntryId` | UUID | FK to causal predecessor entry (cross-subject causality) |
+| `digest` | String | Merkle leaf hash of this entry's canonical content (auto-set by `save()`) |
 | `occurredAt` | Instant | When this entry was recorded (auto-set) |
 | `supplementJson` | String | JSON snapshot of all attached supplements (auto-set by `attach()`) |
 
@@ -110,7 +111,6 @@ Optional fields are handled via supplements — see [§ Supplements](#supplement
 |---|---|---|
 | `ComplianceSupplement` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording decisions subject to GDPR Art.22 or EU AI Act Art.12 |
 | `ProvenanceSupplement` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Subject is driven by an external workflow |
-| `ObservabilitySupplement` | `correlationId`, `causedByEntryId` | Linking to OTel traces or cross-system causality |
 
 ---
 
@@ -247,23 +247,21 @@ public class OrderService {
 
     private void writeLedgerEntry(UUID orderId, String actor,
                                   String commandType, String eventType) {
-        // Sequence and previous hash — scoped per order
         Optional<OrderLedgerEntry> latest = ledgerRepo.findLatestByOrderId(orderId);
         int nextSeq = latest.map(e -> e.sequenceNumber + 1).orElse(1);
-        String previousHash = latest.map(e -> e.digest).orElse(null);
 
         OrderLedgerEntry entry = new OrderLedgerEntry();
-        entry.subjectId     = orderId;
-        entry.orderId       = orderId;
+        entry.subjectId      = orderId;
+        entry.orderId        = orderId;
         entry.sequenceNumber = nextSeq;
-        entry.entryType     = LedgerEntryType.EVENT;
-        entry.commandType   = commandType;
-        entry.eventType     = eventType;
-        entry.actorId       = actor;
-        entry.actorType     = ActorType.HUMAN;
-        entry.actorRole     = "Initiator";
-        // Set occurredAt before hash computation — @PrePersist sets it too late
-        entry.occurredAt    = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        entry.entryType      = LedgerEntryType.EVENT;
+        entry.commandType    = commandType;
+        entry.eventType      = eventType;
+        entry.actorId        = actor;
+        entry.actorType      = ActorType.HUMAN;
+        entry.actorRole      = "Initiator";
+        // Set before repo.save() — @PrePersist runs too late for leaf hash computation
+        entry.occurredAt     = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
         if (ledgerConfig.decisionContext().enabled()) {
             final ComplianceSupplement cs = new ComplianceSupplement();
@@ -271,11 +269,7 @@ public class OrderService {
             entry.attach(cs);
         }
 
-        if (ledgerConfig.hashChain().enabled()) {
-            entry.previousHash = previousHash;
-            entry.digest = LedgerHashChain.compute(previousHash, entry);
-        }
-
+        // Merkle leaf hash and frontier update handled automatically by save()
         ledgerRepo.save(entry);
     }
 
@@ -290,7 +284,7 @@ public class OrderService {
 
 > **Transaction boundary:** The ledger write must happen in the same transaction as the domain state change. If the transaction rolls back, no ledger entry is written — ensuring consistency.
 
-> **occurredAt timing:** Always set `occurredAt` explicitly with millisecond precision *before* calling `LedgerHashChain.compute()`. The `@PrePersist` hook runs too late for the hash computation, and the database truncates to milliseconds anyway.
+> **occurredAt timing:** Always set `occurredAt` explicitly with millisecond precision *before* calling `repo.save()`. The `@PrePersist` hook runs too late for the leaf hash computation, and the database truncates to milliseconds anyway.
 
 ---
 
@@ -300,8 +294,10 @@ public class OrderService {
 // Full ledger for one order, in sequence order
 List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
 
-// Verify the hash chain has not been tampered with
-boolean intact = LedgerHashChain.verify(entries);
+// Verify integrity via Merkle Mountain Range — injected CDI bean
+@Inject LedgerVerificationService verificationService;
+// ...
+boolean intact = verificationService.verify(orderId);
 
 // Load attestations for a specific entry
 List<LedgerAttestation> attestations =
@@ -328,7 +324,7 @@ Add to `application.properties`:
 # Master switch (default: true)
 quarkus.ledger.enabled=true
 
-# SHA-256 hash chain — Certificate Transparency tamper detection (default: true)
+# Merkle leaf hash computation (RFC 9162 domain separation) — enables tamper detection (default: true)
 quarkus.ledger.hash-chain.enabled=true
 
 # Decision context snapshots — required for GDPR Art.22 / EU AI Act Art.12 (default: true)
@@ -349,6 +345,10 @@ quarkus.ledger.trust-score.decay-half-life-days=90
 
 # Trust-score routing signals via CDI events (default: false)
 quarkus.ledger.trust-score.routing-enabled=false
+
+# Merkle tree external publishing (opt-in) — post Ed25519-signed tlog-checkpoint on each write
+# quarkus.ledger.merkle.publish.url=https://your-checkpoint-log/
+# quarkus.ledger.merkle.publish.private-key=/path/to/ed25519-key.pem
 ```
 
 ---
@@ -401,21 +401,31 @@ trustScoreJob.runComputation(); // @Transactional, safe to call directly
 
 ---
 
-## Hash chain verification
+## Merkle tree verification
 
-Verify chain integrity at any time — no runtime dependency on the database format:
+`LedgerVerificationService` (auto-activated CDI bean) provides tamper detection via the
+Merkle Mountain Range built incrementally on each write:
 
 ```java
-List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
-boolean intact = LedgerHashChain.verify(entries);
+@Inject LedgerVerificationService verificationService;
+
+// Verify all entries for a subject — O(N log N)
+boolean intact = verificationService.verify(subjectId);
 // intact == false → at least one entry has been modified since writing
+
+// Get the current Merkle root for external anchoring
+String root = verificationService.treeRoot(subjectId);
+
+// Get an O(log N) inclusion proof for a specific entry
+InclusionProof proof = verificationService.inclusionProof(entryId);
 ```
 
-The canonical form hashes only base-class fields:
+Each entry's `digest` is a Merkle leaf hash (RFC 9162 domain separation) computed over
+base-class fields only:
 `subjectId|seqNum|entryType|actorId|actorRole|occurredAt`
 
 Subclass-specific fields (like `commandType`, `eventType`) and supplement fields are
-intentionally excluded — the chain covers provenance and timing, not domain labels or
+intentionally excluded — the hash covers provenance and timing, not domain labels or
 compliance enrichment.
 
 ---
