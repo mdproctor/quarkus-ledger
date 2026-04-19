@@ -21,8 +21,8 @@ auditability of AI decisions, regulatory compliance.
 | 4 | **EU AI Act Article 12 compliance surface** | M | High | ★★★★ | Hard external deadline: **2 August 2026** (15 months). The ledger is already the right tool — it just needs retention config (`quarkus.ledger.retention.*`), a completeness-verification endpoint, and explicit compliance documentation. Non-compliance penalty up to €15M / 3% global turnover. |
 | 5 | **Causality field (Lamport, not full vector clocks)** | M | High | ★★★★ | When Claudony orchestrates Tarkus + Qhorus, entries across systems that share a causal trigger have no way to express that today. A single `causedBy: UUID` field costs one column + one FK but enables full cross-system causal chain reconstruction. |
 | 6 | **Time-weighted Bayesian trust** | M | Medium | ★★★ | Current exponential decay on the aggregate score is crude. Per-interaction recency weighting before the eigen computation is more principled. Higher value when many agents have varied interaction cadences (CaseHub scenario). |
-| 7 | **W3C PROV-DM JSON-LD export** | M | Medium | ★★★ | The conceptual mapping already exists (LedgerEntry ≅ PROV Entity, actorId ≅ PROV Agent, entryType ≅ PROV Activity). A serialiser adds external interoperability with ML pipeline auditing tools. Becomes a differentiator for Quarkiverse submission. |
-| 8 | **Merkle tree upgrade to hash chain** | L | Medium | ★★ | Strictly better than linear hash chaining for external verification (O(log N) inclusion proofs vs full-chain scan). Current consumers don't yet need external/third-party verification — they trust the DB. Right move eventually, not urgent. |
+| 7 | **W3C PROV-DM JSON-LD export** | ~~M~~ | ~~Medium~~ | ✅ Done | `LedgerProvSerializer` + `LedgerProvExportService` shipped. See `docs/prov-dm-mapping.md`. |
+| 8 | **Merkle tree upgrade to hash chain** | ~~L~~ | ~~Medium~~ | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerVerificationService`, `LedgerMerklePublisher`. ADR 0002. |
 | 9 | **EERP reputation chains (per-interaction history)** | L | Medium | ★★ | Full interaction history per actor enables collusion detection. Significant data model change (new table, query patterns, index strategy). Valuable in large multi-agent deployments with adversarial actors; overkill for the current 3-consumer ecosystem. |
 | 10 | **Zero-knowledge proofs** | XL | Low (now) | ★ | Technically compelling but JVM tooling is immature, complexity is extreme, and no current consumer has a privacy-vs-auditability conflict that requires it. Monitor the space, build later. |
 
@@ -38,6 +38,8 @@ auditability of AI decisions, regulatory compliance.
 | 4 | EU AI Act Article 12 plumbing | Clock is running — enforcement August 2026 |
 
 Items 5–7 are the natural next milestone after these land.
+
+**Note:** Items 7 (PROV-DM export) and 8 (Merkle tree upgrade) have been completed. See Priority Matrix above.
 
 ---
 

@@ -58,6 +58,10 @@ from base entries — trust scoring works across all consumers.
 | `ledger_entry` | V1000 | Base audit record (discriminator column: `dtype`) |
 | `ledger_attestation` | V1000 | Peer verdicts — FK to `ledger_entry.id` |
 | `actor_trust_score` | V1001 | Nightly EigenTrust scores per actor |
+| `ledger_supplement_compliance` | V1002 | ComplianceSupplement joined table |
+| `ledger_supplement_provenance` | V1002 | ProvenanceSupplement joined table |
+| `ledger_entry_archive` | V1003 | Archive records before retention deletion |
+| `ledger_merkle_frontier` | V1000 | Merkle Mountain Range frontier nodes (≤log₂(N) rows per subject) |
 
 ---
 
@@ -82,7 +86,6 @@ fields by concern and moving them out of the core entity entirely.
 |---|---|---|---|
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording automated decisions subject to GDPR Art.22 or EU AI Act Art.12 |
 | `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Entry is driven by an external workflow system |
-| `ObservabilitySupplement` | `ledger_supplement_observability` | `correlationId`, `causedByEntryId` | Linking entries to OTel traces or cross-system causal chains |
 
 ### Attaching a supplement
 
@@ -101,8 +104,8 @@ entry.attach(cs); // also refreshes entry.supplementJson
 written by `attach()` containing all attached supplements. No additional query.
 
 **Typed access (lazy join):** Use the typed accessors — `entry.compliance()`,
-`entry.provenance()`, `entry.observability()`. Triggers a single SELECT on the
-supplement table only when accessed.
+`entry.provenance()`. Triggers a single SELECT on the supplement table only when
+accessed.
 
 ### Zero-complexity guarantee
 
@@ -173,6 +176,28 @@ Replaces the linear hash chain. Per-subject stored frontier gives O(log N) inclu
 
 **External publishing** (opt-in) — `LedgerMerklePublisher` posts Ed25519-signed tlog-checkpoints to `quarkus.ledger.merkle.publish.url` on each frontier update. Disabled by default.
 
+## W3C PROV-DM JSON-LD Export
+
+Exports a subject's complete audit trail as a W3C PROV-DM JSON-LD document for
+interoperability with ML pipeline auditing tools, RDF stores, and regulatory systems.
+
+**Mapping:**
+- `LedgerEntry` → `prov:Entity` (`ledger:entry/<uuid>`)
+- `actorId` → `prov:Agent` (`ledger:actor/<actorId>`, deduplicated per export)
+- Entry action → `prov:Activity` (`ledger:activity/<uuid>`)
+
+**Relations:** `wasGeneratedBy` (every entry), `wasAssociatedWith` (when actorId set),
+`wasDerivedFrom` (sequential chain + `causedByEntryId` cross-subject causality),
+`hadPrimarySource` (when `ProvenanceSupplement` attached).
+
+**`LedgerProvSerializer`** (pure static) — `toProvJsonLd(UUID subjectId, List<LedgerEntry> entries)`.
+No CDI, no DB access. Must be called within a `@Transactional` boundary so supplements lazy-load.
+
+**`LedgerProvExportService`** (`@ApplicationScoped`) — `exportSubject(UUID subjectId)`.
+Fetches entries, initialises supplements, delegates to serialiser. Auto-activated.
+
+See `docs/prov-dm-mapping.md` for the full field-by-field mapping including all supplement fields.
+
 ### `@ConfigRoot` alongside `@ConfigMapping`
 
 `LedgerConfig` carries both annotations. `@ConfigMapping` provides the SmallRye nested
@@ -220,6 +245,14 @@ Clean decisions (score = 1.0) are unaffected. See `adr/0001-forgiveness-mechanis
 | `retention.operational-days` | `180` | Retention window in days (EU AI Act Art.12 minimum: 6 months) |
 | `retention.archive-before-delete` | `true` | Write full entry JSON to `ledger_entry_archive` before deletion |
 
+**Merkle publishing sub-config (`quarkus.ledger.merkle.publish.*`):**
+
+| Key | Default | Description |
+|---|---|---|
+| `merkle.publish.url` | (absent) | POST endpoint for Ed25519-signed tlog-checkpoints; publisher inactive when absent |
+| `merkle.publish.private-key` | (absent) | Path to Ed25519 private key PEM file (PKCS#8) |
+| `merkle.publish.key-id` | `"default"` | Opaque key identifier included in each checkpoint |
+
 Archive-then-delete: verify chain integrity → write to `ledger_entry_archive` → delete attestations → JPA-cascade delete entry. A subject with a broken hash chain is skipped.
 Audit queries: `findByActorId(actorId, from, to)`, `findByActorRole(role, from, to)`, `findByTimeRange(from, to)` — all use `Instant` params for timezone-safe querying.
 
@@ -243,24 +276,22 @@ These are excluded by design — consumers implement their own:
 
 ### Near-term
 
-Nothing blocking. Extension is feature-complete for current consumers. Wait for
-CaseHub integration requirements before adding anything to the base.
+**Bayesian trust weighting** — per-interaction recency weighting before EigenTrust eigen
+computation (pending).
+
+**Privacy / pseudonymisation** — Axiom 7 gap, GDPR right-to-erasure design (pending).
 
 ### Medium-term
 
 **Quarkiverse submission** — structurally ready (quarkiverse-parent, CI workflows,
-full docs, 62 tests across runtime + two examples). Needs a stability decision on the
+full docs, 127 tests across runtime + examples). Needs a stability decision on the
 public API (`LedgerEntry` core fields, `LedgerMerkleTree` canonical form, supplement API)
 before submitting. The supplement architecture stabilises the surface — `attach()`,
-`compliance()`, `provenance()`, `observability()` are the public entry points.
+`compliance()`, `provenance()` are the public entry points.
 
 **OTel trace ID auto-wiring** — automatically populate `correlationId` from the active
 OTel span context. Could be provided as a base helper that capture services call, or
 wired directly in the extension using a CDI extension observer.
-
-**Merkle verification helper** — `LedgerVerificationService.verify()` works but consumers
-must expose it themselves. A base utility (REST endpoint or service method) that
-consumers can opt into would reduce copy-paste.
 
 ### Longer-term (depends on CaseHub)
 
@@ -282,14 +313,16 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | Phase | Status | What |
 |---|---|---|
 | **Initial extraction** | ✅ Done | Abstract LedgerEntry, LedgerAttestation, ActorTrustScore, LedgerMerkleTree, TrustScoreComputer, TrustScoreJob, SPI, LedgerConfig, Flyway V1000/V1001, jandex, @Alternative, @ConfigRoot |
-| **Unit tests** | ✅ Done | 42 unit tests — LedgerMerkleTree (22, LedgerMerkleTreeTest) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) — then extended to 110 with Merkle, publisher, and IT tests |
+| **Unit tests** | ✅ Done | 42 unit tests — LedgerMerkleTree (22, LedgerMerkleTreeTest) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) — then extended to 127 with Merkle, publisher, PROV-DM, and IT tests |
 | **Tarkus migration** | ✅ Done | WorkItemLedgerEntry, WorkItemLedgerEntryRepository, Tarkus-ledger 69 tests passing |
 | **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
-| **Runnable examples** | ✅ Done | examples/order-processing/ (12 IT), examples/art22-decision-snapshot/ (3 IT), examples/art12-compliance/ (3 IT) |
+| **Runnable examples** | ✅ Done | `examples/order-processing/` (12 IT), `examples/art22-decision-snapshot/` (3 IT), `examples/art12-compliance/` (3 IT), `examples/merkle-verification/` (2 IT), `examples/prov-dm-export/` (2 IT) |
 | **LedgerSupplement architecture** | ✅ Done | ComplianceSupplement, ProvenanceSupplement, ObservabilitySupplement deleted (fields moved to core); LedgerEntry with 12 core fields; Flyway V1000/V1001; 7 supplement IT tests; GDPR Art.22 example |
 | **Forgiveness mechanism** | ✅ Done | Two-parameter (recency + frequency) forgiveness in `TrustScoreComputer`; `quarkus.ledger.trust-score.forgiveness.*`; 22 unit tests + 3 IT tests |
 | **EU AI Act Art.12 compliance** | ✅ Done | Archive-then-delete retention job (`LedgerRetentionJob`), V1003 archive table, audit query SPI (`findByActorId`, `findByActorRole`, `findByTimeRange`), `docs/compliance/EU-AI-ACT-ART12.md`, `examples/art12-compliance/` |
 | **Causality & Observability to core** | ✅ Done | `correlationId` + `causedByEntryId` on `LedgerEntry`; `ObservabilitySupplement` deleted; `findCausedBy()` SPI |
+| **Merkle Mountain Range** | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerMerkleFrontier` (log₂(N) rows/subject), `LedgerVerificationService` (treeRoot/inclusionProof/verify), `LedgerMerklePublisher` (opt-in Ed25519 tlog-checkpoint); ADR 0002; `examples/merkle-verification/` (2 IT) |
+| **W3C PROV-DM JSON-LD export** | ✅ Done | `LedgerProvSerializer.toProvJsonLd()` (pure static, 13 unit tests), `LedgerProvExportService` (CDI bean, 4 IT); `docs/prov-dm-mapping.md` field reference; `examples/prov-dm-export/` (2 IT) |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

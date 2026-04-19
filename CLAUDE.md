@@ -15,7 +15,7 @@ audit ledger for any Quarkus application. Any Quarkus app adds `io.quarkiverse.l
 as a dependency and immediately gets:
 
 - **Immutable append-only audit log** (`LedgerEntry` base entity with JPA JOINED inheritance)
-- **Hash chain tamper evidence** (Certificate Transparency pattern — SHA-256 chaining per subject)
+- **Merkle Mountain Range tamper evidence** (RFC 9162 stored frontier — O(log N) inclusion proofs, Ed25519 signed checkpoints)
 - **Peer attestation** (`LedgerAttestation` — verdicts, confidence scores)
 - **EigenTrust reputation** (`TrustScoreComputer` — nightly batch, exponential decay weighting)
 - **Provenance tracking** (`sourceEntityId / sourceEntityType / sourceEntitySystem`)
@@ -64,11 +64,11 @@ the domain-specific `work_item_id` that was in the original Tarkus ledger. Consu
 registered subclass tables on query. `LedgerAttestation` holds a FK to the base table —
 attestations work regardless of which subclass produced the entry.
 
-**Hash chain canonical form (core fields only)**
+**Merkle leaf hash canonical form (core fields only)**
 `subjectId|seqNum|entryType|actorId|actorRole|occurredAt`
 Domain-specific subclass fields and supplement fields are excluded — canonical form stays
-domain-agnostic. `planRef` was moved to `ComplianceSupplement` in V1002 and removed from
-the canonical form.
+domain-agnostic. The leaf hash is `SHA-256(0x00 | canonicalBytes)` per RFC 9162.
+The Merkle Mountain Range (stored frontier) replaces the old linear chain.
 
 **`correlationId` and `causedByEntryId` are core fields**
 Both OTel trace linking and causal relationships are structural — present on every entry where
