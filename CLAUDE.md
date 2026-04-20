@@ -76,12 +76,14 @@ relevant. They live on `LedgerEntry` directly (not in supplements). `findCausedB
 traverses causal chains one hop at a time. The test for core vs supplement: is the field
 relevant to every consumer, every entry, every time? If yes → core. If no → supplement.
 
-**`LedgerEntry` is a plain `@Entity` — not a Panache active-record entity**
-`LedgerEntry` does not extend `PanacheEntityBase`. This allows reactive subclassing
-(e.g. Qhorus's `AgentMessageLedgerEntry` with Hibernate Reactive). `JpaLedgerEntryRepository`
-uses `EntityManager` directly for all queries. `LedgerEntryRepository.findById(UUID)` was
-renamed to `findEntryById(UUID)` to avoid a Java return-type conflict with
-`PanacheRepositoryBase.findById()`.
+**All entities are plain `@Entity` — no Panache active-record base**
+No entity in the runtime module extends `PanacheEntityBase`. This allows reactive
+subclassing by consumers (e.g. Qhorus's `AgentMessageLedgerEntry`) and removes the
+forced `quarkus-hibernate-orm-panache` dep. Repositories use `EntityManager` + JPQL.
+Queries are declared as `@NamedQuery` on entity classes — Hibernate validates them at
+startup, so typos fail at boot not at query time.
+`LedgerEntryRepository.findById(UUID)` was renamed to `findEntryById(UUID)` to avoid
+a Java return-type conflict with `PanacheRepositoryBase.findById()`.
 
 **REST endpoints are domain-specific**
 `quarkus-ledger` provides model, SPI, services, and JPA implementations only. Tarkus and
