@@ -18,15 +18,9 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "ledger_attestation")
-@NamedQuery(
-        name = "LedgerAttestation.findByEntryId",
-        query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId ORDER BY a.occurredAt ASC")
-@NamedQuery(
-        name = "LedgerAttestation.findBySubjectId",
-        query = "SELECT a FROM LedgerAttestation a WHERE a.subjectId = :subjectId ORDER BY a.occurredAt ASC")
-@NamedQuery(
-        name = "LedgerAttestation.findByEntryIds",
-        query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId IN :entryIds")
+@NamedQuery(name = "LedgerAttestation.findByEntryId", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId ORDER BY a.occurredAt ASC")
+@NamedQuery(name = "LedgerAttestation.findBySubjectId", query = "SELECT a FROM LedgerAttestation a WHERE a.subjectId = :subjectId ORDER BY a.occurredAt ASC")
+@NamedQuery(name = "LedgerAttestation.findByEntryIds", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId IN :entryIds")
 public class LedgerAttestation {
 
     @Id
@@ -63,7 +57,9 @@ public class LedgerAttestation {
 
     @PrePersist
     void prePersist() {
-        if (id == null) id = UUID.randomUUID();
-        if (occurredAt == null) occurredAt = Instant.now();
+        if (id == null)
+            id = UUID.randomUUID();
+        if (occurredAt == null)
+            occurredAt = Instant.now();
     }
 }
