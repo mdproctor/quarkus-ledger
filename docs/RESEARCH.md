@@ -1,6 +1,6 @@
 # Quarkus Ledger — Research & Strategic Directions
 
-Research conducted 2026-04-16. Sources: web search + Google Scholar sweep across audit
+Research conducted 2026-04-16. Last updated 2026-04-20. Sources: web search + Google Scholar sweep across audit
 ledger cryptography, trust algorithms, EU/GDPR compliance, AI accountability, and
 distributed systems causality literature.
 
@@ -15,31 +15,32 @@ auditability of AI decisions, regulatory compliance.
 
 | # | Direction | Effort | Impact | Priority | Rationale |
 |---|---|---|---|---|---|
-| 1 | **GDPR Art. 22 decision snapshot enrichment** | S | High | ★★★★★ | Fields already exist (`planRef`, decision context). Adding structured inputs / algorithm-ref / confidence / contestation-link is a model change only. Directly used by every AI decision in Tarkus/Qhorus today. |
-| 2 | **Auditability axioms self-assessment** | S | High | ★★★★★ | Zero code — apply the 8-axiom framework as a gap analysis. Outputs a concrete backlog. Likely surfaces the other items below as findings. Do this first or in parallel with #1. |
-| 3 | **Forgiveness mechanism in trust scoring** | S | High | ★★★★ | AI agents fail transiently (network timeouts, model errors) — pure EigenTrust punishes them permanently. A severity + frequency + recency forgiveness factor is a small change to `TrustScoreComputer` with outsized fairness impact. |
-| 4 | **EU AI Act Article 12 compliance surface** | M | High | ★★★★ | Hard external deadline: **2 August 2026** (15 months). The ledger is already the right tool — it just needs retention config (`quarkus.ledger.retention.*`), a completeness-verification endpoint, and explicit compliance documentation. Non-compliance penalty up to €15M / 3% global turnover. |
-| 5 | **Causality field (Lamport, not full vector clocks)** | M | High | ★★★★ | When Claudony orchestrates Tarkus + Qhorus, entries across systems that share a causal trigger have no way to express that today. A single `causedBy: UUID` field costs one column + one FK but enables full cross-system causal chain reconstruction. |
+| 1 | **GDPR Art. 22 decision snapshot enrichment** | ~~S~~ | ~~High~~ | ✅ Done | `ComplianceSupplement` shipped with `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable`, `decisionContext`. Issue #7 closed. |
+| 2 | **Auditability axioms self-assessment** | ~~S~~ | ~~High~~ | ✅ Done | `docs/AUDITABILITY.md` — full 8-axiom gap analysis. 6 of 8 axioms ✅. Axiom 7 (privacy) is the remaining gap. |
+| 3 | **Forgiveness mechanism in trust scoring** | ~~S~~ | ~~High~~ | ✅ Superseded | Implemented in issue #8, then superseded by the Bayesian Beta model (issue #28, ADR 0003). `ForgivenessParams` removed entirely. |
+| 4 | **EU AI Act Article 12 compliance surface** | ~~M~~ | ~~High~~ | ✅ Done | `LedgerRetentionJob`, `RetentionEligibilityChecker`, `LedgerEntryArchiver`, audit query API (`findByActorId`, `findByActorRole`, `findByTimeRange`), `docs/compliance/EU-AI-ACT-ART12.md`. Issue #9 closed. Enforcement deadline: 2 August 2026. |
+| 5 | **Causality field (Lamport, not full vector clocks)** | ~~M~~ | ~~High~~ | ✅ Done | `causedByEntryId` core field on `LedgerEntry` + `findCausedBy(UUID)` on `LedgerEntryRepository`. Issue #10 closed. |
 | 6 | **Time-weighted Bayesian trust** | ~~M~~ | ~~Medium~~ | ✅ Done | Bayesian Beta model: per-attestation α/β accumulation with recency weighting. `ForgivenessParams` removed. See ADR 0003. |
 | 7 | **W3C PROV-DM JSON-LD export** | ~~M~~ | ~~Medium~~ | ✅ Done | `LedgerProvSerializer` + `LedgerProvExportService` shipped. See `docs/prov-dm-mapping.md`. |
 | 8 | **Merkle tree upgrade to hash chain** | ~~L~~ | ~~Medium~~ | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerVerificationService`, `LedgerMerklePublisher`. ADR 0002. |
-| 9 | **EERP reputation chains (per-interaction history)** | L | Medium | ★★ | Full interaction history per actor enables collusion detection. Significant data model change (new table, query patterns, index strategy). Valuable in large multi-agent deployments with adversarial actors; overkill for the current 3-consumer ecosystem. |
-| 10 | **Zero-knowledge proofs** | XL | Low (now) | ★ | Technically compelling but JVM tooling is immature, complexity is extreme, and no current consumer has a privacy-vs-auditability conflict that requires it. Monitor the space, build later. |
+| 9 | **Privacy / pseudonymisation (GDPR Art.17 right to erasure)** | L | High | ★★★★ | Fundamental tension: GDPR requires the ability to erase personal data; the ledger is immutable by design. Needs a pseudonymisation strategy (e.g. tokenised `actorId`, detachable PII store) before any code. Axiom 7 gap in `AUDITABILITY.md`. |
+| 10 | **LLM agent mesh trust coordination** | L | Medium | ★★★ | How to apply trust scoring to short-lived Claude sessions. Key question: `actorId` maps to behavioral identity (CLAUDE.md + memory), not session. See GitHub epic #22 and child issues #23–#27. |
+| 11 | **EigenTrust transitive propagation** | M | Medium | ★★★ | Current model computes direct attestation scores only. True EigenTrust propagates trust transitively through the mesh via eigenvector computation. Meaningful when agent mesh is sparse. See GitHub issue #26. |
+| 12 | **EERP reputation chains (per-interaction history)** | L | Medium | ★★ | Full interaction history per actor enables collusion detection. Significant data model change. Overkill for the current 3-consumer ecosystem. |
+| 13 | **Zero-knowledge proofs** | XL | Low (now) | ★ | Technically compelling but JVM tooling is immature and no current consumer has a privacy-vs-auditability conflict requiring it. Monitor the space. |
 
 ---
 
-## The Clear Top Four (Active Sprint)
+## What's Next
 
-| # | Feature | Why Now |
+Items 1–8 are all complete. The remaining open work:
+
+| Priority | Item | Why |
 |---|---|---|
-| 2 | Auditability axiom gap analysis | Costs nothing; scopes all other work |
-| 1 | GDPR Art. 22 enrichment | Small, immediately valuable to Tarkus/Qhorus |
-| 3 | Forgiveness in trust scoring | Protects AI agents from transient-failure reputation damage |
-| 4 | EU AI Act Article 12 plumbing | Clock is running — enforcement August 2026 |
-
-Items 5–7 are the natural next milestone after these land.
-
-**Note:** Items 7 (PROV-DM export) and 8 (Merkle tree upgrade) have been completed. See Priority Matrix above.
+| ★★★★ | **Privacy / pseudonymisation** (#9) | The one axiom gap (Axiom 7) that touches every data subject whose decisions are logged. Needs design first — the erasure vs. immutability tension has no obvious solution. |
+| ★★★ | **LLM agent mesh** (#10, epic #22) | How Claudony and its agents accumulate trust across short-lived sessions. Agent identity model (#23) is the prerequisite for everything else in the epic. |
+| ★★★ | **EigenTrust transitivity** (#11, issue #26) | Makes trust scoring useful in sparse agent meshes. Research task before any implementation. |
+| ★★ | **EERP reputation chains** (#12) | Collusion detection. Only valuable at scale. |
 
 ---
 
