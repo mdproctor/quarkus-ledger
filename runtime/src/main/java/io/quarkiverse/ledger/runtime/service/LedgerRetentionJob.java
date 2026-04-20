@@ -145,8 +145,14 @@ public class LedgerRetentionJob {
                 .forEach(entityManager::remove);
 
         // 4. Delete entries — JPA cascade handles: supplements → subclass rows → ledger_entry
+        // Use em.find() rather than em.merge() — merge loses polymorphic subclass identity
+        // for JOINED inheritance, causing OptimisticLockException (row count mismatch).
+        // em.find() returns the correctly-typed managed entity in this EM's context.
         for (final LedgerEntry e : sorted) {
-            entityManager.remove(entityManager.contains(e) ? e : entityManager.merge(e));
+            final LedgerEntry managed = entityManager.find(LedgerEntry.class, e.id);
+            if (managed != null) {
+                entityManager.remove(managed);
+            }
         }
     }
 }
