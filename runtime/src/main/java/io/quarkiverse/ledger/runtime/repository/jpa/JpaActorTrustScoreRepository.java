@@ -36,7 +36,8 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
     @Override
     @Transactional
     public void upsert(final String actorId, final ActorType actorType, final double trustScore,
-            final int decisionCount, final int overturnedCount, final int appealCount,
+            final int decisionCount, final int overturnedCount,
+            final double alpha, final double beta,
             final int attestationPositive, final int attestationNegative,
             final Instant lastComputedAt) {
 
@@ -47,9 +48,10 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
         }
         score.actorType = actorType;
         score.trustScore = trustScore;
+        score.alpha = alpha;
+        score.beta = beta;
         score.decisionCount = decisionCount;
         score.overturnedCount = overturnedCount;
-        score.appealCount = appealCount;
         score.attestationPositive = attestationPositive;
         score.attestationNegative = attestationNegative;
         score.lastComputedAt = lastComputedAt;

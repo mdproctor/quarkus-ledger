@@ -7,13 +7,7 @@ import java.util.Optional;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 
-/**
- * SPI for persisting and querying {@link ActorTrustScore} records.
- *
- * <p>
- * The default implementation uses Hibernate ORM with Panache. Alternative implementations
- * can be substituted via CDI.
- */
+/** SPI for persisting and querying {@link ActorTrustScore} records. */
 public interface ActorTrustScoreRepository {
 
     /**
@@ -32,13 +26,14 @@ public interface ActorTrustScoreRepository {
      * @param trustScore the computed trust score in [0.0, 1.0]
      * @param decisionCount total number of EVENT entries attributed to this actor
      * @param overturnedCount number of decisions with at least one negative attestation
-     * @param appealCount appeal count (reserved for future use)
+     * @param alpha final α value from the Beta distribution
+     * @param beta final β value from the Beta distribution
      * @param attestationPositive total positive attestation count
      * @param attestationNegative total negative attestation count
      * @param lastComputedAt the timestamp of this computation
      */
     void upsert(String actorId, ActorType actorType, double trustScore,
-            int decisionCount, int overturnedCount, int appealCount,
+            int decisionCount, int overturnedCount, double alpha, double beta,
             int attestationPositive, int attestationNegative,
             Instant lastComputedAt);
 
