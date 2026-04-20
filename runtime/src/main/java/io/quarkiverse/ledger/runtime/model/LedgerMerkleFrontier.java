@@ -12,17 +12,14 @@ import jakarta.persistence.Table;
 /**
  * One node in the Merkle Mountain Range frontier for a subject.
  *
- * <p>A subject with N entries has exactly {@code Integer.bitCount(N)} rows at any time.
+ * <p>
+ * A subject with N entries has exactly {@code Integer.bitCount(N)} rows at any time.
  * Plain {@code @Entity} — queries via {@code @NamedQuery} + EntityManager.
  */
 @Entity
 @Table(name = "ledger_merkle_frontier")
-@NamedQuery(
-        name = "LedgerMerkleFrontier.findBySubjectId",
-        query = "SELECT f FROM LedgerMerkleFrontier f WHERE f.subjectId = :subjectId ORDER BY f.level ASC")
-@NamedQuery(
-        name = "LedgerMerkleFrontier.deleteBySubjectAndLevel",
-        query = "DELETE FROM LedgerMerkleFrontier f WHERE f.subjectId = :subjectId AND f.level = :level")
+@NamedQuery(name = "LedgerMerkleFrontier.findBySubjectId", query = "SELECT f FROM LedgerMerkleFrontier f WHERE f.subjectId = :subjectId ORDER BY f.level ASC")
+@NamedQuery(name = "LedgerMerkleFrontier.deleteBySubjectAndLevel", query = "DELETE FROM LedgerMerkleFrontier f WHERE f.subjectId = :subjectId AND f.level = :level")
 public class LedgerMerkleFrontier {
 
     @Id
@@ -39,6 +36,7 @@ public class LedgerMerkleFrontier {
 
     @PrePersist
     void prePersist() {
-        if (id == null) id = UUID.randomUUID();
+        if (id == null)
+            id = UUID.randomUUID();
     }
 }

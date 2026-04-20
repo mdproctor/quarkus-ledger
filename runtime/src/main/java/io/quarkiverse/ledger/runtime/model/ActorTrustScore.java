@@ -16,9 +16,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "actor_trust_score")
-@NamedQuery(
-        name = "ActorTrustScore.findAll",
-        query = "SELECT s FROM ActorTrustScore s")
+@NamedQuery(name = "ActorTrustScore.findAll", query = "SELECT s FROM ActorTrustScore s")
 public class ActorTrustScore {
 
     @Id
