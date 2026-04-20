@@ -52,6 +52,11 @@ public class TrustScoreJob {
         runComputation();
     }
 
+    /**
+     * Loads all EVENT entries into memory before grouping by actor. For very large ledgers
+     * this will become a bottleneck — a streaming or per-actor approach should be considered
+     * when entry counts reach production scale.
+     */
     @Transactional
     public void runComputation() {
         final TrustScoreComputer computer = new TrustScoreComputer(
