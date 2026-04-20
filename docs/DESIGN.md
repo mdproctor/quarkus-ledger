@@ -57,7 +57,7 @@ from base entries — trust scoring works across all consumers.
 |---|---|---|
 | `ledger_entry` | V1000 | Base audit record (discriminator column: `dtype`) |
 | `ledger_attestation` | V1000 | Peer verdicts — FK to `ledger_entry.id` |
-| `actor_trust_score` | V1001 | Nightly EigenTrust scores per actor |
+| `actor_trust_score` | V1001 | Nightly Bayesian Beta trust scores per actor |
 | `ledger_supplement_compliance` | V1002 | ComplianceSupplement joined table |
 | `ledger_supplement_provenance` | V1002 | ProvenanceSupplement joined table |
 | `ledger_entry_archive` | V1003 | Archive records before retention deletion |
@@ -221,21 +221,9 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `decision-context.enabled` | `true` | Capture decision context snapshots (GDPR Art.22 / EU AI Act Art.12) |
 | `evidence.enabled` | `false` | Accept and store structured evidence in `ComplianceSupplement.evidence` |
 | `attestations.enabled` | `true` | Enable peer attestation endpoints |
-| `trust-score.enabled` | `false` | Enable nightly EigenTrust reputation computation (requires historical data) |
-| `trust-score.decay-half-life-days` | `90` | Exponential decay half-life for historical decision weighting |
+| `trust-score.enabled` | `false` | Enable nightly Bayesian Beta trust score computation (requires historical data) |
+| `trust-score.decay-half-life-days` | `90` | Exponential decay half-life for attestation recency weighting |
 | `trust-score.routing-enabled` | `false` | Influence routing via CDI events based on trust scores |
-
-**Forgiveness sub-config (`quarkus.ledger.trust-score.forgiveness.*`):**
-
-| Key | Default | Description |
-|---|---|---|
-| `forgiveness.enabled` | `false` | Enable forgiveness — off by default, zero behaviour change when disabled |
-| `forgiveness.frequency-threshold` | `3` | Negative decisions ≤ this receive full leniency (1.0); above → half leniency (0.5) |
-| `forgiveness.half-life-days` | `30` | Forgiveness recency decay half-life in days (independent of `decay-half-life-days`) |
-
-Formula: `F = 2^(-ageInDays / halfLifeDays) × frequencyLeniency`,
-`adjustedScore = decisionScore + F × (1.0 - decisionScore)`.
-Clean decisions (score = 1.0) are unaffected. See `adr/0001-forgiveness-mechanism-omits-severity-dimension.md` for the decision to exclude severity as a dimension.
 
 **Retention sub-config (`quarkus.ledger.retention.*`):**
 
@@ -276,8 +264,14 @@ These are excluded by design — consumers implement their own:
 
 ### Near-term
 
-**Bayesian trust weighting** — per-interaction recency weighting before EigenTrust eigen
-computation (pending).
+**Trust scoring** uses a Bayesian Beta model. For each actor, all attestations across all
+decisions accumulate into a Beta distribution: `α` for positive verdicts (SOUND, ENDORSED),
+`β` for negative verdicts (FLAGGED, CHALLENGED). Each contribution is recency-weighted:
+`weight = 2^(-ageInDays / decayHalfLifeDays)` using the attestation's own timestamp.
+Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
+
+`ActorTrustScore` stores `trust_score`, `alpha_value`, `beta_value`, and diagnostic
+counters. `TrustScoreJob` runs nightly when enabled.
 
 **Privacy / pseudonymisation** — Axiom 7 gap, GDPR right-to-erasure design (pending).
 
@@ -318,11 +312,12 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
 | **Runnable examples** | ✅ Done | `examples/order-processing/` (12 IT), `examples/art22-decision-snapshot/` (3 IT), `examples/art12-compliance/` (3 IT), `examples/merkle-verification/` (2 IT), `examples/prov-dm-export/` (2 IT) |
 | **LedgerSupplement architecture** | ✅ Done | ComplianceSupplement, ProvenanceSupplement, ObservabilitySupplement deleted (fields moved to core); LedgerEntry with 12 core fields; Flyway V1000/V1001; 7 supplement IT tests; GDPR Art.22 example |
-| **Forgiveness mechanism** | ✅ Done | Two-parameter (recency + frequency) forgiveness in `TrustScoreComputer`; `quarkus.ledger.trust-score.forgiveness.*`; 22 unit tests + 3 IT tests |
+| **Forgiveness mechanism** | ✅ Superseded | Replaced by Bayesian Beta model (ADR 0003). ForgivenessParams removed. |
 | **EU AI Act Art.12 compliance** | ✅ Done | Archive-then-delete retention job (`LedgerRetentionJob`), V1003 archive table, audit query SPI (`findByActorId`, `findByActorRole`, `findByTimeRange`), `docs/compliance/EU-AI-ACT-ART12.md`, `examples/art12-compliance/` |
 | **Causality & Observability to core** | ✅ Done | `correlationId` + `causedByEntryId` on `LedgerEntry`; `ObservabilitySupplement` deleted; `findCausedBy()` SPI |
 | **Merkle Mountain Range** | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerMerkleFrontier` (log₂(N) rows/subject), `LedgerVerificationService` (treeRoot/inclusionProof/verify), `LedgerMerklePublisher` (opt-in Ed25519 tlog-checkpoint); ADR 0002; `examples/merkle-verification/` (2 IT) |
 | **W3C PROV-DM JSON-LD export** | ✅ Done | `LedgerProvSerializer.toProvJsonLd()` (pure static, 13 unit tests), `LedgerProvExportService` (CDI bean, 4 IT); `docs/prov-dm-mapping.md` field reference; `examples/prov-dm-export/` (2 IT) |
+| **Bayesian trust weighting** | ✅ Done | Bayesian Beta model: per-attestation recency weighting, alpha/beta posterior, ForgivenessParams removed. See ADR 0003. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

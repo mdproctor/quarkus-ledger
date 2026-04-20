@@ -1,7 +1,7 @@
 # 0001 — Forgiveness mechanism omits severity as a distinct dimension
 
 Date: 2026-04-17
-Status: Accepted
+Status: Superseded by ADR 0003
 
 ## Context and Problem Statement
 
