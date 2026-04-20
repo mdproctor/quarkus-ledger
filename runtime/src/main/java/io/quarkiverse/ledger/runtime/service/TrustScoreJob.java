@@ -20,7 +20,7 @@ import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.scheduler.Scheduled;
 
 /**
- * Nightly scheduled job that recomputes EigenTrust-inspired trust scores for all
+ * Nightly scheduled job that recomputes Bayesian Beta trust scores for all
  * decision-making actors in the ledger.
  *
  * <p>
@@ -43,10 +43,6 @@ public class TrustScoreJob {
     @Inject
     LedgerConfig config;
 
-    /**
-     * Scheduled entry point — runs every 24 hours.
-     * Delegates to {@link #runComputation()} when trust scoring is enabled.
-     */
     @Scheduled(every = "24h", identity = "ledger-trust-score-job")
     @Transactional
     public void computeTrustScores() {
@@ -56,14 +52,6 @@ public class TrustScoreJob {
         runComputation();
     }
 
-    /**
-     * Perform the full trust score computation.
-     *
-     * <p>
-     * Loads all EVENT entries, groups them by actor, loads all attestations for those entries,
-     * then upserts an {@code ActorTrustScore} row for each actor.
-     * Exposed for direct invocation in tests (scheduler disabled in test profile).
-     */
     @Transactional
     public void runComputation() {
         final TrustScoreComputer computer = new TrustScoreComputer(
@@ -91,8 +79,9 @@ public class TrustScoreJob {
 
             final TrustScoreComputer.ActorScore score = computer.compute(decisions, attestationsByEntry, now);
 
-            trustRepo.upsert(actorId, actorType, score.trustScore(), score.decisionCount(),
-                    score.overturnedCount(), 0,
+            trustRepo.upsert(actorId, actorType, score.trustScore(),
+                    score.decisionCount(), score.overturnedCount(),
+                    score.alpha(), score.beta(),
                     score.attestationPositive(), score.attestationNegative(), now);
         }
     }
