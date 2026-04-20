@@ -32,7 +32,7 @@ public interface ReactiveLedgerEntryRepository {
 
     Uni<Optional<LedgerEntry>> findLatestBySubjectId(UUID subjectId);
 
-    Uni<Optional<LedgerEntry>> findById(UUID id);
+    Uni<Optional<LedgerEntry>> findEntryById(UUID id);
 
     Uni<List<LedgerEntry>> findAllEvents();
 
