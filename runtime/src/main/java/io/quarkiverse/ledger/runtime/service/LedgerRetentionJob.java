@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import org.jboss.logging.Logger;
@@ -47,6 +48,9 @@ public class LedgerRetentionJob {
     LedgerEntryRepository ledgerRepo;
 
     @Inject
+    EntityManager entityManager;
+
+    @Inject
     LedgerConfig config;
 
     @Inject
@@ -76,7 +80,7 @@ public class LedgerRetentionJob {
         final boolean archiveBeforeDelete = config.retention().archiveBeforeDelete();
 
         // Load ALL entries (not just EVENTs — retention covers all types)
-        final List<LedgerEntry> all = LedgerEntry.listAll();
+        final List<LedgerEntry> all = ledgerRepo.listAll();
         final Map<UUID, List<LedgerEntry>> bySubject = all.stream()
                 .filter(e -> e.subjectId != null)
                 .collect(Collectors.groupingBy(e -> e.subjectId));
@@ -139,7 +143,7 @@ public class LedgerRetentionJob {
 
         // 4. Delete entries — JPA cascade handles: supplements → subclass rows → ledger_entry
         for (final LedgerEntry e : sorted) {
-            e.delete();
+            entityManager.remove(entityManager.contains(e) ? e : entityManager.merge(e));
         }
     }
 }
