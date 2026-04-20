@@ -11,7 +11,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
 /**
- * EigenTrust-inspired trust score for a decision-making actor.
+ * Bayesian Beta trust score for a decision-making actor.
  * Plain {@code @Entity} — queries via {@code @NamedQuery} + EntityManager.
  */
 @Entity
@@ -30,14 +30,17 @@ public class ActorTrustScore {
     @Column(name = "trust_score")
     public double trustScore;
 
+    @Column(name = "alpha_value")
+    public double alpha;
+
+    @Column(name = "beta_value")
+    public double beta;
+
     @Column(name = "decision_count")
     public int decisionCount;
 
     @Column(name = "overturned_count")
     public int overturnedCount;
-
-    @Column(name = "appeal_count")
-    public int appealCount;
 
     @Column(name = "attestation_positive")
     public int attestationPositive;
