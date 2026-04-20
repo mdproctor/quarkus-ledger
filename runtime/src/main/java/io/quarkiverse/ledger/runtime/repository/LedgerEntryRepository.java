@@ -50,7 +50,7 @@ public interface LedgerEntryRepository {
      * @param id the ledger entry UUID primary key
      * @return the entry if found, or empty
      */
-    Optional<LedgerEntry> findById(UUID id);
+    Optional<LedgerEntry> findEntryById(UUID id);
 
     /**
      * Return all attestations for the given ledger entry, ordered by occurrence time ascending.
@@ -67,6 +67,13 @@ public interface LedgerEntryRepository {
      * @return the persisted attestation
      */
     LedgerAttestation saveAttestation(LedgerAttestation attestation);
+
+    /**
+     * Return all ledger entries across all subjects (for retention and bulk operations).
+     *
+     * @return list of all entries; empty if none exist
+     */
+    List<LedgerEntry> listAll();
 
     /**
      * Return all EVENT-type ledger entries across all subjects (for trust score computation).

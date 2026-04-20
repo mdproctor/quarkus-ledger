@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
 
 /**
@@ -17,6 +19,9 @@ import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
  */
 @ApplicationScoped
 public class LedgerVerificationService {
+
+    @Inject
+    LedgerEntryRepository ledgerRepo;
 
     /** Return the current Merkle tree root for a subject. */
     @Transactional
@@ -35,13 +40,11 @@ public class LedgerVerificationService {
      */
     @Transactional
     public InclusionProof inclusionProof(final UUID entryId) {
-        final LedgerEntry entry = LedgerEntry.<LedgerEntry> list("id = ?1", entryId).stream()
-                .findFirst().orElse(null);
+        final LedgerEntry entry = ledgerRepo.findEntryById(entryId).orElse(null);
         if (entry == null)
             throw new IllegalArgumentException("Entry not found: " + entryId);
 
-        final List<LedgerEntry> allForSubject = LedgerEntry.<LedgerEntry> list(
-                "subjectId = ?1 ORDER BY sequenceNumber ASC", entry.subjectId);
+        final List<LedgerEntry> allForSubject = ledgerRepo.findBySubjectId(entry.subjectId);
 
         final List<String> leafHashes = allForSubject.stream()
                 .map(e -> e.digest)
@@ -62,8 +65,7 @@ public class LedgerVerificationService {
      */
     @Transactional
     public boolean verify(final UUID subjectId) {
-        final List<LedgerEntry> entries = LedgerEntry.<LedgerEntry> list(
-                "subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
+        final List<LedgerEntry> entries = ledgerRepo.findBySubjectId(subjectId);
 
         List<LedgerMerkleFrontier> frontier = new ArrayList<>();
         for (final LedgerEntry entry : entries) {

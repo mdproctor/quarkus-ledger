@@ -22,6 +22,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 /**
  * Hibernate ORM / Panache implementation of {@link LedgerEntryRepository}.
@@ -40,7 +41,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
  */
 @ApplicationScoped
 @Alternative
-public class JpaLedgerEntryRepository implements LedgerEntryRepository {
+public class JpaLedgerEntryRepository implements LedgerEntryRepository, PanacheRepositoryBase<LedgerEntry, UUID> {
 
     @Inject
     LedgerConfig ledgerConfig;
@@ -61,7 +62,7 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         if (ledgerConfig.hashChain().enabled()) {
             entry.digest = LedgerMerkleTree.leafHash(entry);
         }
-        entry.persist();
+        persist(entry);
 
         if (ledgerConfig.hashChain().enabled()) {
             final List<LedgerMerkleFrontier> currentFrontier = LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
@@ -93,20 +94,20 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findBySubjectId(final UUID subjectId) {
-        return LedgerEntry.list("subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
+        return list("subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
     }
 
     /** {@inheritDoc} */
     @Override
     public Optional<LedgerEntry> findLatestBySubjectId(final UUID subjectId) {
-        return LedgerEntry.find("subjectId = ?1 ORDER BY sequenceNumber DESC", subjectId)
+        return find("subjectId = ?1 ORDER BY sequenceNumber DESC", subjectId)
                 .firstResultOptional();
     }
 
     /** {@inheritDoc} */
     @Override
-    public Optional<LedgerEntry> findById(final UUID id) {
-        return Optional.ofNullable(LedgerEntry.findById(id));
+    public Optional<LedgerEntry> findEntryById(final UUID id) {
+        return findByIdOptional(id);
     }
 
     /** {@inheritDoc} */
@@ -124,8 +125,14 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     /** {@inheritDoc} */
     @Override
+    public List<LedgerEntry> listAll() {
+        return PanacheRepositoryBase.super.listAll();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<LedgerEntry> findAllEvents() {
-        return LedgerEntry.find("entryType = ?1", LedgerEntryType.EVENT).list();
+        return find("entryType = ?1", LedgerEntryType.EVENT).list();
     }
 
     /** {@inheritDoc} */
@@ -142,7 +149,7 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     public List<LedgerEntry> findByActorId(final String actorId,
             final Instant from, final Instant to) {
-        return LedgerEntry.list(
+        return list(
                 "actorId = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
                 actorId, from, to);
     }
@@ -151,7 +158,7 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     public List<LedgerEntry> findByActorRole(final String actorRole,
             final Instant from, final Instant to) {
-        return LedgerEntry.list(
+        return list(
                 "actorRole = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
                 actorRole, from, to);
     }
@@ -159,7 +166,7 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findByTimeRange(final Instant from, final Instant to) {
-        return LedgerEntry.list(
+        return list(
                 "occurredAt >= ?1 AND occurredAt <= ?2 ORDER BY occurredAt ASC",
                 from, to);
     }
@@ -167,7 +174,7 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findCausedBy(final UUID entryId) {
-        return LedgerEntry.list(
+        return list(
                 "causedByEntryId = ?1 ORDER BY occurredAt ASC", entryId);
     }
 }

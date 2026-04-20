@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 
 /**
  * CDI bean exporting a subject's audit history as W3C PROV-DM JSON-LD.
@@ -21,6 +23,9 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 @ApplicationScoped
 public class LedgerProvExportService {
 
+    @Inject
+    LedgerEntryRepository ledgerRepo;
+
     /**
      * Export the complete provenance graph for the given subject as PROV-JSON-LD.
      *
@@ -30,8 +35,7 @@ public class LedgerProvExportService {
      */
     @Transactional
     public String exportSubject(final UUID subjectId) {
-        final List<LedgerEntry> entries = LedgerEntry.<LedgerEntry> list(
-                "subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
+        final List<LedgerEntry> entries = ledgerRepo.findBySubjectId(subjectId);
         if (entries.isEmpty()) {
             throw new IllegalArgumentException("No entries found for subject: " + subjectId);
         }
