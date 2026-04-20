@@ -126,7 +126,7 @@ class CausalityQueryIT {
         e.actorRole = "Processor";
         e.occurredAt = occurredAt;
         e.causedByEntryId = causedByEntryId;
-        e.persist();
+        repo.save(e);
         return e;
     }
 

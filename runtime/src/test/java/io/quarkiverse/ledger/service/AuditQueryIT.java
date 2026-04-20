@@ -137,6 +137,6 @@ class AuditQueryIT {
         e.actorType = ActorType.AGENT;
         e.actorRole = actorRole;
         e.occurredAt = occurredAt;
-        e.persist();
+        repo.save(e);
     }
 }

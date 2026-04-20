@@ -126,9 +126,9 @@ class LedgerVerificationServiceIT {
         UUID sub = UUID.randomUUID();
         TestEntry e = seedEntry(sub, 1, "actor-a");
 
-        LedgerEntry stored = repo.findById(e.id).orElseThrow();
+        LedgerEntry stored = repo.findEntryById(e.id).orElseThrow();
         stored.digest = "0000000000000000000000000000000000000000000000000000000000000000";
-        stored.persist();
+        repo.save(stored);
 
         assertThat(verificationService.verify(sub)).isFalse();
     }

@@ -17,6 +17,7 @@ import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
 import io.quarkiverse.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
@@ -52,6 +53,9 @@ class TrustScoreForgivenessIT {
 
     @Inject
     TrustScoreJob trustScoreJob;
+
+    @Inject
+    LedgerEntryRepository repo;
 
     // ── happy path: forgiveness raises score for actor with old failure ──────
 
@@ -141,7 +145,7 @@ class TrustScoreForgivenessIT {
         entry.actorType = ActorType.AGENT;
         entry.actorRole = "Classifier";
         entry.occurredAt = occurredAt;
-        entry.persist();
+        repo.save(entry);
 
         if (verdictOrNull != null) {
             final LedgerAttestation att = new LedgerAttestation();

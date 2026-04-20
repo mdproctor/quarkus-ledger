@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**
@@ -25,13 +27,16 @@ import io.quarkus.test.junit.QuarkusTest;
 @QuarkusTest
 class LedgerSupplementIT {
 
+    @Inject
+    LedgerEntryRepository repo;
+
     // ── happy path: no supplements ────────────────────────────────────────────
 
     @Test
     @Transactional
     void bareEntry_supplementTablesNotTouched() {
         final TestEntry entry = bareEntry();
-        entry.persist();
+        repo.save(entry);
 
         final long count = LedgerSupplement.count("ledgerEntry.id", entry.id);
         assertThat(count).isZero();
@@ -54,9 +59,9 @@ class LedgerSupplementIT {
         cs.humanOverrideAvailable = true;
         cs.decisionContext = "{\"score\":88}";
         entry.attach(cs);
-        entry.persist();
+        repo.save(entry);
 
-        final TestEntry found = TestEntry.findById(entry.id);
+        final TestEntry found = (TestEntry) repo.findEntryById(entry.id).orElseThrow();
         assertThat(found).isNotNull();
         assertThat(found.supplementJson).isNotNull();
         assertThat(found.supplementJson).contains("classifier-v2");
@@ -85,9 +90,9 @@ class LedgerSupplementIT {
         final ProvenanceSupplement ps = new ProvenanceSupplement();
         ps.sourceEntitySystem = "quarkus-flow";
         entry.attach(ps);
-        entry.persist();
+        repo.save(entry);
 
-        final TestEntry found = TestEntry.findById(entry.id);
+        final TestEntry found = (TestEntry) repo.findEntryById(entry.id).orElseThrow();
         assertThat(found.supplementJson).contains("\"COMPLIANCE\"");
         assertThat(found.supplementJson).contains("\"PROVENANCE\"");
         assertThat(found.supplementJson).contains("quarkus-flow");
@@ -105,9 +110,9 @@ class LedgerSupplementIT {
         ps.sourceEntityType = "Flow:WorkflowInstance";
         ps.sourceEntitySystem = "quarkus-flow";
         entry.attach(ps);
-        entry.persist();
+        repo.save(entry);
 
-        final ProvenanceSupplement loaded = TestEntry.<TestEntry> findById(entry.id)
+        final ProvenanceSupplement loaded = ((TestEntry) repo.findEntryById(entry.id).orElseThrow())
                 .provenance().orElseThrow();
         assertThat(loaded.sourceEntityId).isEqualTo("wf-42");
         assertThat(loaded.sourceEntitySystem).isEqualTo("quarkus-flow");
@@ -141,9 +146,9 @@ class LedgerSupplementIT {
     @Transactional
     void bareEntry_supplementJson_isNull() {
         final TestEntry entry = bareEntry();
-        entry.persist();
+        repo.save(entry);
 
-        final TestEntry found = TestEntry.findById(entry.id);
+        final TestEntry found = (TestEntry) repo.findEntryById(entry.id).orElseThrow();
         assertThat(found.supplementJson).isNull();
     }
 

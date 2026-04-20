@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
@@ -50,7 +49,7 @@ class LedgerRetentionJobIT {
 
         retentionJob.runRetention();
 
-        assertThat(LedgerEntry.find("subjectId", subjectId).count()).isZero();
+        assertThat(repo.findBySubjectId(subjectId)).isEmpty();
         assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isEqualTo(2);
     }
 
@@ -62,7 +61,7 @@ class LedgerRetentionJobIT {
 
         retentionJob.runRetention();
 
-        assertThat(LedgerEntry.find("subjectId", subjectId).count()).isEqualTo(1);
+        assertThat(repo.findBySubjectId(subjectId)).hasSize(1);
         assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isZero();
     }
 
@@ -92,7 +91,7 @@ class LedgerRetentionJobIT {
         // FK ordering wrong → would throw constraint violation
         retentionJob.runRetention();
 
-        assertThat(LedgerEntry.find("subjectId", subjectId).count()).isZero();
+        assertThat(repo.findBySubjectId(subjectId)).isEmpty();
         assertThat(LedgerAttestation.find("ledgerEntryId", e.id).count()).isZero();
     }
 
@@ -105,7 +104,7 @@ class LedgerRetentionJobIT {
 
         retentionJob.runRetention();
 
-        assertThat(LedgerEntry.find("subjectId", subjectId).count()).isEqualTo(2);
+        assertThat(repo.findBySubjectId(subjectId)).hasSize(2);
         assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isZero();
     }
 
@@ -116,11 +115,11 @@ class LedgerRetentionJobIT {
         final TestEntry e = chainedEntry(subjectId, 1, now().minus(50, ChronoUnit.DAYS));
         // Tamper: corrupt the digest so chain verification fails
         e.digest = "000000000000000000000000000000000000000000000000000000000000dead";
-        e.persist();
+        repo.save(e);
 
         retentionJob.runRetention();
 
-        assertThat(LedgerEntry.find("subjectId", subjectId).count()).isEqualTo(1);
+        assertThat(repo.findBySubjectId(subjectId)).hasSize(1);
         assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isZero();
     }
 

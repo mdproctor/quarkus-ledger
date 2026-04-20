@@ -76,7 +76,7 @@ class LedgerProvExportServiceIT {
         cs.algorithmRef = "gpt-4o";
         cs.confidenceScore = 0.88;
         e.attach(cs);
-        e.persist();
+        repo.save(e);
 
         String json = exportService.exportSubject(sub);
 
@@ -98,7 +98,7 @@ class LedgerProvExportServiceIT {
         ps.sourceEntityType = "WorkItem";
         ps.sourceEntitySystem = "tarkus";
         e.attach(ps);
-        e.persist();
+        repo.save(e);
 
         String json = exportService.exportSubject(sub);
 
