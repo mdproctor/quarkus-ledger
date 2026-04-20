@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,9 @@ class LedgerRetentionJobIT {
     @Inject
     LedgerEntryRepository repo;
 
+    @Inject
+    EntityManager em;
+
     @Test
     @Transactional
     void oldEntries_archivedAndDeleted() {
@@ -50,7 +55,7 @@ class LedgerRetentionJobIT {
         retentionJob.runRetention();
 
         assertThat(repo.findBySubjectId(subjectId)).isEmpty();
-        assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isEqualTo(2);
+        assertThat(archiveCountForSubject(subjectId)).isEqualTo(2);
     }
 
     @Test
@@ -62,7 +67,7 @@ class LedgerRetentionJobIT {
         retentionJob.runRetention();
 
         assertThat(repo.findBySubjectId(subjectId)).hasSize(1);
-        assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isZero();
+        assertThat(archiveCountForSubject(subjectId)).isZero();
     }
 
     @Test
@@ -73,8 +78,13 @@ class LedgerRetentionJobIT {
 
         retentionJob.runRetention();
 
-        final LedgerEntryArchiveRecord record = LedgerEntryArchiveRecord
-                .<LedgerEntryArchiveRecord> find("subjectId", subjectId).firstResult();
+        final List<LedgerEntryArchiveRecord> records = em.createQuery(
+                "SELECT r FROM LedgerEntryArchiveRecord r WHERE r.subjectId = :subjectId",
+                LedgerEntryArchiveRecord.class)
+                .setParameter("subjectId", subjectId)
+                .getResultList();
+        assertThat(records).hasSize(1);
+        final LedgerEntryArchiveRecord record = records.get(0);
         assertThat(record).isNotNull();
         assertThat(record.entryJson).contains("\"actorId\":\"retention-actor\"");
         assertThat(record.entryJson).contains("\"sequenceNumber\":1");
@@ -92,7 +102,11 @@ class LedgerRetentionJobIT {
         retentionJob.runRetention();
 
         assertThat(repo.findBySubjectId(subjectId)).isEmpty();
-        assertThat(LedgerAttestation.find("ledgerEntryId", e.id).count()).isZero();
+        final long attestCount = (Long) em.createQuery(
+                "SELECT COUNT(a) FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId")
+                .setParameter("entryId", e.id)
+                .getSingleResult();
+        assertThat(attestCount).isZero();
     }
 
     @Test
@@ -105,7 +119,7 @@ class LedgerRetentionJobIT {
         retentionJob.runRetention();
 
         assertThat(repo.findBySubjectId(subjectId)).hasSize(2);
-        assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isZero();
+        assertThat(archiveCountForSubject(subjectId)).isZero();
     }
 
     @Test
@@ -120,7 +134,14 @@ class LedgerRetentionJobIT {
         retentionJob.runRetention();
 
         assertThat(repo.findBySubjectId(subjectId)).hasSize(1);
-        assertThat(LedgerEntryArchiveRecord.find("subjectId", subjectId).count()).isZero();
+        assertThat(archiveCountForSubject(subjectId)).isZero();
+    }
+
+    private long archiveCountForSubject(final UUID subjectId) {
+        return (Long) em.createQuery(
+                "SELECT COUNT(r) FROM LedgerEntryArchiveRecord r WHERE r.subjectId = :subjectId")
+                .setParameter("subjectId", subjectId)
+                .getSingleResult();
     }
 
     private TestEntry chainedEntry(final UUID subjectId, final int seq,
@@ -147,7 +168,7 @@ class LedgerRetentionJobIT {
         att.verdict = verdict;
         att.confidence = 0.9;
         att.occurredAt = Instant.now();
-        att.persist();
+        em.persist(att);
     }
 
     private Instant now() {

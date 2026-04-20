@@ -9,8 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-
 /**
  * Persisted archive record written by the retention job before a
  * {@link LedgerEntry} is removed from the main table.
@@ -26,7 +24,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
  */
 @Entity
 @Table(name = "ledger_entry_archive")
-public class LedgerEntryArchiveRecord extends PanacheEntityBase {
+public class LedgerEntryArchiveRecord {
 
     /** Primary key — UUID assigned on first persist. */
     @Id
