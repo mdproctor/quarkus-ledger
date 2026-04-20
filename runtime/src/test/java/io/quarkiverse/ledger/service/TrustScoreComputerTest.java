@@ -461,4 +461,69 @@ class TrustScoreComputerTest {
         assertThat(forgiven.trustScore()).isGreaterThan(baseline.trustScore());
         assertThat(forgiven.trustScore()).isGreaterThan(0.5); // recencyF ≈ 1.0, frequencyF = 1.0 → F ≈ 1.0
     }
+
+    // ── Beta model: these tests FAIL with the current algorithm ──────────────
+
+    @Test
+    void beta_unattestedDecision_scoresNeutral() {
+        // Current model: unattempted decisions score 1.0 (clean).
+        // Beta model: unattested decisions contribute nothing — prior gives 0.5.
+        final TestLedgerEntry d = decision("alice", now.minus(1, ChronoUnit.HOURS));
+
+        final TrustScoreComputer.ActorScore score = computer.compute(List.of(d), Map.of(), now);
+
+        assertThat(score.trustScore()).isCloseTo(0.5, within(0.01));
+    }
+
+    @Test
+    void beta_onePositiveAttestation_scoreNotAtMax() {
+        // Current model: 1 positive → score 1.0 (maximum confidence).
+        // Beta model: 1 positive → α=2, β=1 → score ≈ 0.667 (uncertainty acknowledged).
+        final TestLedgerEntry d = decision("alice", now.minus(1, ChronoUnit.HOURS));
+        final LedgerAttestation a = attestation(d.id, AttestationVerdict.SOUND);
+        a.occurredAt = now.minus(1, ChronoUnit.HOURS);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(d), Map.of(d.id, List.of(a)), now);
+
+        assertThat(score.trustScore()).isLessThan(0.9); // Beta: ~0.667, not 1.0
+    }
+
+    @Test
+    void beta_oneNegativeAttestation_scoreAboveZero() {
+        // Current model: 1 negative → score 0.0 (harshest penalty).
+        // Beta model: 1 negative → α=1, β=2 → score ≈ 0.333 (uncertainty acknowledged).
+        final TestLedgerEntry d = decision("alice", now.minus(1, ChronoUnit.HOURS));
+        final LedgerAttestation a = attestation(d.id, AttestationVerdict.FLAGGED);
+        a.occurredAt = now.minus(1, ChronoUnit.HOURS);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(d), Map.of(d.id, List.of(a)), now);
+
+        assertThat(score.trustScore()).isGreaterThan(0.1); // Beta: ~0.333, not 0.0
+    }
+
+    @Test
+    void beta_moreEvidenceYieldsHigherConfidence() {
+        // Current model: 1 positive and 100 positives both score 1.0.
+        // Beta model: 1 positive → 0.667; 100 positives → 0.990. Evidence matters.
+        final TestLedgerEntry d1 = decision("alice", now.minus(1, ChronoUnit.HOURS));
+        final LedgerAttestation onePositive = attestation(d1.id, AttestationVerdict.SOUND);
+        onePositive.occurredAt = now.minus(1, ChronoUnit.HOURS);
+
+        final TestLedgerEntry d2 = decision("bob", now.minus(1, ChronoUnit.HOURS));
+        final java.util.List<LedgerAttestation> manyPositive = new java.util.ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            final LedgerAttestation a = attestation(d2.id, AttestationVerdict.SOUND);
+            a.occurredAt = now.minus(1, ChronoUnit.HOURS);
+            manyPositive.add(a);
+        }
+
+        final TrustScoreComputer.ActorScore scoreOne = computer.compute(
+                List.of(d1), Map.of(d1.id, List.of(onePositive)), now);
+        final TrustScoreComputer.ActorScore scoreMany = computer.compute(
+                List.of(d2), Map.of(d2.id, manyPositive), now);
+
+        assertThat(scoreMany.trustScore()).isGreaterThan(scoreOne.trustScore());
+    }
 }
