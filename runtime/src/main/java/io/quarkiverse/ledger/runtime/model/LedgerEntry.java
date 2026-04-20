@@ -26,7 +26,6 @@ import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /**
  * Abstract base for all ledger entries.
@@ -64,7 +63,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "ledger_entry")
-public abstract class LedgerEntry extends PanacheEntityBase {
+public abstract class LedgerEntry {
 
     // ── Core identity ─────────────────────────────────────────────────────────
 
