@@ -134,12 +134,15 @@ public class LedgerRetentionJob {
                 record.entryJson = LedgerEntryArchiver.toJson(e, attests);
                 record.entryOccurredAt = e.occurredAt;
                 record.archivedAt = now;
-                record.persist();
+                entityManager.persist(record);
             }
         }
 
         // 3. Delete attestations first — non-cascaded FK to ledger_entry
-        LedgerAttestation.delete("ledgerEntryId in ?1", entryIds);
+        entityManager.createNamedQuery("LedgerAttestation.findByEntryIds", LedgerAttestation.class)
+                .setParameter("entryIds", entryIds)
+                .getResultList()
+                .forEach(entityManager::remove);
 
         // 4. Delete entries — JPA cascade handles: supplements → subclass rows → ledger_entry
         for (final LedgerEntry e : sorted) {

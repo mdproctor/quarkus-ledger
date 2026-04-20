@@ -16,7 +16,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /**
  * Abstract base for all ledger supplements.
@@ -50,7 +49,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "supplement_type", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "ledger_supplement")
-public abstract class LedgerSupplement extends PanacheEntityBase {
+public abstract class LedgerSupplement {
 
     /** Primary key — UUID assigned on first persist. */
     @Id

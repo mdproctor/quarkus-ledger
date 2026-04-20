@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,8 @@ class LedgerVerificationServiceIT {
     LedgerVerificationService verificationService;
     @Inject
     LedgerEntryRepository repo;
+    @Inject
+    EntityManager em;
 
     private TestEntry seedEntry(UUID subjectId, int seq, String actorId) {
         TestEntry e = new TestEntry();
@@ -47,7 +50,10 @@ class LedgerVerificationServiceIT {
         seedEntry(sub, 1, "actor-a");
 
         String root = verificationService.treeRoot(sub);
-        List<LedgerMerkleFrontier> frontier = LedgerMerkleFrontier.findBySubjectId(sub);
+        List<LedgerMerkleFrontier> frontier = em
+                .createNamedQuery("LedgerMerkleFrontier.findBySubjectId", LedgerMerkleFrontier.class)
+                .setParameter("subjectId", sub)
+                .getResultList();
 
         assertThat(root).isNotNull().matches("[0-9a-f]{64}");
         assertThat(root).isEqualTo(LedgerMerkleTree.treeRoot(frontier));
@@ -62,7 +68,10 @@ class LedgerVerificationServiceIT {
 
         verificationService.treeRoot(sub);
 
-        List<LedgerMerkleFrontier> frontier = LedgerMerkleFrontier.findBySubjectId(sub);
+        List<LedgerMerkleFrontier> frontier = em
+                .createNamedQuery("LedgerMerkleFrontier.findBySubjectId", LedgerMerkleFrontier.class)
+                .setParameter("subjectId", sub)
+                .getResultList();
         assertThat(frontier).hasSize(Integer.bitCount(5));
     }
 

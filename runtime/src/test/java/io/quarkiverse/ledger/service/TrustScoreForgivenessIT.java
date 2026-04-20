@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,9 @@ class TrustScoreForgivenessIT {
     @Inject
     LedgerEntryRepository repo;
 
+    @Inject
+    EntityManager em;
+
     // ── happy path: forgiveness raises score for actor with old failure ──────
 
     @Test
@@ -76,8 +80,7 @@ class TrustScoreForgivenessIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = ActorTrustScore
-                .<ActorTrustScore> find("actorId", actorId).firstResult();
+        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
         assertThat(score).isNotNull();
         // With forgiveness: old failure partially forgiven, recent clean history dominates
         assertThat(score.trustScore).isGreaterThan(0.7);
@@ -98,8 +101,7 @@ class TrustScoreForgivenessIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = ActorTrustScore
-                .<ActorTrustScore> find("actorId", actorId).firstResult();
+        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isCloseTo(1.0, within(0.01));
     }
@@ -125,10 +127,8 @@ class TrustScoreForgivenessIT {
 
         trustScoreJob.runComputation();
 
-        final double oneOffScore = ActorTrustScore
-                .<ActorTrustScore> find("actorId", oneOffActor).firstResult().trustScore;
-        final double repeatScore = ActorTrustScore
-                .<ActorTrustScore> find("actorId", repeatActor).firstResult().trustScore;
+        final double oneOffScore = em.find(ActorTrustScore.class, oneOffActor).trustScore;
+        final double repeatScore = em.find(ActorTrustScore.class, repeatActor).trustScore;
 
         assertThat(oneOffScore).isGreaterThan(repeatScore);
     }
@@ -157,7 +157,7 @@ class TrustScoreForgivenessIT {
             att.verdict = verdictOrNull;
             att.confidence = 0.9;
             att.occurredAt = occurredAt.plusSeconds(60);
-            att.persist();
+            em.persist(att);
         }
     }
 

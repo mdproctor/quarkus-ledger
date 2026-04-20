@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ class LedgerSupplementIT {
     @Inject
     LedgerEntryRepository repo;
 
+    @Inject
+    EntityManager em;
+
     // ── happy path: no supplements ────────────────────────────────────────────
 
     @Test
@@ -38,7 +42,10 @@ class LedgerSupplementIT {
         final TestEntry entry = bareEntry();
         repo.save(entry);
 
-        final long count = LedgerSupplement.count("ledgerEntry.id", entry.id);
+        final long count = (Long) em.createQuery(
+                "SELECT COUNT(s) FROM LedgerSupplement s WHERE s.ledgerEntry.id = :id")
+                .setParameter("id", entry.id)
+                .getSingleResult();
         assertThat(count).isZero();
         assertThat(entry.supplementJson).isNull();
     }

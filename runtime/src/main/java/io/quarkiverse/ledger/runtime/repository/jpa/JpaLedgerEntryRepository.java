@@ -37,8 +37,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
  * {@link EntityManager} directly.
  *
  * <p>
- * {@link LedgerAttestation} and {@link LedgerMerkleFrontier} still extend PanacheEntityBase —
- * their active record methods are used as-is.
+ * All queries use EntityManager and named queries directly.
  *
  * <p>
  * Marked {@code @Alternative} so that domain-specific extensions (e.g. Tarkus's
@@ -77,7 +76,10 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         em.persist(entry);
 
         if (ledgerConfig.hashChain().enabled()) {
-            final List<LedgerMerkleFrontier> currentFrontier = LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
+            final List<LedgerMerkleFrontier> currentFrontier = em
+                    .createNamedQuery("LedgerMerkleFrontier.findBySubjectId", LedgerMerkleFrontier.class)
+                    .setParameter("subjectId", entry.subjectId)
+                    .getResultList();
 
             final List<LedgerMerkleFrontier> newFrontier = LedgerMerkleTree.append(entry.digest, currentFrontier,
                     entry.subjectId);
@@ -87,13 +89,19 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
                     .collect(Collectors.toSet());
             for (final LedgerMerkleFrontier old : currentFrontier) {
                 if (!newLevels.contains(old.level)) {
-                    LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, old.level);
+                    em.createNamedQuery("LedgerMerkleFrontier.deleteBySubjectAndLevel")
+                            .setParameter("subjectId", entry.subjectId)
+                            .setParameter("level", old.level)
+                            .executeUpdate();
                 }
             }
 
             for (final LedgerMerkleFrontier node : newFrontier) {
-                LedgerMerkleFrontier.deleteBySubjectAndLevel(entry.subjectId, node.level);
-                node.persist();
+                em.createNamedQuery("LedgerMerkleFrontier.deleteBySubjectAndLevel")
+                        .setParameter("subjectId", entry.subjectId)
+                        .setParameter("level", node.level)
+                        .executeUpdate();
+                em.persist(node);
             }
 
             final String newRoot = LedgerMerkleTree.treeRoot(newFrontier);
@@ -134,13 +142,15 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     /** {@inheritDoc} */
     @Override
     public List<LedgerAttestation> findAttestationsByEntryId(final UUID ledgerEntryId) {
-        return LedgerAttestation.list("ledgerEntryId = ?1 ORDER BY occurredAt ASC", ledgerEntryId);
+        return em.createNamedQuery("LedgerAttestation.findByEntryId", LedgerAttestation.class)
+                .setParameter("entryId", ledgerEntryId)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
     @Override
     public LedgerAttestation saveAttestation(final LedgerAttestation attestation) {
-        attestation.persist();
+        em.persist(attestation);
         return attestation;
     }
 
@@ -167,7 +177,10 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         if (entryIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        final List<LedgerAttestation> all = LedgerAttestation.list("ledgerEntryId IN ?1", entryIds);
+        final List<LedgerAttestation> all = em
+                .createNamedQuery("LedgerAttestation.findByEntryIds", LedgerAttestation.class)
+                .setParameter("entryIds", entryIds)
+                .getResultList();
         return all.stream().collect(Collectors.groupingBy(a -> a.ledgerEntryId));
     }
 
