@@ -21,6 +21,13 @@
       <artifactId>quarkus-hibernate-orm-panache</artifactId>
     </dependency>
 
+    <!-- Reactive Panache — optional; consumers who don't use reactive won't get it transitively -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-reactive-panache</artifactId>
+      <optional>true</optional>
+    </dependency>
+
     <!-- Schema migrations -->
     <dependency>
       <groupId>io.quarkus</groupId>
