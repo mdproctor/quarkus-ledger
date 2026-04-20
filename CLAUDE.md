@@ -115,6 +115,9 @@ quarkus-ledger/
 │           ├── LedgerMerkleTree.java        — Merkle Mountain Range algorithm (pure static)
 │           ├── LedgerVerificationService.java — treeRoot / inclusionProof / verify (CDI bean)
 │           ├── LedgerMerklePublisher.java   — Ed25519 signed tlog-checkpoint (opt-in CDI bean)
+│           ├── model/
+│           │   ├── InclusionProof.java       — Merkle inclusion proof value type
+│           │   └── ProofStep.java            — single sibling node in a proof path
 │           ├── TrustScoreComputer.java      — EigenTrust algorithm (pure Java)
 │           └── TrustScoreJob.java           — @Scheduled nightly recomputation
 │       └── supplement/
