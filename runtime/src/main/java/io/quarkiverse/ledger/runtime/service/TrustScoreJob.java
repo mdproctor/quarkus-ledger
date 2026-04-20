@@ -67,11 +67,7 @@ public class TrustScoreJob {
     @Transactional
     public void runComputation() {
         final TrustScoreComputer computer = new TrustScoreComputer(
-                config.trustScore().decayHalfLifeDays(),
-                new TrustScoreComputer.ForgivenessParams(
-                        config.trustScore().forgiveness().enabled(),
-                        config.trustScore().forgiveness().frequencyThreshold(),
-                        config.trustScore().forgiveness().halfLifeDays()));
+                config.trustScore().decayHalfLifeDays());
         final Instant now = Instant.now();
 
         final List<LedgerEntry> allEvents = ledgerRepo.findAllEvents();
@@ -96,7 +92,7 @@ public class TrustScoreJob {
             final TrustScoreComputer.ActorScore score = computer.compute(decisions, attestationsByEntry, now);
 
             trustRepo.upsert(actorId, actorType, score.trustScore(), score.decisionCount(),
-                    score.overturnedCount(), score.appealCount(),
+                    score.overturnedCount(), 0,
                     score.attestationPositive(), score.attestationNegative(), now);
         }
     }
