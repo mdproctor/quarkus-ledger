@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
@@ -22,14 +23,22 @@ import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 /**
- * Hibernate ORM / Panache implementation of {@link LedgerEntryRepository}.
+ * Hibernate ORM implementation of {@link LedgerEntryRepository} using EntityManager directly.
  *
  * <p>
  * Queries on {@link LedgerEntry} are polymorphic — Hibernate joins to all registered
  * subclass tables and returns the correct concrete type for each row.
+ *
+ * <p>
+ * {@link LedgerEntry} is a plain {@code @Entity} (not a PanacheEntityBase subclass), so
+ * Panache repository bytecode enhancement cannot be used here. All queries go through
+ * {@link EntityManager} directly.
+ *
+ * <p>
+ * {@link LedgerAttestation} and {@link LedgerMerkleFrontier} still extend PanacheEntityBase —
+ * their active record methods are used as-is.
  *
  * <p>
  * Marked {@code @Alternative} so that domain-specific extensions (e.g. Tarkus's
@@ -41,7 +50,10 @@ import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
  */
 @ApplicationScoped
 @Alternative
-public class JpaLedgerEntryRepository implements LedgerEntryRepository, PanacheRepositoryBase<LedgerEntry, UUID> {
+public class JpaLedgerEntryRepository implements LedgerEntryRepository {
+
+    @Inject
+    EntityManager em;
 
     @Inject
     LedgerConfig ledgerConfig;
@@ -56,13 +68,13 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository, PanacheR
         // Ensure occurredAt is set before computing the digest — @PrePersist fires
         // during persist(), which is too late for leafHash() to see the correct value.
         if (entry.occurredAt == null) {
-            entry.occurredAt = java.time.Instant.now();
+            entry.occurredAt = Instant.now();
         }
 
         if (ledgerConfig.hashChain().enabled()) {
             entry.digest = LedgerMerkleTree.leafHash(entry);
         }
-        persist(entry);
+        em.persist(entry);
 
         if (ledgerConfig.hashChain().enabled()) {
             final List<LedgerMerkleFrontier> currentFrontier = LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
@@ -94,20 +106,29 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository, PanacheR
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findBySubjectId(final UUID subjectId) {
-        return list("subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.subjectId = :subjectId ORDER BY e.sequenceNumber ASC",
+                LedgerEntry.class)
+                .setParameter("subjectId", subjectId)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
     @Override
     public Optional<LedgerEntry> findLatestBySubjectId(final UUID subjectId) {
-        return find("subjectId = ?1 ORDER BY sequenceNumber DESC", subjectId)
-                .firstResultOptional();
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.subjectId = :subjectId ORDER BY e.sequenceNumber DESC",
+                LedgerEntry.class)
+                .setParameter("subjectId", subjectId)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
     }
 
     /** {@inheritDoc} */
     @Override
     public Optional<LedgerEntry> findEntryById(final UUID id) {
-        return findByIdOptional(id);
+        return Optional.ofNullable(em.find(LedgerEntry.class, id));
     }
 
     /** {@inheritDoc} */
@@ -126,13 +147,18 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository, PanacheR
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> listAll() {
-        return PanacheRepositoryBase.super.listAll();
+        return em.createQuery("SELECT e FROM LedgerEntry e", LedgerEntry.class)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findAllEvents() {
-        return find("entryType = ?1", LedgerEntryType.EVENT).list();
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.entryType = :type",
+                LedgerEntry.class)
+                .setParameter("type", LedgerEntryType.EVENT)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
@@ -149,32 +175,49 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository, PanacheR
     @Override
     public List<LedgerEntry> findByActorId(final String actorId,
             final Instant from, final Instant to) {
-        return list(
-                "actorId = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
-                actorId, from, to);
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.actorId = :actorId" +
+                        " AND e.occurredAt >= :from AND e.occurredAt <= :to ORDER BY e.occurredAt ASC",
+                LedgerEntry.class)
+                .setParameter("actorId", actorId)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findByActorRole(final String actorRole,
             final Instant from, final Instant to) {
-        return list(
-                "actorRole = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
-                actorRole, from, to);
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.actorRole = :actorRole" +
+                        " AND e.occurredAt >= :from AND e.occurredAt <= :to ORDER BY e.occurredAt ASC",
+                LedgerEntry.class)
+                .setParameter("actorRole", actorRole)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findByTimeRange(final Instant from, final Instant to) {
-        return list(
-                "occurredAt >= ?1 AND occurredAt <= ?2 ORDER BY occurredAt ASC",
-                from, to);
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.occurredAt >= :from AND e.occurredAt <= :to" +
+                        " ORDER BY e.occurredAt ASC",
+                LedgerEntry.class)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
     }
 
     /** {@inheritDoc} */
     @Override
     public List<LedgerEntry> findCausedBy(final UUID entryId) {
-        return list(
-                "causedByEntryId = ?1 ORDER BY occurredAt ASC", entryId);
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.causedByEntryId = :entryId ORDER BY e.occurredAt ASC",
+                LedgerEntry.class)
+                .setParameter("entryId", entryId)
+                .getResultList();
     }
 }

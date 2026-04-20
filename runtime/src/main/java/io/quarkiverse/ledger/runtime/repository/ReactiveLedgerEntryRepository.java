@@ -28,6 +28,8 @@ public interface ReactiveLedgerEntryRepository {
 
     Uni<LedgerEntry> save(LedgerEntry entry);
 
+    Uni<List<LedgerEntry>> listAll();
+
     Uni<List<LedgerEntry>> findBySubjectId(UUID subjectId);
 
     Uni<Optional<LedgerEntry>> findLatestBySubjectId(UUID subjectId);
