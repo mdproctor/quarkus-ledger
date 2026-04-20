@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
@@ -23,10 +24,16 @@ public class LedgerVerificationService {
     @Inject
     LedgerEntryRepository ledgerRepo;
 
+    @Inject
+    EntityManager em;
+
     /** Return the current Merkle tree root for a subject. */
     @Transactional
     public String treeRoot(final UUID subjectId) {
-        final List<LedgerMerkleFrontier> frontier = LedgerMerkleFrontier.findBySubjectId(subjectId);
+        final List<LedgerMerkleFrontier> frontier = em
+                .createNamedQuery("LedgerMerkleFrontier.findBySubjectId", LedgerMerkleFrontier.class)
+                .setParameter("subjectId", subjectId)
+                .getResultList();
         if (frontier.isEmpty()) {
             throw new IllegalStateException("No entries for subject " + subjectId);
         }
