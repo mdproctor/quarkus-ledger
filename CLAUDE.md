@@ -76,6 +76,13 @@ relevant. They live on `LedgerEntry` directly (not in supplements). `findCausedB
 traverses causal chains one hop at a time. The test for core vs supplement: is the field
 relevant to every consumer, every entry, every time? If yes → core. If no → supplement.
 
+**`LedgerEntry` is a plain `@Entity` — not a Panache active-record entity**
+`LedgerEntry` does not extend `PanacheEntityBase`. This allows reactive subclassing
+(e.g. Qhorus's `AgentMessageLedgerEntry` with Hibernate Reactive). `JpaLedgerEntryRepository`
+uses `EntityManager` directly for all queries. `LedgerEntryRepository.findById(UUID)` was
+renamed to `findEntryById(UUID)` to avoid a Java return-type conflict with
+`PanacheRepositoryBase.findById()`.
+
 **REST endpoints are domain-specific**
 `quarkus-ledger` provides model, SPI, services, and JPA implementations only. Tarkus and
 Qhorus each define their own REST/MCP endpoints on top.
@@ -98,9 +105,10 @@ quarkus-ledger/
 │       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM
 │       │   └── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
 │       ├── repository/
-│       │   ├── LedgerEntryRepository.java   — SPI (uses subjectId)
-│       │   ├── ActorTrustScoreRepository.java — SPI
-│       │   └── jpa/                         — Panache implementations
+│       │   ├── LedgerEntryRepository.java        — blocking SPI (uses subjectId); findById → findEntryById
+│       │   ├── ReactiveLedgerEntryRepository.java — reactive SPI (Uni<T> return types)
+│       │   ├── ActorTrustScoreRepository.java     — SPI
+│       │   └── jpa/                              — JPA implementations (EntityManager-based)
 │       └── service/
 │           ├── LedgerMerkleTree.java        — Merkle Mountain Range algorithm (pure static)
 │           ├── LedgerVerificationService.java — treeRoot / inclusionProof / verify (CDI bean)

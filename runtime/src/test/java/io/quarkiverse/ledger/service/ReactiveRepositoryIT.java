@@ -7,61 +7,47 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Alternative;
-
 import org.junit.jupiter.api.Test;
 
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.repository.ReactiveLedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.repository.jpa.ReactiveJpaLedgerEntryRepository;
 
 /**
- * Structural verification of {@link ReactiveJpaLedgerEntryRepository}.
+ * Structural verification of the reactive SPI.
  *
  * <p>
- * A {@code @QuarkusTest} is not used here because Hibernate Reactive requires a Vert.x-based
- * reactive datasource — incompatible with the H2 JDBC datasource used by the existing test suite.
- * End-to-end reactive integration tests require a reactive datasource (e.g. Reactive PG) and
- * {@code quarkus-test-vertx}, both of which are not yet configured in this module.
+ * No {@code @QuarkusTest} — Hibernate Reactive requires a Vert.x-based reactive datasource
+ * incompatible with the H2 JDBC pool used by the existing test suite.
  *
  * <p>
- * These structural tests confirm that the class is correctly annotated and implements
- * the full {@link ReactiveLedgerEntryRepository} SPI without requiring a running Quarkus context.
+ * {@link ReactiveLedgerEntryRepository} provides the SPI contract. Consumers implement it
+ * using {@code ReactivePanacheRepository<LedgerEntry, UUID>} from
+ * {@code quarkus-hibernate-reactive-panache} in their own module.
  */
 class ReactiveRepositoryIT {
 
     @Test
-    void reactiveRepository_implementsReactiveSpi() {
-        assertThat(ReactiveLedgerEntryRepository.class)
-                .isAssignableFrom(ReactiveJpaLedgerEntryRepository.class);
+    void reactiveSpi_usesUniReturnTypes() {
+        long uniMethods = Arrays.stream(ReactiveLedgerEntryRepository.class.getDeclaredMethods())
+                .filter(m -> m.getReturnType().getName().contains("Uni"))
+                .count();
+        assertThat(uniMethods)
+                .as("All SPI methods must return Uni<T>")
+                .isEqualTo(ReactiveLedgerEntryRepository.class.getDeclaredMethods().length);
     }
 
     @Test
-    void reactiveRepository_isAnnotatedAlternative() {
-        assertThat(ReactiveJpaLedgerEntryRepository.class.isAnnotationPresent(Alternative.class))
-                .as("@Alternative must be present so the bean is inactive by default")
-                .isTrue();
-    }
-
-    @Test
-    void reactiveRepository_isAnnotatedApplicationScoped() {
-        assertThat(ReactiveJpaLedgerEntryRepository.class.isAnnotationPresent(ApplicationScoped.class))
-                .as("@ApplicationScoped must be present")
-                .isTrue();
-    }
-
-    @Test
-    void reactiveRepository_implementsAllSpiMethods() {
-        final Set<String> spiMethodNames = Arrays.stream(ReactiveLedgerEntryRepository.class.getDeclaredMethods())
+    void reactiveSpi_coversAllBlockingSpiMethods() {
+        Set<String> blockingNames = Arrays.stream(LedgerEntryRepository.class.getDeclaredMethods())
                 .map(Method::getName)
                 .collect(Collectors.toSet());
-
-        final Set<String> implMethodNames = Arrays.stream(ReactiveJpaLedgerEntryRepository.class.getDeclaredMethods())
+        Set<String> reactiveNames = Arrays.stream(ReactiveLedgerEntryRepository.class.getDeclaredMethods())
                 .map(Method::getName)
                 .collect(Collectors.toSet());
-
-        assertThat(implMethodNames)
-                .as("ReactiveJpaLedgerEntryRepository must implement all SPI methods")
-                .containsAll(spiMethodNames);
+        // findAllEvents is a batch concern excluded from the reactive SPI
+        blockingNames.remove("findAllEvents");
+        assertThat(reactiveNames)
+                .as("ReactiveLedgerEntryRepository must cover all LedgerEntryRepository methods")
+                .containsAll(blockingNames);
     }
 }

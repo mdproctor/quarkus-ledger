@@ -93,7 +93,21 @@
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn install)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl examples/merkle-verification)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn -f /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-merkle/examples/merkle-verification/pom.xml test)",
-      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; cat \"{}\"')"
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; cat \"{}\"')",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-prov-dm/runtime)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test-compile -pl runtime -q -f /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-prov-dm/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerProvSerializerTest -f /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-prov-dm/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerProvSerializerTest)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=LedgerProvExportServiceIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn -f examples/prov-dm-export/pom.xml test)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn -pl runtime,deployment clean install -DskipTests)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl /Users/mdproctor/claude/quarkus-ledger/runtime)",
+      "Bash(python3 -c 'import json; d=json.load\\(open\\('\\\\''__TRACKED_VAR__/.claude/settings.json'\\\\''\\)\\); print\\(d.get\\('\\\\''initials'\\\\'','\\\\''NOT SET'\\\\''\\)\\)')",
+      "Bash(jar -tf /Users/mdproctor/.m2/repository/io/quarkus/quarkus-hibernate-reactive-panache/3.32.2/quarkus-hibernate-reactive-panache-3.32.2.jar)",
+      "Bash(jar -xf /Users/mdproctor/.m2/repository/io/quarkus/quarkus-hibernate-reactive-panache/3.31.1/quarkus-hibernate-reactive-panache-3.31.1-sources.jar)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-reactive/runtime)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=ReactiveRepositoryIT)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean compile -pl runtime)"
     ]
   }
 }
