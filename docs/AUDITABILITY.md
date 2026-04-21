@@ -9,7 +9,7 @@ compliance in multi-agent orchestration (Tarkus → Qhorus → Claudony).
 Gaps are stated honestly. Where a gap is uncomfortable, that is the point — it is the
 thing to fix.
 
-**Last assessed:** 2026-04-16 against `quarkus-ledger` v1.0.0-SNAPSHOT.
+**Last assessed:** 2026-04-21 against `quarkus-ledger` v1.0.0-SNAPSHOT.
 
 ---
 
@@ -37,7 +37,7 @@ every consumer; it must never surprise them.
 | 4. Verifiability | ✅ Addressed | Merkle tree upgrade (#11) — O(log N) inclusion proofs + Ed25519 publishing |
 | 5. Accessibility | ✅ Addressed | EU AI Act Art.12 audit query API (#9) |
 | 6. Resource Proportionality | ✅ Addressed | Retention config (#9) |
-| 7. Privacy Compatibility | ❌ Gap | Pseudonymisation strategy (not yet designed) |
+| 7. Privacy Compatibility | ✅ Addressed | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs. Built-in tokenisation via `quarkus.ledger.identity.tokenisation.enabled`. `LedgerErasureService` for GDPR Art.17 requests. |
 | 8. Governance Alignment | ✅ Addressed | ComplianceSupplement (#7) + EU AI Act Art. 12 (#9) |
 
 ---
@@ -59,30 +59,25 @@ AI agents may produce decisions with legal or financial consequences. If an agen
 collapses. A trust system built on mutable logs is not a trust system.
 
 **Current state:**
-Strong. `LedgerHashChain` computes a SHA-256 chain per `subjectId`:
+Strong. Each entry carries an RFC 9162 Merkle leaf hash (`digest`):
 
 ```
-hash = SHA-256(subjectId | seqNum | entryType | actorId | actorRole | occurredAt | prevHash)
+leaf = SHA-256(0x00 | subjectId | seqNum | entryType | actorId | actorRole | occurredAt)
 ```
 
-Note: `planRef` was removed from the canonical form (V1002) — it now lives in
-`ComplianceSupplement`. Supplement fields are deliberately excluded from the chain.
+Entries accumulate into a Merkle Mountain Range (stored frontier). Any modification
+to any entry changes its leaf hash and invalidates the tree root. The canonical form is
+deliberately domain-agnostic — subclass fields (`commandType`, `toolName`, etc.) and
+supplement fields are excluded, so the chain works identically for all consumers.
 
-Each entry's hash covers the previous entry's hash, so any modification to any entry
-in the chain invalidates all subsequent hashes. The canonical form is deliberately
-domain-agnostic — subclass fields (`commandType`, `toolName`, etc.) are excluded,
-so the chain works identically for all consumers.
+`LedgerVerificationService.verify(subjectId)` recomputes the full MMR from stored entries
+and compares against the stored frontier. `inclusionProof(entryId)` produces a compact
+O(log N) proof verifiable without database access.
 
-**Gap:**
-`LedgerHashChain.verify()` exists as a pure static utility but is not exposed as a
-service. An external auditor wanting to verify chain integrity must have direct database
-access and write their own verification code. The chain is tamper-evident but not
-independently verifiable without system internals. See Axiom 4 (Verifiability) for
-the related gap.
-
-**How to incorporate:**
-No change needed to the core chain mechanism. The gap closes when a verification
-endpoint is exposed (medium-term roadmap).
+**Gap (closed):**
+`LedgerVerificationService` provides `verify(subjectId)`, `treeRoot(subjectId)`, and
+`inclusionProof(entryId)` as a CDI bean — no database credentials or schema knowledge
+needed by an external verifier. See Axiom 4 (Verifiability) for the full treatment.
 
 ---
 
@@ -177,11 +172,9 @@ credentials, the verification is not independent. For GDPR conformity assessment
 EU AI Act compliance, the audit trail must be provably intact without trusting the
 party being audited.
 
-**Current state:**
-Partial. `LedgerHashChain.verify(entries)` is a correct implementation of chain
-verification, but it requires the caller to fetch the entries from the database and
-invoke the method directly. There is no HTTP endpoint, no service method exposed via
-CDI, and no documentation of how a third party would perform verification.
+**Previous state:**
+The original hash chain required callers to fetch entries and call a static utility
+directly — no CDI service, no documented third-party verification path.
 
 **Status:** ✅ Addressed (#11)
 
@@ -261,51 +254,36 @@ retention or additional fidelity.
 
 ---
 
-### 7. Privacy Compatibility ❌ Gap
+### 7. Privacy Compatibility ✅ Addressed
 
 **What it means:**
-The audit system respects data privacy requirements — including the right to erasure,
-data minimisation, and purpose limitation — without destroying the integrity of the
-audit record. Privacy and auditability are in inherent tension; the axiom requires a
-design that does not sacrifice one for the other.
-
-**Why it matters for agentic AI:**
-`actorId` and decision context fields in `LedgerEntry` may contain personal data under
-GDPR — especially in systems where agents act on behalf of identifiable individuals.
-The GDPR right to erasure ("right to be forgotten") directly conflicts with an
-append-only immutable ledger. An entry cannot be modified without breaking the hash
-chain. An actor cannot be "forgotten" without invalidating their entire chain history.
+Audit records must coexist with privacy rights — including the GDPR right to erasure (Art.17).
+An immutable ledger cannot delete entries without breaking tamper evidence. The solution is
+pseudonymisation: store tokens instead of raw identities, backed by a detachable mapping.
 
 **Current state:**
-Gap. `actorId` and `actorRole` (core fields) plus any data stored in attached supplements
-(`ComplianceSupplement.decisionContext`, `ComplianceSupplement.planRef`, etc.) are stored
-permanently with no retention limit and no anonymisation mechanism. The hash chain's immutability
-guarantee is structurally incompatible with erasure of individual entries. There is no
-design for how these requirements would be reconciled.
+Two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
 
-**Gap:**
-GDPR right-to-erasure has no implementation path with the current design. Deleting an
-entry breaks the chain. Modifying `actorId` to a pseudonym breaks the chain (the hash
-covers `actorId`). A consumer receiving an erasure request for an actor has no supported
-way to satisfy it.
+- `ActorIdentityProvider` — tokenises `actorId` (write) and `attestorId` on every persist.
+  `tokenise()` creates a UUID token if none exists. `tokeniseForQuery()` does a read-only
+  lookup. `erase()` deletes the mapping — the token in existing entries becomes unresolvable.
+- `DecisionContextSanitiser` — sanitises `ComplianceSupplement.decisionContext` JSON before
+  persist. Default is pass-through; consumers supply a custom CDI bean to strip PII.
 
-**How to incorporate (without breaking existing consumers):**
-The standard approach for this problem is **pseudonymisation at write time** — the
-ledger stores a pseudonym (e.g., a keyed HMAC of the real actorId), not the actorId
-itself. The mapping table lives outside the ledger. Erasure = delete the mapping row;
-the chain remains intact with pseudonyms. This requires a design decision on the
-pseudonymisation scheme before any implementation. It also requires consumer changes
-(pass pseudonym, not real actorId) — which technically violates the zero-complexity
-constraint for existing consumers. This is the hardest gap to close.
+Built-in implementation (`InternalActorIdentityProvider`) backed by the `actor_identity`
+table (V1004). Activated via `quarkus.ledger.identity.tokenisation.enabled=true`.
 
-**Risk without this:**
-High for any deployment where `actorId` is a user identifier. Medium for pure
-agent-to-agent systems where actorId is a service identity with no natural person behind
-it.
+`LedgerErasureService.erase(String rawActorId)` processes GDPR Art.17 requests: locates
+the token, counts affected entries (informational), severs the mapping, returns `ErasureResult`.
 
-**Priority:**
-Not in the current sprint. Needs dedicated design work before implementation.
-Flag for the next roadmap review.
+Organisations with external identity management supply a custom `ActorIdentityProvider` CDI
+bean — it replaces the default via `@DefaultBean` semantics, no config changes needed.
+
+**Remaining gap:**
+`decisionContext` PII scrubbing is the consumer's responsibility — the `DecisionContextSanitiser`
+SPI provides the hook, but the extension cannot validate JSON content. `subjectId` (the
+aggregate UUID) is typically not personal data; consumers who use PII as their `subjectId`
+must address this outside the extension.
 
 ---
 
@@ -360,7 +338,7 @@ that closing each gap satisfies the zero-complexity constraint for existing cons
 | No retention policy (Axiom 6) | EU AI Act Art.12 compliance surface (#9) | ✅ retention.* config, disabled by default |
 | No Art. 22 decision fields (Axiom 8) | GDPR Art. 22 enrichment (#1) | ✅ ComplianceSupplement — all fields nullable, zero boilerplate |
 | No coverage enforcement (Axiom 2) | `@Auditable` CDI interceptor (not yet planned) | ✅ Opt-in annotation |
-| Privacy / right-to-erasure (Axiom 7) | Pseudonymisation design (not yet planned) | ❌ Requires consumer changes |
+| Privacy / right-to-erasure (Axiom 7) | Pseudonymisation (#29) | ✅ Pass-through defaults — zero consumer changes; opt-in tokenisation via config |
 
 ---
 

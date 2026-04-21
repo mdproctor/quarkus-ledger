@@ -190,7 +190,7 @@ public class OrderLedgerEntryRepository implements LedgerEntryRepository {
     }
 
     @Override
-    public Optional<LedgerEntry> findById(UUID id) {
+    public Optional<LedgerEntry> findEntryById(UUID id) {
         return Optional.ofNullable(LedgerEntry.findById(id));
     }
 
@@ -370,14 +370,17 @@ This enables cross-system audit queries: given a workflow instance ID, find all 
 
 ---
 
-## Using EigenTrust reputation
+## Using trust scoring (Bayesian Beta)
 
-When `trust-score.enabled=true`, a nightly `@Scheduled` job (`TrustScoreJob`) computes trust scores for all actors who have EVENT-type entries. Scores are written to `actor_trust_score`.
+When `trust-score.enabled=true`, a nightly `@Scheduled` job (`TrustScoreJob`) computes trust scores for all actors who have attestations. Scores are written to `actor_trust_score`.
 
-The algorithm:
-- **Decision score:** 1.0 (no negative attestations) / 0.5 (mixed) / 0.0 (majority negative)
-- **Recency weight:** `2^(-(ageInDays / halfLifeDays))` — older decisions decay
-- **Trust score:** weighted average, clamped to [0.0, 1.0], neutral prior 0.5
+The algorithm — Bayesian Beta accumulation:
+- **`α` (alpha):** incremented for positive verdicts (SOUND, ENDORSED), recency-weighted
+- **`β` (beta):** incremented for negative verdicts (FLAGGED, CHALLENGED), recency-weighted
+- **Recency weight:** `2^(-(ageInDays / halfLifeDays))` — older attestations decay
+- **Score:** `α / (α + β)`, clamped to [0.0, 1.0]. Prior Beta(1,1) → score 0.5 with no history
+
+Enable only once attestation history has accumulated — early scores with sparse data are unreliable.
 
 Query scores at any time:
 

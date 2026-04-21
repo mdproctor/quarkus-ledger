@@ -48,7 +48,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 ## Flyway migration
 
 ```sql
--- V1003__order_ledger_entry.sql
+-- V1004__order_ledger_entry.sql  (V1000–V1003 are reserved by quarkus-ledger)
 CREATE TABLE order_ledger_entry (
     id           UUID         NOT NULL,
     order_id     UUID         NOT NULL,
@@ -107,7 +107,7 @@ public class OrderLedgerEntryRepository implements LedgerEntryRepository {
     }
 
     @Override
-    public Optional<LedgerEntry> findById(UUID id) {
+    public Optional<LedgerEntry> findEntryById(UUID id) {
         return Optional.ofNullable(LedgerEntry.findById(id));
     }
 

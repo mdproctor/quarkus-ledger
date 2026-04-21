@@ -10,12 +10,13 @@ A Quarkus extension providing a domain-agnostic immutable audit ledger for any Q
 
 Every domain transition is recorded as a `LedgerEntry` row with a monotonically increasing sequence number per aggregate. Entries are never updated or deleted — only appended. Each entry carries who acted (`actorId`, `actorType`, `actorRole`), what happened (`entryType`: COMMAND / EVENT / ATTESTATION), and when (`occurredAt`).
 
-### SHA-256 hash chain
+### Merkle Mountain Range tamper evidence
 
-Each entry carries `previousHash` and `digest` fields. The digest is `SHA-256(previousHash | subjectId | seqNum | entryType | actorId | actorRole | occurredAt)`. Any tampering with a historical entry breaks the chain. Verification is offline — no database access needed:
+Each entry carries a `digest` — a SHA-256 leaf hash (RFC 9162) over its canonical fields. Entries accumulate into a Merkle Mountain Range: a compact stored frontier that gives O(log N) inclusion proofs. Any entry modification is detectable without replaying the entire chain:
 
 ```java
-boolean intact = LedgerHashChain.verify(entries); // recomputes all digests from scratch
+boolean intact = verificationService.verify(subjectId); // O(N log N), no trust in operator needed
+InclusionProof proof = verificationService.inclusionProof(entryId); // compact cryptographic proof
 ```
 
 ### JPA JOINED inheritance — bring your own domain fields
@@ -30,7 +31,8 @@ Three built-in supplement types carry optional fields that not every consumer ne
 |---|---|---|---|
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | GDPR Art.22 / EU AI Act Art.12 automated decision auditability |
 | `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Entry driven by an external workflow or orchestration system |
-| `ObservabilitySupplement` | `ledger_supplement_observability` | `correlationId`, `causedByEntryId` | OTel trace linkage, cross-system causality chains |
+
+OTel trace linkage (`correlationId`) and cross-subject causality (`causedByEntryId`) are core fields on every entry — not supplements.
 
 Attaching a supplement:
 ```java
@@ -50,7 +52,6 @@ String json = entry.supplementJson;
 // Typed path: lazy join, only when needed
 Optional<ComplianceSupplement> cs = entry.compliance();
 Optional<ProvenanceSupplement> prov = entry.provenance();
-Optional<ObservabilitySupplement> obs = entry.observability();
 ```
 
 If a consumer never calls `attach()`, no supplement rows are written. Zero schema cost, zero runtime cost.
@@ -71,13 +72,13 @@ attestation.evidence      = "Checked against policy-v2";
 attestation.persist();
 ```
 
-Verdicts feed the EigenTrust reputation system when it is enabled.
+Verdicts feed the Bayesian Beta trust scoring system when it is enabled.
 
-### EigenTrust reputation (optional)
+### Bayesian Beta trust scoring (optional)
 
-A nightly `@Scheduled` job recomputes a trust score `[0.0, 1.0]` per actor from their full ledger history. Algorithm: decision score (1.0 clean / 0.5 mixed / 0.0 predominantly negative), exponentially decayed by age (`weight = 2^(-age/halfLife)`), weighted average across all decisions.
+A nightly `@Scheduled` job recomputes a trust score `[0.0, 1.0]` per actor from their full attestation history. Algorithm: Bayesian Beta accumulation — `α` increments for positive verdicts (SOUND, ENDORSED), `β` for negative (FLAGGED, CHALLENGED). Each contribution is recency-weighted: `weight = 2^(-ageInDays / halfLifeDays)`. Prior is Beta(1,1) — score 0.5 with no history. Score = α/(α+β).
 
-Optional forgiveness mechanism: old isolated failures are partially forgiven based on how recent they are and how infrequent the actor's negative history is. Disabled by default.
+Disabled by default. Enable once attestation history has accumulated — early scores with sparse data are unreliable.
 
 Scores are stored in `actor_trust_score` and queryable via `ActorTrustScoreRepository`.
 
@@ -155,7 +156,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 **3. Write to the ledger:**
 ```java
 OrderLedgerEntry entry = new OrderLedgerEntry();
-entry.subjectId      = order.id;   // scopes sequence + hash chain per order
+entry.subjectId      = order.id;   // scopes sequence + Merkle chain per order
 entry.orderId        = order.id;
 entry.sequenceNumber = nextSeq(order.id);
 entry.entryType      = LedgerEntryType.EVENT;
@@ -163,20 +164,16 @@ entry.transitionType = "PlaceOrder";
 entry.actorId        = currentUser;
 entry.actorType      = ActorType.HUMAN;
 entry.actorRole      = "Customer";
-entry.occurredAt     = Instant.now().truncatedTo(ChronoUnit.MILLIS); // set before hash!
+entry.occurredAt     = Instant.now().truncatedTo(ChronoUnit.MILLIS); // set before repo.save()!
 
-if (config.hashChain().enabled()) {
-    entry.previousHash = previousDigest(order.id);
-    entry.digest = LedgerHashChain.compute(entry.previousHash, entry);
-}
-entry.persist();
+repo.save(entry); // computes Merkle leaf hash and updates MMR frontier automatically
 ```
 
 **4. Verify chain integrity:**
 ```java
-List<OrderLedgerEntry> entries = OrderLedgerEntry
-    .list("subjectId = ?1 ORDER BY sequenceNumber ASC", orderId);
-boolean intact = LedgerHashChain.verify(entries);
+@Inject LedgerVerificationService verificationService;
+// ...
+boolean intact = verificationService.verify(orderId); // O(N log N), offline-verifiable
 ```
 
 ---
@@ -193,11 +190,12 @@ boolean intact = LedgerHashChain.verify(entries);
 | `actorType` | ActorType | `HUMAN`, `AGENT`, or `SYSTEM` |
 | `actorRole` | String | Functional role (e.g. "Approver", "Resolver") |
 | `occurredAt` | Instant | When recorded — set this explicitly before computing the hash |
-| `previousHash` | String | SHA-256 digest of the preceding entry (`null` for the first) |
-| `digest` | String | SHA-256 digest of this entry's canonical content |
+| `correlationId` | String | OTel trace ID linking this entry to a distributed trace |
+| `causedByEntryId` | UUID | FK to causal predecessor entry (cross-subject causality) |
+| `digest` | String | RFC 9162 Merkle leaf hash — `SHA-256(0x00 \| canonical fields)` |
 | `supplementJson` | String | JSON snapshot of all attached supplements (auto-set by `attach()`) |
 
-Optional fields — attach as supplements (see above): `correlationId`, `causedByEntryId` (ObservabilitySupplement); `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` (ComplianceSupplement); `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` (ProvenanceSupplement).
+Optional fields — attach as supplements (see above): `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` (ComplianceSupplement); `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` (ProvenanceSupplement).
 
 ---
 
@@ -212,12 +210,10 @@ All keys are under `quarkus.ledger`:
 | `quarkus.ledger.decision-context.enabled` | `true` | Gate: populate `ComplianceSupplement.decisionContext` |
 | `quarkus.ledger.evidence.enabled` | `false` | Gate: populate `ComplianceSupplement.evidence` |
 | `quarkus.ledger.attestations.enabled` | `true` | Enable peer attestation persistence |
-| `quarkus.ledger.trust-score.enabled` | `false` | Enable nightly EigenTrust computation |
-| `quarkus.ledger.trust-score.decay-half-life-days` | `90` | Age decay half-life for trust scoring |
+| `quarkus.ledger.trust-score.enabled` | `false` | Enable nightly Bayesian Beta trust score computation |
+| `quarkus.ledger.trust-score.decay-half-life-days` | `90` | Age decay half-life for attestation recency weighting |
 | `quarkus.ledger.trust-score.routing-enabled` | `false` | Fire CDI events when trust scores influence routing |
-| `quarkus.ledger.trust-score.forgiveness.enabled` | `false` | Partially forgive old isolated failures |
-| `quarkus.ledger.trust-score.forgiveness.frequency-threshold` | `3` | Negative decisions ≤ this receive full leniency; above → half |
-| `quarkus.ledger.trust-score.forgiveness.half-life-days` | `30` | Forgiveness decay half-life |
+| `quarkus.ledger.identity.tokenisation.enabled` | `false` | Enable built-in UUID token pseudonymisation for actor identities |
 
 ---
 
@@ -225,6 +221,8 @@ All keys are under `quarkus.ledger`:
 
 | Doc | Contents |
 |---|---|
+| [Capabilities Guide](docs/CAPABILITIES.md) | Every capability explained — applicability ratings, regulatory drivers, when to enable |
+| [Consumer Privacy Obligations](docs/PRIVACY.md) | What consumers must decide: `actorId` tokenisation, `decisionContext` sanitisation, GDPR Art.17 erasure |
 | [Integration Guide](docs/integration-guide.md) | Step-by-step: subclass, migration, repository, capture, supplements, queries, configuration |
 | [Design Document](docs/DESIGN.md) | Architecture decisions, supplement rationale, roadmap |
 | [Auditability Assessment](docs/AUDITABILITY.md) | 8-axiom self-assessment against ACM FAIR 2025 framework |

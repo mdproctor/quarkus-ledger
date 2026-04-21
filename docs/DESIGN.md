@@ -61,6 +61,7 @@ from base entries — trust scoring works across all consumers.
 | `ledger_supplement_compliance` | V1002 | ComplianceSupplement joined table |
 | `ledger_supplement_provenance` | V1002 | ProvenanceSupplement joined table |
 | `ledger_entry_archive` | V1003 | Archive records before retention deletion |
+| `actor_identity` | V1004 | Actor pseudonymisation token-to-identity mapping |
 | `ledger_merkle_frontier` | V1000 | Merkle Mountain Range frontier nodes (≤log₂(N) rows per subject) |
 
 ---
@@ -208,6 +209,35 @@ warnings and cannot override defaults via `application.properties`.
 
 ---
 
+### Privacy and Pseudonymisation
+
+Actor identities (`actorId`, `attestorId`) and decision context blobs are intercepted on
+every write by two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
+
+| SPI | Default | Purpose |
+|---|---|---|
+| `ActorIdentityProvider` | Pass-through | Tokenise actor identities; resolve tokens back to real identities; sever mappings on erasure |
+| `DecisionContextSanitiser` | Pass-through | Strip PII from `ComplianceSupplement.decisionContext` before persist |
+
+Both defaults produce zero behaviour change. Supply a custom CDI bean to replace either.
+
+**Built-in tokenisation** (`InternalActorIdentityProvider`) activates when
+`quarkus.ledger.identity.tokenisation.enabled=true`. Tokens are UUID strings stored in the
+`actor_identity` table (V1004). Erasure deletes the mapping row — the token in existing
+entries becomes permanently unresolvable but the Merkle hash chain is intact.
+
+**`LedgerErasureService`** processes GDPR Art.17 erasure requests. Returns `ErasureResult`
+with the actor identity, whether a mapping was found, and how many ledger entries were
+affected (entries are not deleted).
+
+**Config:**
+
+| Key | Default | Description |
+|---|---|---|
+| `quarkus.ledger.identity.tokenisation.enabled` | `false` | Activate built-in UUID token pseudonymisation (see `docs/PRIVACY.md`) |
+
+---
+
 ## Configuration
 
 The extension is configured under the `quarkus.ledger` prefix via `application.properties` or environment variables.
@@ -273,12 +303,12 @@ Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
 `ActorTrustScore` stores `trust_score`, `alpha_value`, `beta_value`, and diagnostic
 counters. `TrustScoreJob` runs nightly when enabled.
 
-**Privacy / pseudonymisation** — Axiom 7 gap, GDPR right-to-erasure design (pending).
+**Privacy / pseudonymisation** — ✅ Done. `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, built-in UUID tokenisation, `LedgerErasureService` for GDPR Art.17 requests. See `docs/PRIVACY.md`.
 
 ### Medium-term
 
 **Quarkiverse submission** — structurally ready (quarkiverse-parent, CI workflows,
-full docs, 127 tests across runtime + examples). Needs a stability decision on the
+full docs, 159 tests across runtime + examples). Needs a stability decision on the
 public API (`LedgerEntry` core fields, `LedgerMerkleTree` canonical form, supplement API)
 before submitting. The supplement architecture stabilises the surface — `attach()`,
 `compliance()`, `provenance()` are the public entry points.
@@ -307,7 +337,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | Phase | Status | What |
 |---|---|---|
 | **Initial extraction** | ✅ Done | Abstract LedgerEntry, LedgerAttestation, ActorTrustScore, LedgerMerkleTree, TrustScoreComputer, TrustScoreJob, SPI, LedgerConfig, Flyway V1000/V1001, jandex, @Alternative, @ConfigRoot |
-| **Unit tests** | ✅ Done | 42 unit tests — LedgerMerkleTree (22, LedgerMerkleTreeTest) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) — then extended to 127 with Merkle, publisher, PROV-DM, and IT tests |
+| **Unit tests** | ✅ Done | 42 unit tests — LedgerMerkleTree (22, LedgerMerkleTreeTest) + TrustScoreComputer (16) + LedgerSupplementSerializer (8) — extended to 159 with Merkle, publisher, PROV-DM, privacy, and IT tests |
 | **Tarkus migration** | ✅ Done | WorkItemLedgerEntry, WorkItemLedgerEntryRepository, Tarkus-ledger 69 tests passing |
 | **Documentation** | ✅ Done | README, integration guide, examples.md, AUDITABILITY.md, RESEARCH.md |
 | **Runnable examples** | ✅ Done | `examples/order-processing/` (12 IT), `examples/art22-decision-snapshot/` (3 IT), `examples/art12-compliance/` (3 IT), `examples/merkle-verification/` (2 IT), `examples/prov-dm-export/` (2 IT) |
@@ -318,6 +348,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Merkle Mountain Range** | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerMerkleFrontier` (log₂(N) rows/subject), `LedgerVerificationService` (treeRoot/inclusionProof/verify), `LedgerMerklePublisher` (opt-in Ed25519 tlog-checkpoint); ADR 0002; `examples/merkle-verification/` (2 IT) |
 | **W3C PROV-DM JSON-LD export** | ✅ Done | `LedgerProvSerializer.toProvJsonLd()` (pure static, 13 unit tests), `LedgerProvExportService` (CDI bean, 4 IT); `docs/prov-dm-mapping.md` field reference; `examples/prov-dm-export/` (2 IT) |
 | **Bayesian trust weighting** | ✅ Done | Bayesian Beta model: per-attestation recency weighting, alpha/beta posterior, ForgivenessParams removed. See ADR 0003. |
-| **Quarkiverse submission** | ⬜ Pending | API stabilisation + submission PR |
+| **Privacy / pseudonymisation** | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, `InternalActorIdentityProvider`, `LedgerErasureService`, `ActorIdentity` entity, V1004 migration. 31 tests. |
+| **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

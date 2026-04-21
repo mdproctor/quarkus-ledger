@@ -23,7 +23,7 @@ auditability of AI decisions, regulatory compliance.
 | 6 | **Time-weighted Bayesian trust** | ~~M~~ | ~~Medium~~ | ✅ Done | Bayesian Beta model: per-attestation α/β accumulation with recency weighting. `ForgivenessParams` removed. See ADR 0003. |
 | 7 | **W3C PROV-DM JSON-LD export** | ~~M~~ | ~~Medium~~ | ✅ Done | `LedgerProvSerializer` + `LedgerProvExportService` shipped. See `docs/prov-dm-mapping.md`. |
 | 8 | **Merkle tree upgrade to hash chain** | ~~L~~ | ~~Medium~~ | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerVerificationService`, `LedgerMerklePublisher`. ADR 0002. |
-| 9 | **Privacy / pseudonymisation (GDPR Art.17 right to erasure)** | L | High | ★★★★ | Fundamental tension: GDPR requires the ability to erase personal data; the ledger is immutable by design. Needs a pseudonymisation strategy (e.g. tokenised `actorId`, detachable PII store) before any code. Axiom 7 gap in `AUDITABILITY.md`. |
+| 9 | **Privacy / pseudonymisation (GDPR Art.17 right to erasure)** | ~~L~~ | ~~High~~ | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs; `InternalActorIdentityProvider` (UUID tokens, `actor_identity` table); `LedgerErasureService` (token severing, returns `ErasureResult`). Axiom 7 ✅. Issue #29 closed. |
 | 10 | **LLM agent mesh trust coordination** | L | Medium | ★★★ | How to apply trust scoring to short-lived Claude sessions. Key question: `actorId` maps to behavioral identity (CLAUDE.md + memory), not session. See GitHub epic #22 and child issues #23–#27. |
 | 11 | **EigenTrust transitive propagation** | M | Medium | ★★★ | Current model computes direct attestation scores only. True EigenTrust propagates trust transitively through the mesh via eigenvector computation. Meaningful when agent mesh is sparse. See GitHub issue #26. |
 | 12 | **EERP reputation chains (per-interaction history)** | L | Medium | ★★ | Full interaction history per actor enables collusion detection. Significant data model change. Overkill for the current 3-consumer ecosystem. |
@@ -33,11 +33,10 @@ auditability of AI decisions, regulatory compliance.
 
 ## What's Next
 
-Items 1–8 are all complete. The remaining open work:
+Items 1–9 are all complete. The remaining open work:
 
 | Priority | Item | Why |
 |---|---|---|
-| ★★★★ | **Privacy / pseudonymisation** (#9) | The one axiom gap (Axiom 7) that touches every data subject whose decisions are logged. Needs design first — the erasure vs. immutability tension has no obvious solution. |
 | ★★★ | **LLM agent mesh** (#10, epic #22) | How Claudony and its agents accumulate trust across short-lived sessions. Agent identity model (#23) is the prerequisite for everything else in the epic. |
 | ★★★ | **EigenTrust transitivity** (#11, issue #26) | Makes trust scoring useful in sparse agent meshes. Research task before any implementation. |
 | ★★ | **EERP reputation chains** (#12) | Collusion detection. Only valuable at scale. |
