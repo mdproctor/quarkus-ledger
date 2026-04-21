@@ -85,5 +85,8 @@ public class InternalActorIdentityProvider implements ActorIdentityProvider {
         em.createNamedQuery("ActorIdentity.deleteByActorId")
                 .setParameter("actorId", rawActorId)
                 .executeUpdate();
+        // Bulk JPQL DELETE bypasses the L1 cache — clear it so subsequent
+        // em.find() calls hit the database and see the deletion.
+        em.clear();
     }
 }
