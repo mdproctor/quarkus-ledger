@@ -8,7 +8,7 @@ import java.util.Optional;
  * <p>
  * The default implementation is pass-through — existing consumers see zero behaviour change.
  * Replace with a custom CDI bean to plug in any pseudonymisation strategy.
- * The built-in {@link InternalActorIdentityProvider} activates when
+ * The built-in {@code InternalActorIdentityProvider} activates when
  * {@code quarkus.ledger.identity.tokenisation.enabled=true}.
  */
 public interface ActorIdentityProvider {
@@ -28,8 +28,8 @@ public interface ActorIdentityProvider {
      * Returns {@code rawActorId} unchanged if no mapping exists.
      * Called on read queries ({@code findByActorId}) to avoid spurious token creation.
      *
-     * @param rawActorId the real actor identity
-     * @return existing token, or {@code rawActorId} if unmapped
+     * @param rawActorId the real actor identity; may be {@code null}
+     * @return existing token, or {@code rawActorId} if unmapped; {@code null} if input is {@code null}
      */
     String tokeniseForQuery(String rawActorId);
 
@@ -48,7 +48,7 @@ public interface ActorIdentityProvider {
      * After this call, {@link #resolve(String)} for the actor's token returns empty.
      * Ledger entries retaining the token become permanently anonymous.
      *
-     * @param rawActorId the real actor identity whose mapping to sever
+     * @param rawActorId the real actor identity whose mapping to sever; {@code null} is treated as a no-op
      */
     void erase(String rawActorId);
 }
