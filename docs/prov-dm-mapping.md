@@ -28,12 +28,18 @@ All IRIs use the `ledger:` prefix (`http://quarkiverse.io/ledger#`):
 | Element | IRI pattern | Example |
 |---|---|---|
 | Entry entity | `ledger:entry/<uuid>` | `ledger:entry/e1a2b3...` |
-| Agent | `ledger:actor/<actorId>` | `ledger:actor/agent-007` |
+| Agent (human/system) | `ledger:actor/<actorId>` | `ledger:actor/alice` |
+| Agent (LLM) | `ledger:actor/<actorId>` | `ledger:actor/claude:tarkus-reviewer@v1` |
 | Activity | `ledger:activity/<uuid>` | `ledger:activity/e1a2b3...` |
 | External source | `ledger:external/<type>/<system>/<id>` | `ledger:external/WorkItem/tarkus/wi-abc` |
 
 Agents are **deduplicated** — the same `actorId` appearing across multiple entries
 produces a single `agent` node in the document.
+
+**LLM agent IRIs:** For LLM agents, `actorId` follows the versioned persona convention
+`{model-family}:{persona}@{major}` (ADR 0004). The colon and `@` are valid IRI
+characters; the resulting IRI `ledger:actor/claude:tarkus-reviewer@v1` is unambiguous
+and stable across sessions.
 
 ## Core LedgerEntry Fields
 
@@ -72,11 +78,12 @@ Compliance fields appear as additional properties on the `prov:Entity` when a
 A `ProvenanceSupplement` produces a `hadPrimarySource` relation from the entry entity
 to an external IRI constructed from the three source fields.
 
-| `ProvenanceSupplement` field | Role in IRI |
+| `ProvenanceSupplement` field | Role in IRI / export |
 |---|---|
 | `sourceEntityType` | Type segment: `ledger:external/<type>/...` |
 | `sourceEntitySystem` | System segment: `.../tarkus/...` |
 | `sourceEntityId` | ID segment: `.../wi-abc` |
+| `agentConfigHash` | Not mapped to PROV-DM — forensic audit field only; emitted as `ledger:agentConfigHash` on the Agent node when non-null |
 
 Example: `sourceEntityType=WorkItem`, `sourceEntitySystem=tarkus`, `sourceEntityId=wi-abc`
 → `ledger:external/WorkItem/tarkus/wi-abc`
