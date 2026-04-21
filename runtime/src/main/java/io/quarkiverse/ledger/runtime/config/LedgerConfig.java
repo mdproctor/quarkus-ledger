@@ -271,6 +271,21 @@ public interface LedgerConfig {
          * @return list of pre-trusted actor IDs; empty by default
          */
         java.util.Optional<java.util.List<String>> preTrustedActors();
+
+        /**
+         * Recomputation interval for trust scores expressed as a Quarkus duration string
+         * (e.g. {@code "24h"}, {@code "6h"}, {@code "1h"}). Default is {@code "24h"} (nightly).
+         *
+         * <p>
+         * For agent mesh deployments with high interaction rates, reduce this so that
+         * trust scores reflect recent behaviour more quickly. There is no benefit to values
+         * below the typical inter-attestation interval — scores cannot change faster than
+         * attestations arrive.
+         *
+         * @return recomputation interval (default {@code "24h"})
+         */
+        @WithDefault("24h")
+        String schedule();
     }
 
     /** Actor identity pseudonymisation settings. */

@@ -44,7 +44,7 @@ public class TrustScoreJob {
     @Inject
     LedgerConfig config;
 
-    @Scheduled(every = "24h", identity = "ledger-trust-score-job")
+    @Scheduled(every = "{quarkus.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")
     @Transactional
     public void computeTrustScores() {
         if (!config.trustScore().enabled()) {
