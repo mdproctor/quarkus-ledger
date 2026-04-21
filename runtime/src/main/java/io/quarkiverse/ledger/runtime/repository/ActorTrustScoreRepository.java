@@ -38,6 +38,15 @@ public interface ActorTrustScoreRepository {
             Instant lastComputedAt);
 
     /**
+     * Update the EigenTrust global trust score for an actor. Called after power iteration
+     * completes, in a separate pass from the Bayesian Beta {@link #upsert}.
+     *
+     * @param actorId the actor's identity string
+     * @param globalTrustScore the EigenTrust eigenvector component for this actor, in [0.0, 1.0]
+     */
+    void updateGlobalTrustScore(String actorId, double globalTrustScore);
+
+    /**
      * Return all computed trust scores.
      *
      * @return list of all actor trust scores; empty if none computed yet

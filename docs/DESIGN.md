@@ -254,6 +254,9 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `trust-score.enabled` | `false` | Enable nightly Bayesian Beta trust score computation (requires historical data) |
 | `trust-score.decay-half-life-days` | `90` | Exponential decay half-life for attestation recency weighting |
 | `trust-score.routing-enabled` | `false` | Influence routing via CDI events based on trust scores |
+| `trust-score.eigentrust-enabled` | `false` | Run EigenTrust power iteration after the Beta pass to compute transitive global trust scores |
+| `trust-score.eigentrust-alpha` | `0.15` | EigenTrust dampening constant α — higher values anchor the eigenvector closer to the pre-trusted set |
+| `trust-score.pre-trusted-actors` | (empty) | Comma-separated actor IDs used as the EigenTrust seed; uniform distribution used when empty |
 
 **Retention sub-config (`quarkus.ledger.retention.*`):**
 
@@ -300,8 +303,10 @@ decisions accumulate into a Beta distribution: `α` for positive verdicts (SOUND
 `weight = 2^(-ageInDays / decayHalfLifeDays)` using the attestation's own timestamp.
 Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
 
-`ActorTrustScore` stores `trust_score`, `alpha_value`, `beta_value`, and diagnostic
-counters. `TrustScoreJob` runs nightly when enabled.
+`ActorTrustScore` stores `trust_score`, `alpha_value`, `beta_value`, diagnostic
+counters, and `global_trust_score` (EigenTrust). `TrustScoreJob` runs nightly when enabled.
+
+**EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
 **Privacy / pseudonymisation** — ✅ Done. `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, built-in UUID tokenisation, `LedgerErasureService` for GDPR Art.17 requests. See `docs/PRIVACY.md`.
 
@@ -349,6 +354,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **W3C PROV-DM JSON-LD export** | ✅ Done | `LedgerProvSerializer.toProvJsonLd()` (pure static, 13 unit tests), `LedgerProvExportService` (CDI bean, 4 IT); `docs/prov-dm-mapping.md` field reference; `examples/prov-dm-export/` (2 IT) |
 | **Bayesian trust weighting** | ✅ Done | Bayesian Beta model: per-attestation recency weighting, alpha/beta posterior, ForgivenessParams removed. See ADR 0003. |
 | **Privacy / pseudonymisation** | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, `InternalActorIdentityProvider`, `LedgerErasureService`, `ActorIdentity` entity, V1004 migration. 31 tests. |
+| **EigenTrust transitivity** | ✅ Done | `EigenTrustComputer` (power iteration, dangling-node fix, pre-trusted seed), `global_trust_score` on `ActorTrustScore`, `TrustScoreJob` eigentrust pass (opt-in). 8 unit tests. Closes #26. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

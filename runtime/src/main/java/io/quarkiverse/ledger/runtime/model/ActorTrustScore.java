@@ -50,4 +50,11 @@ public class ActorTrustScore {
 
     @Column(name = "last_computed_at")
     public Instant lastComputedAt;
+
+    /**
+     * EigenTrust global trust share in [0.0, 1.0]; values sum to ≤ 1.0 across all actors.
+     * Zero indicates EigenTrust has not yet been computed or is disabled.
+     */
+    @Column(name = "global_trust_score")
+    public double globalTrustScore;
 }

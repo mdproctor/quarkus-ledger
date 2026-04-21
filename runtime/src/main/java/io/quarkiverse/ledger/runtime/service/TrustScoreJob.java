@@ -1,6 +1,7 @@
 package io.quarkiverse.ledger.runtime.service;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,6 +89,37 @@ public class TrustScoreJob {
                     score.decisionCount(), score.overturnedCount(),
                     score.alpha(), score.beta(),
                     score.attestationPositive(), score.attestationNegative(), now);
+        }
+
+        if (config.trustScore().eigentrustEnabled()) {
+            runEigenTrustPass(allEvents, attestationsByEntry);
+        }
+    }
+
+    private void runEigenTrustPass(
+            final List<LedgerEntry> allEvents,
+            final Map<UUID, List<LedgerAttestation>> attestationsByEntry) {
+
+        final Map<UUID, String> entryActorIndex = allEvents.stream()
+                .filter(e -> e.actorId != null)
+                .collect(Collectors.toMap(e -> e.id, e -> e.actorId));
+
+        final List<LedgerAttestation> allAttestations = attestationsByEntry.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        final Set<String> preTrustedActors = config.trustScore().preTrustedActors()
+                .map(LinkedHashSet::new)
+                .orElseGet(LinkedHashSet::new);
+
+        final EigenTrustComputer eigenTrust = new EigenTrustComputer(
+                config.trustScore().eigentrustAlpha());
+
+        final Map<String, Double> globalScores = eigenTrust.compute(
+                allAttestations, entryActorIndex, preTrustedActors);
+
+        for (final Map.Entry<String, Double> entry : globalScores.entrySet()) {
+            trustRepo.updateGlobalTrustScore(entry.getKey(), entry.getValue());
         }
     }
 }

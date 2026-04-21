@@ -121,6 +121,7 @@ quarkus-ledger/
 │           │   └── ProofStep.java            — single sibling node in a proof path
 │           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
 │           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (pure Java)
+│           ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
 │           └── TrustScoreJob.java           — @Scheduled nightly recomputation
 │       └── privacy/
 │           ├── ActorIdentityProvider.java   — SPI: tokenise/resolve/erase actor identities
@@ -134,7 +135,7 @@ quarkus-ledger/
 │           └── LedgerSupplementSerializer.java — JSON serialiser for supplementJson
 │   └── src/main/resources/db/migration/
 │       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables
-│       ├── V1001__actor_trust_score.sql     — actor_trust_score table
+│       ├── V1001__actor_trust_score.sql     — actor_trust_score table (trust_score + global_trust_score)
 │       ├── V1002__ledger_supplement.sql     — supplement tables + drops moved columns
 │       ├── V1003__ledger_entry_archive.sql  — ledger_entry_archive table
 │       └── V1004__actor_identity.sql        — actor_identity pseudonymisation table

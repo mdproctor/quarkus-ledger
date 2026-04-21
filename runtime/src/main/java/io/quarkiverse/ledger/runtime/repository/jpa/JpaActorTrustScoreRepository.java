@@ -60,6 +60,17 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
 
     /** {@inheritDoc} */
     @Override
+    @Transactional
+    public void updateGlobalTrustScore(final String actorId, final double globalTrustScore) {
+        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        if (score != null) {
+            score.globalTrustScore = globalTrustScore;
+            em.merge(score);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<ActorTrustScore> findAll() {
         return em.createNamedQuery("ActorTrustScore.findAll", ActorTrustScore.class)
                 .getResultList();
