@@ -74,6 +74,13 @@ public interface LedgerConfig {
      */
     MerkleConfig merkle();
 
+    /**
+     * Actor identity pseudonymisation settings.
+     *
+     * @return the identity sub-configuration
+     */
+    IdentityConfig identity();
+
     /** Merkle Mountain Range and external publishing settings. */
     interface MerkleConfig {
 
@@ -111,44 +118,6 @@ public interface LedgerConfig {
              */
             @WithDefault("default")
             String keyId();
-        }
-    }
-
-    /**
-     * Actor identity pseudonymisation settings.
-     *
-     * @return the identity sub-configuration
-     */
-    IdentityConfig identity();
-
-    /** Actor identity pseudonymisation settings. */
-    interface IdentityConfig {
-
-        /**
-         * Tokenisation settings.
-         *
-         * @return the tokenisation sub-configuration
-         */
-        TokenisationConfig tokenisation();
-
-        /** Token-based pseudonymisation settings. */
-        interface TokenisationConfig {
-
-            /**
-             * When {@code true}, actor identities are stored as UUID tokens backed by
-             * the {@code actor_identity} table. On erasure, the token→identity mapping
-             * is deleted — ledger entries retain the token but it becomes unresolvable.
-             * Off by default — zero behaviour change when disabled.
-             *
-             * <p>
-             * Organisations with their own identity management systems should leave this
-             * off and provide a custom {@link io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider}
-             * CDI bean instead.
-             *
-             * @return {@code true} if built-in tokenisation is active; {@code false} by default
-             */
-            @WithDefault("false")
-            boolean enabled();
         }
     }
 
@@ -273,5 +242,36 @@ public interface LedgerConfig {
          */
         @WithDefault("false")
         boolean routingEnabled();
+    }
+
+    /** Actor identity pseudonymisation settings. */
+    interface IdentityConfig {
+
+        /**
+         * Tokenisation settings.
+         *
+         * @return the tokenisation sub-configuration
+         */
+        TokenisationConfig tokenisation();
+
+        /** Token-based pseudonymisation settings. */
+        interface TokenisationConfig {
+
+            /**
+             * When {@code true}, actor identities are stored as UUID tokens backed by
+             * the {@code actor_identity} table. On erasure, the token→identity mapping
+             * is deleted — ledger entries retain the token but it becomes unresolvable.
+             * Off by default — zero behaviour change when disabled.
+             *
+             * <p>
+             * Organisations with their own identity management systems should leave this
+             * off and provide a custom {@link io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider}
+             * CDI bean instead.
+             *
+             * @return {@code true} if built-in tokenisation is active; {@code false} by default
+             */
+            @WithDefault("false")
+            boolean enabled();
+        }
     }
 }
