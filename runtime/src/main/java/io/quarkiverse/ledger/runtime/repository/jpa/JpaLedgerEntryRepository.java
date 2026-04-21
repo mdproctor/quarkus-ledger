@@ -20,6 +20,8 @@ import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider;
+import io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
@@ -60,6 +62,12 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     @Inject
     LedgerMerklePublisher merklePublisher;
 
+    @Inject
+    ActorIdentityProvider actorIdentityProvider;
+
+    @Inject
+    DecisionContextSanitiser decisionContextSanitiser;
+
     /** {@inheritDoc} */
     @Override
     @Transactional
@@ -69,6 +77,20 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         if (entry.occurredAt == null) {
             entry.occurredAt = Instant.now();
         }
+
+        // Pseudonymise actor identity before computing the leaf hash.
+        // The hash chain covers the token, not the raw identity.
+        if (entry.actorId != null) {
+            entry.actorId = actorIdentityProvider.tokenise(entry.actorId);
+        }
+
+        // Sanitise decisionContext in any attached ComplianceSupplement.
+        entry.compliance().ifPresent(cs -> {
+            if (cs.decisionContext != null) {
+                cs.decisionContext = decisionContextSanitiser.sanitise(cs.decisionContext);
+                entry.refreshSupplementJson();
+            }
+        });
 
         if (ledgerConfig.hashChain().enabled()) {
             entry.digest = LedgerMerkleTree.leafHash(entry);
@@ -150,6 +172,9 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     /** {@inheritDoc} */
     @Override
     public LedgerAttestation saveAttestation(final LedgerAttestation attestation) {
+        if (attestation.attestorId != null) {
+            attestation.attestorId = actorIdentityProvider.tokenise(attestation.attestorId);
+        }
         em.persist(attestation);
         return attestation;
     }
@@ -188,11 +213,12 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     public List<LedgerEntry> findByActorId(final String actorId,
             final Instant from, final Instant to) {
+        final String token = actorIdentityProvider.tokeniseForQuery(actorId);
         return em.createQuery(
                 "SELECT e FROM LedgerEntry e WHERE e.actorId = :actorId" +
                         " AND e.occurredAt >= :from AND e.occurredAt <= :to ORDER BY e.occurredAt ASC",
                 LedgerEntry.class)
-                .setParameter("actorId", actorId)
+                .setParameter("actorId", token)
                 .setParameter("from", from)
                 .setParameter("to", to)
                 .getResultList();
