@@ -32,7 +32,7 @@ Domain logic is NOT in this extension — it lives in consumers via JPA JOINED s
 
 Each consumer defines its own subclass and its own Flyway migration for the subclass table.
 The base tables (`ledger_entry`, `ledger_attestation`, `actor_trust_score`) are defined here
-in V1000, V1001, V1002, and V1003 and always present when `quarkus-ledger` is on the classpath.
+in V1000–V1004 and always present when `quarkus-ledger` is on the classpath.
 
 ---
 
@@ -105,7 +105,8 @@ quarkus-ledger/
 │       │   ├── LedgerMerkleFrontier.java    — Merkle frontier node entity (log₂(N) rows per subject)
 │       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION
 │       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM
-│       │   └── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
+│       │   ├── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
+│       │   └── ActorIdentity.java           — token↔identity mapping for pseudonymisation
 │       ├── repository/
 │       │   ├── LedgerEntryRepository.java        — blocking SPI (uses subjectId); findById → findEntryById
 │       │   ├── ReactiveLedgerEntryRepository.java — reactive SPI (Uni<T> return types)
@@ -118,8 +119,14 @@ quarkus-ledger/
 │           ├── model/
 │           │   ├── InclusionProof.java       — Merkle inclusion proof value type
 │           │   └── ProofStep.java            — single sibling node in a proof path
-│           ├── TrustScoreComputer.java      — EigenTrust algorithm (pure Java)
+│           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
+│           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (pure Java)
 │           └── TrustScoreJob.java           — @Scheduled nightly recomputation
+│       └── privacy/
+│           ├── ActorIdentityProvider.java   — SPI: tokenise/resolve/erase actor identities
+│           ├── DecisionContextSanitiser.java — SPI: sanitise decisionContext JSON before persist
+│           ├── InternalActorIdentityProvider.java — built-in UUID token impl (config-gated)
+│           └── LedgerPrivacyProducer.java   — CDI producer for both SPIs (@DefaultBean)
 │       └── supplement/
 │           ├── LedgerSupplement.java        — abstract base (JOINED inheritance)
 │           ├── ComplianceSupplement.java    — GDPR Art.22, governance fields
@@ -129,7 +136,8 @@ quarkus-ledger/
 │       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables
 │       ├── V1001__actor_trust_score.sql     — actor_trust_score table
 │       ├── V1002__ledger_supplement.sql     — supplement tables + drops moved columns
-│       └── V1003__ledger_entry_archive.sql  — ledger_entry_archive table
+│       ├── V1003__ledger_entry_archive.sql  — ledger_entry_archive table
+│       └── V1004__actor_identity.sql        — actor_identity pseudonymisation table
 └── deployment/
     └── src/main/java/io/quarkiverse/ledger/deployment/
         └── LedgerProcessor.java             — @BuildStep: FeatureBuildItem
@@ -185,7 +193,7 @@ Tarkus and Qhorus are siblings — neither depends on the other. Both depend on
 ## Schema Convention
 
 **No existing installations** — there are no deployed instances of `quarkus-ledger` in production.
-All schema changes go directly into the base migration files (V1000–V1003) or into a new base
+All schema changes go directly into the base migration files (V1000–V1004) or into a new base
 migration file. Do NOT create incremental migration scripts to evolve the schema. Rewrite the
 relevant migration file in place. Treat every schema change as a clean-slate design decision.
 
