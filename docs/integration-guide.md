@@ -96,7 +96,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 | `subjectId` | UUID | Aggregate identifier — scopes sequence and hash chain |
 | `sequenceNumber` | int | 1-based position in this subject's ledger |
 | `entryType` | LedgerEntryType | COMMAND, EVENT, or ATTESTATION |
-| `actorId` | String | Who performed this action |
+| `actorId` | String | Who performed this action — see [§ Actor identity](#actor-identity) |
 | `actorType` | ActorType | HUMAN, AGENT, or SYSTEM |
 | `actorRole` | String | Functional role (e.g. "Approver", "Resolver") |
 | `correlationId` | String | OTel trace ID linking this entry to a distributed trace |
@@ -110,7 +110,58 @@ Optional fields are handled via supplements — see [§ Supplements](#supplement
 | Supplement | Fields | Attach when |
 |---|---|---|
 | `ComplianceSupplement` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording decisions subject to GDPR Art.22 or EU AI Act Art.12 |
-| `ProvenanceSupplement` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Subject is driven by an external workflow |
+| `ProvenanceSupplement` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem`, `agentConfigHash` | Subject is driven by an external workflow; or carries LLM agent configuration binding |
+
+---
+
+## Actor identity
+
+### Human and system actors
+
+For human actors, `actorId` is typically a user ID or username. For system actors
+(schedulers, rule engines), `actorId` is a stable service identifier.
+
+```java
+entry.actorId   = currentUser.id();   // e.g. "alice"
+entry.actorType = ActorType.HUMAN;
+entry.actorRole = "Approver";
+```
+
+### LLM agents
+
+LLM agents are stateless — each session starts fresh. Use a **versioned persona name**
+as `actorId` so trust accumulates correctly across sessions (ADR 0004):
+
+```
+{model-family}:{persona}@{major}
+```
+
+| Segment | Description | Example |
+|---|---|---|
+| `model-family` | LLM family | `claude`, `gpt`, `gemini` |
+| `persona` | Stable role name from system instructions | `tarkus-reviewer` |
+| `@{major}` | Major version; bump when behaviour warrants a new trust baseline | `@v1` |
+
+```java
+entry.actorId   = "claude:tarkus-reviewer@v1";
+entry.actorType = ActorType.AGENT;
+entry.actorRole = "code-reviewer";  // broader functional classification
+```
+
+Bump the major version when the agent's system instructions or behaviour change
+materially enough that accumulated trust should not carry over. Minor tuning and
+bug fixes do not require a bump.
+
+**Configuration binding (optional):** to detect configuration drift within a version,
+attach a `ProvenanceSupplement` with `agentConfigHash` set to the SHA-256 hex of the
+agent's configuration at session start (e.g. CLAUDE.md + system prompts). This is a
+forensic audit field — it does not affect trust scoring.
+
+```java
+ProvenanceSupplement ps = new ProvenanceSupplement();
+ps.agentConfigHash = sha256HexOf(claudeMd + systemPrompts);
+entry.attach(ps);
+```
 
 ---
 
