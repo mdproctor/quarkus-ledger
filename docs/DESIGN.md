@@ -86,7 +86,7 @@ fields by concern and moving them out of the core entity entirely.
 | Supplement | Table | Fields | Use when |
 |---|---|---|---|
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording automated decisions subject to GDPR Art.22 or EU AI Act Art.12 |
-| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Entry is driven by an external workflow system |
+| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem`, `agentConfigHash` | Entry is driven by an external workflow system; or carries LLM agent configuration binding |
 
 ### Attaching a supplement
 
@@ -238,6 +238,62 @@ affected (entries are not deleted).
 
 ---
 
+## Agent Identity Model
+
+LLM agents are stateless — each session starts fresh. For trust scores to accumulate and
+audit trails to remain coherent, `actorId` must be stable across sessions. See ADR 0004.
+
+### `actorId` format for LLM agents
+
+```
+{model-family}:{persona}@{major}
+```
+
+Examples: `"claude:tarkus-reviewer@v1"`, `"claude:message-router@v1"`.
+
+| Segment | Description |
+|---|---|
+| `model-family` | LLM family: `claude`, `gpt`, `gemini`, … |
+| `persona` | Stable role name from the agent's system instructions |
+| `@{major}` | Major version; bumped when behaviour changes enough to warrant a new trust baseline |
+
+### Versioning semantics
+
+| Change type | Version impact | Trust |
+|---|---|---|
+| Behaviour break / major system instruction rework | Bump major (`v1` → `v2`) | New baseline |
+| Feature add or tuning within same persona | No bump | Full inheritance |
+| Bug fix or internal refactor | No bump | Full inheritance |
+
+Versioning is intentional and human-controlled — it is not automatic. The question is:
+"does this change warrant resetting the trust baseline?" If yes, bump. If no, don't.
+
+### Three-layer model
+
+| Layer | Field | Description |
+|---|---|---|
+| Persistent identity | `actorId` | Stable trust key — `"{model-family}:{persona}@{major}"` |
+| Configuration binding | `ProvenanceSupplement.agentConfigHash` | SHA-256 hex of CLAUDE.md + system prompts; forensic only; nullable |
+| Session correlation | `correlationId` | Ephemeral session/trace ID; not the actor ID |
+
+### Consumer conventions
+
+```java
+entry.actorId   = "claude:tarkus-reviewer@v1";
+entry.actorType = ActorType.AGENT;
+entry.actorRole = "code-reviewer";  // broader functional classification
+
+// Optional — populate for forensic config drift detection
+ProvenanceSupplement ps = new ProvenanceSupplement();
+ps.agentConfigHash = sha256HexOf(claudeMd + systemPrompts);
+entry.attach(ps);
+```
+
+The `actorId` string is also valid as a `prov:Agent` URI in W3C PROV-DM exports
+(`ledger:actor/claude:tarkus-reviewer@v1`). See `docs/prov-dm-mapping.md`.
+
+---
+
 ## Configuration
 
 The extension is configured under the `quarkus.ledger` prefix via `application.properties` or environment variables.
@@ -355,6 +411,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Bayesian trust weighting** | ✅ Done | Bayesian Beta model: per-attestation recency weighting, alpha/beta posterior, ForgivenessParams removed. See ADR 0003. |
 | **Privacy / pseudonymisation** | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, `InternalActorIdentityProvider`, `LedgerErasureService`, `ActorIdentity` entity, V1004 migration. 31 tests. |
 | **EigenTrust transitivity** | ✅ Done | `EigenTrustComputer` (power iteration, dangling-node fix, pre-trusted seed), `global_trust_score` on `ActorTrustScore`, `TrustScoreJob` eigentrust pass (opt-in). 8 unit tests. Closes #26. |
+| **LLM agent identity model** | ✅ Done | Versioned persona names (`{model-family}:{persona}@{major}`); `agentConfigHash` on `ProvenanceSupplement` for config drift detection; DESIGN.md agent identity section; ADR 0004. Closes #23. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

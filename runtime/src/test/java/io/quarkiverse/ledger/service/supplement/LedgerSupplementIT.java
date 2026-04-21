@@ -125,6 +125,43 @@ class LedgerSupplementIT {
         assertThat(loaded.sourceEntitySystem).isEqualTo("quarkus-flow");
     }
 
+    // ── LLM agent config hash binding (ADR 0004) ──────────────────────────────
+
+    @Test
+    @Transactional
+    void provenanceSupplement_agentConfigHash_persistsAndLoads() {
+        final TestEntry entry = bareEntry();
+        entry.actorId = "claude:tarkus-reviewer@v1";
+
+        final ProvenanceSupplement ps = new ProvenanceSupplement();
+        ps.agentConfigHash = "a".repeat(64); // simulated sha256 hex
+        entry.attach(ps);
+        repo.save(entry);
+
+        final ProvenanceSupplement loaded = ((TestEntry) repo.findEntryById(entry.id).orElseThrow())
+                .provenance().orElseThrow();
+        assertThat(loaded.agentConfigHash).isEqualTo("a".repeat(64));
+        assertThat(loaded.sourceEntityId).isNull();
+    }
+
+    @Test
+    @Transactional
+    void provenanceSupplement_agentConfigHash_nullableForNonAgentEntries() {
+        final TestEntry entry = bareEntry();
+
+        final ProvenanceSupplement ps = new ProvenanceSupplement();
+        ps.sourceEntityId = "wf-99";
+        ps.sourceEntitySystem = "quarkus-flow";
+        // no agentConfigHash — workflow entry, not an LLM agent entry
+        entry.attach(ps);
+        repo.save(entry);
+
+        final ProvenanceSupplement loaded = ((TestEntry) repo.findEntryById(entry.id).orElseThrow())
+                .provenance().orElseThrow();
+        assertThat(loaded.agentConfigHash).isNull();
+        assertThat(loaded.sourceEntityId).isEqualTo("wf-99");
+    }
+
     // ── attach replaces existing supplement of same type ──────────────────────
 
     @Test

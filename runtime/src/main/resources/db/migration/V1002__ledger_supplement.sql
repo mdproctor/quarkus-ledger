@@ -64,6 +64,9 @@ CREATE TABLE ledger_supplement_provenance (
     source_entity_id     VARCHAR(255),
     source_entity_type   VARCHAR(255),
     source_entity_system VARCHAR(100),
+    -- SHA-256 hex of agent configuration (CLAUDE.md + system prompts); nullable;
+    -- populated for LLM agent entries only; forensic drift detection, not trust key.
+    agent_config_hash    VARCHAR(64),
     CONSTRAINT pk_ledger_supplement_provenance PRIMARY KEY (id),
     CONSTRAINT fk_provenance_base FOREIGN KEY (id)
         REFERENCES ledger_supplement (id)
