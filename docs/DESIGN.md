@@ -208,6 +208,35 @@ warnings and cannot override defaults via `application.properties`.
 
 ---
 
+### Privacy and Pseudonymisation
+
+Actor identities (`actorId`, `attestorId`) and decision context blobs are intercepted on
+every write by two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
+
+| SPI | Default | Purpose |
+|---|---|---|
+| `ActorIdentityProvider` | Pass-through | Tokenise actor identities; resolve tokens back to real identities; sever mappings on erasure |
+| `DecisionContextSanitiser` | Pass-through | Strip PII from `ComplianceSupplement.decisionContext` before persist |
+
+Both defaults produce zero behaviour change. Supply a custom CDI bean to replace either.
+
+**Built-in tokenisation** (`InternalActorIdentityProvider`) activates when
+`quarkus.ledger.identity.tokenisation.enabled=true`. Tokens are UUID strings stored in the
+`actor_identity` table (V1004). Erasure deletes the mapping row — the token in existing
+entries becomes permanently unresolvable but the Merkle hash chain is intact.
+
+**`LedgerErasureService`** processes GDPR Art.17 erasure requests. Returns `ErasureResult`
+with the actor identity, whether a mapping was found, and how many ledger entries were
+affected (entries are not deleted).
+
+**Config:**
+
+| Key | Default | Description |
+|---|---|---|
+| `quarkus.ledger.identity.tokenisation.enabled` | `false` | Activate built-in UUID token pseudonymisation |
+
+---
+
 ## Configuration
 
 The extension is configured under the `quarkus.ledger` prefix via `application.properties` or environment variables.
