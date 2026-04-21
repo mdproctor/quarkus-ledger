@@ -54,6 +54,32 @@ Format: `"{model-family}:{persona}@{major}"` — e.g. `"claude:tarkus-reviewer@v
 Versioning is intentional and human-controlled. The decision criterion is:
 "does this change warrant resetting the trust baseline?" If yes, bump. If no, don't.
 
+**Concrete criteria for CLAUDE.md / system instruction changes:**
+
+| Change | Bump? | Rationale |
+|---|---|---|
+| Complete role redefinition | Yes | Different accountability scope — old trust does not transfer |
+| New decision authority (e.g. now approves financial actions) | Yes | Material expansion of risk surface |
+| Significant tightening or loosening of behavioural constraints | Yes | Changed risk profile — prior trust may be misleading |
+| Prompt tuning, worked examples, clarifications | No | Same role, same constraints — continuity is correct |
+| Memory file updates (accumulated knowledge) | No | Knowledge depth, not role identity |
+| Bug fix in instructions | No | Restoring intended behaviour, not changing it |
+| Model family upgrade (e.g. claude-3 → claude-4) with same instructions | Consumer discretion | Trust accumulation can continue if behaviour is demonstrably equivalent; bump if the new model introduces materially different behaviour for the same instructions |
+
+**Score inheritance — no API:**
+
+There is no score inheritance API in `quarkus-ledger`. When a consumer bumps from `@v1`
+to `@v2`, v2 starts at Beta(1,1) = 0.5 (prior). This is intentional:
+
+- An inheritance API would require specifying an inheritance weight — a second judgement
+  call with no objective ground truth.
+- Automatic inheritance would silently transfer trust that may not be warranted.
+- Consumers who want to pre-seed trust for v2 can write synthetic attestations before
+  going live — this leaves an explicit, auditable trail of the seeding decision.
+
+The clean break is the safe default. The cost (a period of low-confidence scores for v2)
+is the correct behaviour: a new configuration should earn trust independently.
+
 **Configuration binding for forensics:**
 
 `ProvenanceSupplement.agentConfigHash` (nullable `VARCHAR(64)`) carries the SHA-256 hex

@@ -268,6 +268,24 @@ Examples: `"claude:tarkus-reviewer@v1"`, `"claude:message-router@v1"`.
 Versioning is intentional and human-controlled — it is not automatic. The question is:
 "does this change warrant resetting the trust baseline?" If yes, bump. If no, don't.
 
+**Concrete criteria for CLAUDE.md / system instruction changes:**
+
+| Change | Bump? |
+|---|---|
+| Complete role redefinition | Yes |
+| New decision authority (e.g. now approves financial actions) | Yes |
+| Significant tightening or loosening of behavioural constraints | Yes |
+| Prompt tuning, worked examples, clarifications | No |
+| Memory file updates (accumulated knowledge) | No |
+| Bug fix in instructions | No |
+| Model family upgrade with same instructions | Consumer discretion |
+
+**Score inheritance:** there is no inheritance API. When a consumer bumps from `@v1` to
+`@v2`, v2 starts at Beta(1,1) = 0.5 (prior). A clean break is the safe default — the
+new configuration earns trust independently. Consumers who want to pre-seed v2 trust
+can write synthetic attestations before go-live, which leaves an explicit auditable trail.
+See ADR 0004 for the full rationale.
+
 ### Three-layer model
 
 | Layer | Field | Description |
@@ -440,6 +458,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **EigenTrust transitivity** | ✅ Done | `EigenTrustComputer` (power iteration, dangling-node fix, pre-trusted seed), `global_trust_score` on `ActorTrustScore`, `TrustScoreJob` eigentrust pass (opt-in). 8 unit tests. Closes #26. |
 | **LLM agent identity model** | ✅ Done | Versioned persona names (`{model-family}:{persona}@{major}`); `agentConfigHash` on `ProvenanceSupplement` for config drift detection; DESIGN.md agent identity section; ADR 0004. Closes #23. |
 | **Trust score continuity across LLM sessions** | ✅ Done | Documented sparse/concurrent/scheduling behaviour in agent mesh deployments; `trust-score.schedule` config key (default `24h`, configurable for high-interaction meshes). Closes #24. |
+| **Agent identity versioning criteria** | ✅ Done | Concrete bump/no-bump criteria for CLAUDE.md changes; no inheritance API (clean break is safe default); pre-seeding via synthetic attestations documented. ADR 0004 updated. Closes #25. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
