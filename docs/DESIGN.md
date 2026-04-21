@@ -292,6 +292,32 @@ entry.attach(ps);
 The `actorId` string is also valid as a `prov:Agent` URI in W3C PROV-DM exports
 (`ledger:actor/claude:tarkus-reviewer@v1`). See `docs/prov-dm-mapping.md`.
 
+### Trust score behaviour in agent mesh deployments
+
+**Sparse sessions (1 decision, 1 attestation):** The Beta model handles this via the
+prior. Beta(1,1) = 0.5 with no history; one positive attestation yields Beta(2,1) = 0.67.
+The contribution is real but carries low confidence weight — exactly the right behaviour.
+No special handling is needed for short-lived sessions.
+
+**Concurrent sessions:** Multiple sessions with the same `actorId` running in parallel
+produce concurrent appends to `ledger_attestation` — plain inserts with no conflict.
+`TrustScoreJob` is a single serialized batch (Quarkus prevents concurrent executions of
+the same job identity). Attestations written after a batch starts are picked up on the
+next run. This is expected batch semantics, not a data hazard.
+
+**Scheduling for high-interaction meshes:** The default `trust-score.schedule=24h` is
+appropriate for most deployments. For dense agent meshes where an actor makes hundreds of
+decisions per hour, reduce the interval so trust scores reflect recent behaviour:
+
+```properties
+quarkus.ledger.trust-score.schedule=1h   # high-interaction mesh
+quarkus.ledger.trust-score.schedule=6h   # moderate interaction
+quarkus.ledger.trust-score.schedule=24h  # default (nightly)
+```
+
+There is no benefit to scheduling below the typical inter-attestation interval — scores
+cannot change faster than attestations arrive.
+
 ---
 
 ## Configuration
@@ -313,6 +339,7 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `trust-score.eigentrust-enabled` | `false` | Run EigenTrust power iteration after the Beta pass to compute transitive global trust scores |
 | `trust-score.eigentrust-alpha` | `0.15` | EigenTrust dampening constant α — higher values anchor the eigenvector closer to the pre-trusted set |
 | `trust-score.pre-trusted-actors` | (empty) | Comma-separated actor IDs used as the EigenTrust seed; uniform distribution used when empty |
+| `trust-score.schedule` | `24h` | Recomputation interval as a Quarkus duration string; reduce for high-interaction agent mesh deployments |
 
 **Retention sub-config (`quarkus.ledger.retention.*`):**
 
@@ -412,6 +439,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Privacy / pseudonymisation** | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, `InternalActorIdentityProvider`, `LedgerErasureService`, `ActorIdentity` entity, V1004 migration. 31 tests. |
 | **EigenTrust transitivity** | ✅ Done | `EigenTrustComputer` (power iteration, dangling-node fix, pre-trusted seed), `global_trust_score` on `ActorTrustScore`, `TrustScoreJob` eigentrust pass (opt-in). 8 unit tests. Closes #26. |
 | **LLM agent identity model** | ✅ Done | Versioned persona names (`{model-family}:{persona}@{major}`); `agentConfigHash` on `ProvenanceSupplement` for config drift detection; DESIGN.md agent identity section; ADR 0004. Closes #23. |
+| **Trust score continuity across LLM sessions** | ✅ Done | Documented sparse/concurrent/scheduling behaviour in agent mesh deployments; `trust-score.schedule` config key (default `24h`, configurable for high-interaction meshes). Closes #24. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
