@@ -468,8 +468,7 @@ before submitting. The supplement architecture stabilises the surface — `attac
 orchestration workflow transitions. Pattern is established; implementation follows
 the Tarkus/Qhorus examples.
 
-**`@Alternative` activation documentation** — for standalone deployments that provide
-no domain repo, document (or provide) the `beans.xml` activation path.
+**`@Alternative` activation documentation** — ✅ Done. `integration-guide.md` covers all three activation paths (`quarkus.arc.selected-alternatives`, `beans.xml`, subclass extension) with a decision table. Misleading "no extra configuration needed" note corrected.
 
 **Trust score routing signals** — ✅ Done. `TrustScoreRoutingPublisher` fires CDI events (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`) after each nightly batch run; sync/async per-consumer. Closes #33.
 
