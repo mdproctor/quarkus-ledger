@@ -45,6 +45,13 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- OpenTelemetry API — optional; OtelTraceIdProvider auto-populates traceId from active span -->
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <optional>true</optional>
+    </dependency>
+
     <!-- Scheduler — for nightly TrustScoreJob -->
     <dependency>
       <groupId>io.quarkus</groupId>
