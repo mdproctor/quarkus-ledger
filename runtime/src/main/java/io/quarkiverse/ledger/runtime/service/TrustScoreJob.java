@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
@@ -49,6 +50,9 @@ public class TrustScoreJob {
     @Inject
     TrustScoreRoutingPublisher routingPublisher;
 
+    @Inject
+    EntityManager em;
+
     @Scheduled(every = "{quarkus.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")
     @Transactional
     public void computeTrustScores() {
@@ -65,10 +69,16 @@ public class TrustScoreJob {
      */
     @Transactional
     public void runComputation() {
-        // Pre-read previous scores only if a delta observer is registered
-        final Map<String, ActorTrustScore> previousSnapshot = routingPublisher.needsPreviousSnapshot()
-                ? trustRepo.findAll().stream().collect(Collectors.toMap(s -> s.actorId, s -> s))
-                : Map.of();
+        // Pre-read previous scores only if a delta observer is registered.
+        // Entities are detached so subsequent upserts do not mutate the snapshot values.
+        final Map<String, ActorTrustScore> previousSnapshot;
+        if (routingPublisher.needsPreviousSnapshot()) {
+            previousSnapshot = trustRepo.findAll().stream()
+                    .peek(s -> em.detach(s))
+                    .collect(Collectors.toMap(s -> s.actorId, s -> s));
+        } else {
+            previousSnapshot = Map.of();
+        }
 
         final TrustScoreComputer computer = new TrustScoreComputer(
                 config.trustScore().decayHalfLifeDays());
