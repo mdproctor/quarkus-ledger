@@ -15,8 +15,9 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  *
  * <p>
  * Queries operate on the base {@link LedgerEntry} type — polymorphic results include all
- * registered subclasses. The default implementation uses Hibernate ORM with Panache.
- * Alternative implementations can be substituted via CDI.
+ * registered subclasses. The built-in implementation ({@code JpaLedgerEntryRepository})
+ * uses Hibernate ORM + EntityManager directly. Alternative implementations can be
+ * substituted via CDI.
  */
 public interface LedgerEntryRepository {
 

@@ -151,7 +151,7 @@ audit trail.
 
 **Addressed by (#10):**
 `causedByEntryId` is a core nullable field on `LedgerEntry` — consumers set it
-directly when an entry is causally triggered by another. `correlationId` is also
+directly when an entry is causally triggered by another. `traceId` is also
 core, linking entries to OTel distributed traces. `findCausedBy(UUID)` enables
 one-hop traversal; recursive chain reconstruction is application-level.
 

@@ -51,7 +51,7 @@ and stable across sessions.
 | `entryType` | Entity + Activity property | `ledger:entryType` |
 | `digest` | Entity property | `ledger:digest` |
 | `occurredAt` | Entity + Activity property | `prov:generatedAtTime`, `prov:startedAtTime` |
-| `correlationId` | Entity property | `ledger:correlationId` |
+| `traceId` | Entity property | `ledger:traceId` |
 | `actorId` | Agent IRI | `ledger:actor/<actorId>` |
 | `actorType` | Agent property | `ledger:actorType` |
 | `actorRole` | Agent property | `ledger:actorRole` |

@@ -348,7 +348,7 @@ Instead, optional cross-cutting field sets live in separate joined tables:
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` |
 | `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` |
 
-OTel trace linkage (`correlationId`) and causal chaining (`causedByEntryId`) are core
+OTel trace linkage (`traceId`) and causal chaining (`causedByEntryId`) are core
 fields on every `LedgerEntry` — present without attaching a supplement, incurring no extra
 table row. They were originally a supplement and were promoted to core when it became clear
 every consumer in the ecosystem needed them.
