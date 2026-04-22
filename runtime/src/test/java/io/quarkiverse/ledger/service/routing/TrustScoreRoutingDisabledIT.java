@@ -1,0 +1,109 @@
+package io.quarkiverse.ledger.service.routing;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.quarkiverse.ledger.runtime.model.ActorType;
+import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
+import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
+import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
+import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
+import io.quarkus.test.junit.TestProfile;
+
+@QuarkusTest
+@TestProfile(TrustScoreRoutingDisabledIT.RoutingDisabledTestProfile.class)
+class TrustScoreRoutingDisabledIT {
+
+    public static class RoutingDisabledTestProfile implements QuarkusTestProfile {
+        @Override
+        public String getConfigProfile() {
+            return "routing-disabled-test";
+        }
+    }
+
+    @Inject
+    TrustScoreJob trustScoreJob;
+
+    @Inject
+    LedgerEntryRepository repo;
+
+    @Inject
+    EntityManager em;
+
+    @Inject
+    TestRoutingObservers observers;
+
+    @BeforeEach
+    void reset() {
+        observers.reset();
+    }
+
+    // ── Robustness: routing-enabled=false → observers never called ─────────────
+
+    @Test
+    @Transactional
+    void routingDisabled_observersNeverCalled() {
+        seedDecision("routing-off-" + UUID.randomUUID(),
+                Instant.now().minus(1, ChronoUnit.DAYS), AttestationVerdict.SOUND);
+
+        trustScoreJob.runComputation();
+
+        assertThat(observers.fullReceived()).isEmpty();
+        assertThat(observers.deltaReceived()).isEmpty();
+        assertThat(observers.notifyReceived()).isEmpty();
+    }
+
+    @Test
+    @Transactional
+    void routingDisabled_trustScoresStillComputed() {
+        final String actorId = "routing-off-score-" + UUID.randomUUID();
+        seedDecision(actorId, Instant.now().minus(1, ChronoUnit.DAYS), AttestationVerdict.SOUND);
+
+        trustScoreJob.runComputation();
+
+        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        assertThat(score).isNotNull();
+        assertThat(score.trustScore).isGreaterThan(0.5);
+    }
+
+    // ── Fixtures ──────────────────────────────────────────────────────────────
+
+    private void seedDecision(final String actorId, final Instant decisionTime,
+            final AttestationVerdict verdict) {
+        final TestEntry entry = new TestEntry();
+        entry.subjectId = UUID.randomUUID();
+        entry.sequenceNumber = 1;
+        entry.entryType = LedgerEntryType.EVENT;
+        entry.actorId = actorId;
+        entry.actorType = ActorType.AGENT;
+        entry.actorRole = "Classifier";
+        entry.occurredAt = decisionTime;
+        repo.save(entry);
+
+        final LedgerAttestation att = new LedgerAttestation();
+        att.id = UUID.randomUUID();
+        att.ledgerEntryId = entry.id;
+        att.subjectId = entry.subjectId;
+        att.attestorId = "routing-attestor";
+        att.attestorType = ActorType.SYSTEM;
+        att.verdict = verdict;
+        att.confidence = 0.9;
+        att.occurredAt = decisionTime.plusSeconds(60);
+        em.persist(att);
+    }
+}
