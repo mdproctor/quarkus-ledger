@@ -392,6 +392,19 @@ class OrderLedgerTest {
 
 ---
 
+## Runnable examples
+
+| Example | What it shows |
+|---|---|
+| [`examples/order-processing/`](../examples/order-processing/) | Full order lifecycle — place, ship, deliver, cancel with hash chain and attestations |
+| [`examples/art22-decision-snapshot/`](../examples/art22-decision-snapshot/) | AI decision service with GDPR Art.22 `ComplianceSupplement` |
+| [`examples/art12-compliance/`](../examples/art12-compliance/) | EU AI Act Art.12 retention job and audit query API |
+| [`examples/merkle-verification/`](../examples/merkle-verification/) | Merkle Mountain Range inclusion proofs and offline verification |
+| [`examples/prov-dm-export/`](../examples/prov-dm-export/) | W3C PROV-DM JSON-LD export from ledger entries |
+| [`examples/trust-score-routing/`](../examples/trust-score-routing/) | CDI routing signals (`TrustScoreFullPayload`, `TrustScoreComputedAt`) after trust score computation |
+
+---
+
 ## Real-world reference implementations
 
 | Project | Subclass | Domain |

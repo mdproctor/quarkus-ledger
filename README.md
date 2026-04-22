@@ -32,7 +32,7 @@ Three built-in supplement types carry optional fields that not every consumer ne
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | GDPR Art.22 / EU AI Act Art.12 automated decision auditability |
 | `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Entry driven by an external workflow or orchestration system |
 
-OTel trace linkage (`correlationId`) and cross-subject causality (`causedByEntryId`) are core fields on every entry — not supplements.
+OTel trace linkage (`traceId`) and cross-subject causality (`causedByEntryId`) are core fields on every entry — not supplements.
 
 Attaching a supplement:
 ```java
@@ -104,7 +104,7 @@ Reference implementations:
 
 - Java 21+
 - Quarkus 3.x
-- Hibernate ORM with Panache
+- Hibernate ORM
 
 ---
 
@@ -190,7 +190,7 @@ boolean intact = verificationService.verify(orderId); // O(N log N), offline-ver
 | `actorType` | ActorType | `HUMAN`, `AGENT`, or `SYSTEM` |
 | `actorRole` | String | Functional role (e.g. "Approver", "Resolver") |
 | `occurredAt` | Instant | When recorded — set this explicitly before computing the hash |
-| `correlationId` | String | OTel trace ID linking this entry to a distributed trace |
+| `traceId` | String | OTel trace ID linking this entry to a distributed trace |
 | `causedByEntryId` | UUID | FK to causal predecessor entry (cross-subject causality) |
 | `digest` | String | RFC 9162 Merkle leaf hash — `SHA-256(0x00 \| canonical fields)` |
 | `supplementJson` | String | JSON snapshot of all attached supplements (auto-set by `attach()`) |
@@ -213,6 +213,7 @@ All keys are under `quarkus.ledger`:
 | `quarkus.ledger.trust-score.enabled` | `false` | Enable nightly Bayesian Beta trust score computation |
 | `quarkus.ledger.trust-score.decay-half-life-days` | `90` | Age decay half-life for attestation recency weighting |
 | `quarkus.ledger.trust-score.routing-enabled` | `false` | Fire CDI events when trust scores influence routing |
+| `quarkus.ledger.trust-score.routing-delta-threshold` | `0.01` | Minimum score change for an actor to appear in a delta routing event |
 | `quarkus.ledger.identity.tokenisation.enabled` | `false` | Enable built-in UUID token pseudonymisation for actor identities |
 
 ---
@@ -229,6 +230,8 @@ All keys are under `quarkus.ledger`:
 | [Examples](docs/examples.md) | Complete worked example — order processing domain |
 | [Runnable Example — Order Processing](examples/order-processing/) | `mvn quarkus:dev` — order lifecycle with ledger, hash chain, attestations |
 | [Runnable Example — GDPR Art.22](examples/art22-decision-snapshot/) | `mvn quarkus:dev` — AI decision service with full Art.22 compliance supplement |
+| [Runnable Example — PROV-DM export](examples/prov-dm-export/) | `mvn quarkus:dev` — W3C PROV-DM JSON-LD export from audit entries |
+| [Runnable Example — Trust Score Routing](examples/trust-score-routing/) | `mvn quarkus:dev` — CDI routing signals after trust score computation |
 
 ---
 

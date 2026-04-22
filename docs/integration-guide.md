@@ -99,7 +99,7 @@ public class OrderLedgerEntry extends LedgerEntry {
 | `actorId` | String | Who performed this action — see [§ Actor identity](#actor-identity) |
 | `actorType` | ActorType | HUMAN, AGENT, or SYSTEM |
 | `actorRole` | String | Functional role (e.g. "Approver", "Resolver") |
-| `correlationId` | String | OTel trace ID linking this entry to a distributed trace |
+| `traceId` | String | OTel trace ID linking this entry to a distributed trace |
 | `causedByEntryId` | UUID | FK to causal predecessor entry (cross-subject causality) |
 | `digest` | String | Merkle leaf hash of this entry's canonical content (auto-set by `save()`) |
 | `occurredAt` | Instant | When this entry was recorded (auto-set) |
@@ -190,87 +190,42 @@ The `FOREIGN KEY ... REFERENCES ledger_entry (id)` is what makes JOINED inherita
 
 ## Step 4 — Create a typed repository
 
-For clean, cast-free access to your subclass, create a standalone `@ApplicationScoped` repository that implements `LedgerEntryRepository`:
+**Recommended:** extend `JpaLedgerEntryRepository` rather than implementing `LedgerEntryRepository` from scratch. This inherits all SPI methods (including `listAll()`, `findAllEvents()`, audit queries, etc.) and handles the Merkle frontier and pseudonymisation inside `save()`. Add only your domain-specific query methods on top.
 
 ```java
-import io.quarkiverse.ledger.runtime.model.*;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class OrderLedgerEntryRepository implements LedgerEntryRepository {
+public class OrderLedgerEntryRepository extends JpaLedgerEntryRepository {
 
-    // -----------------------------------------------------------------------
-    // Domain-typed convenience methods
-    // -----------------------------------------------------------------------
+    @Inject
+    EntityManager orderEm; // own field — parent's em is package-private
 
     public List<OrderLedgerEntry> findByOrderId(UUID orderId) {
-        return OrderLedgerEntry.list(
-            "subjectId = ?1 ORDER BY sequenceNumber ASC", orderId);
+        return orderEm.createQuery(
+                "SELECT e FROM OrderLedgerEntry e WHERE e.subjectId = :sid ORDER BY e.sequenceNumber ASC",
+                OrderLedgerEntry.class)
+            .setParameter("sid", orderId)
+            .getResultList();
     }
 
     public Optional<OrderLedgerEntry> findLatestByOrderId(UUID orderId) {
-        return OrderLedgerEntry
-            .find("subjectId = ?1 ORDER BY sequenceNumber DESC", orderId)
-            .firstResultOptional();
-    }
-
-    // -----------------------------------------------------------------------
-    // LedgerEntryRepository SPI — polymorphic base operations
-    // -----------------------------------------------------------------------
-
-    @Override
-    public LedgerEntry save(LedgerEntry entry) {
-        entry.persist();
-        return entry;
-    }
-
-    @Override
-    public List<LedgerEntry> findBySubjectId(UUID subjectId) {
-        return LedgerEntry.list(
-            "subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
-    }
-
-    @Override
-    public Optional<LedgerEntry> findLatestBySubjectId(UUID subjectId) {
-        return LedgerEntry.find(
-            "subjectId = ?1 ORDER BY sequenceNumber DESC", subjectId)
-            .firstResultOptional();
-    }
-
-    @Override
-    public Optional<LedgerEntry> findEntryById(UUID id) {
-        return Optional.ofNullable(LedgerEntry.findById(id));
-    }
-
-    @Override
-    public List<LedgerAttestation> findAttestationsByEntryId(UUID entryId) {
-        return LedgerAttestation.list(
-            "ledgerEntryId = ?1 ORDER BY occurredAt ASC", entryId);
-    }
-
-    @Override
-    public LedgerAttestation saveAttestation(LedgerAttestation attestation) {
-        attestation.persist();
-        return attestation;
-    }
-
-    @Override
-    public List<LedgerEntry> findAllEvents() {
-        return LedgerEntry.find("entryType = ?1", LedgerEntryType.EVENT).list();
-    }
-
-    @Override
-    public Map<UUID, List<LedgerAttestation>> findAttestationsForEntries(Set<UUID> entryIds) {
-        if (entryIds.isEmpty()) return Collections.emptyMap();
-        return LedgerAttestation.<LedgerAttestation>list("ledgerEntryId IN ?1", entryIds)
-            .stream()
-            .collect(Collectors.groupingBy(a -> a.ledgerEntryId));
+        return orderEm.createQuery(
+                "SELECT e FROM OrderLedgerEntry e WHERE e.subjectId = :sid ORDER BY e.sequenceNumber DESC",
+                OrderLedgerEntry.class)
+            .setParameter("sid", orderId)
+            .setMaxResults(1)
+            .getResultStream()
+            .findFirst();
     }
 }
 ```
+
+No activation needed — this subclass is `@ApplicationScoped` (not `@Alternative`), so CDI picks it up directly.
 
 > **CDI note:** `JpaLedgerEntryRepository` (from quarkus-ledger) is annotated `@Alternative` so it stays dormant when your own `LedgerEntryRepository` is on the classpath — CDI sees only your implementation. See [§ Activating the built-in JPA repository](#activating-the-built-in-jpa-repository) for when and how to activate it explicitly.
 
