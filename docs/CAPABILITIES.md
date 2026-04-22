@@ -29,7 +29,8 @@ The capabilities are grouped by concern. Each has an applicability rating:
 | Provenance tracking | ★★★★★ | Supplement — explicit attach | Data lineage, MLOps, governance |
 | Peer attestation | ★★★★☆ | `true` | Multi-party verification, AI agent trust |
 | Bayesian Beta trust scoring | ★★★☆☆ | `false` | Actor reliability confidence |
-| EigenTrust transitivity | ★★☆☆☆ | Not yet implemented | Decentralised agent mesh trust |
+| EigenTrust transitivity | ★★☆☆☆ | `false` | Decentralised agent mesh trust |
+| Trust score routing signals | ★★☆☆☆ | `false` | CDI event dispatch to routing layers |
 | Supplement system | ★★★★★ | Always available | Zero-overhead optional field sets |
 
 ---
@@ -310,19 +311,14 @@ entering the mesh has no direct attestations. EigenTrust allows the mesh to boot
 via transitivity: "I haven't worked with you directly, but three agents I trust have, and
 they all endorsed you."
 
-**Current state:** Research phase. The direct Bayesian Beta scoring is implemented and
-proven. EigenTrust transitivity is tracked in [RESEARCH.md](RESEARCH.md) (item 11) as the
-next trust evolution. The eigenvector computation is expensive and the dataset needs to be
-meaningful (many actors, many cross-attestations) before it pays off.
+**Current state:** Implemented and opt-in. `EigenTrustComputer` ships with the extension and runs as a post-pass after the Bayesian Beta computation when enabled. The eigenvector computation requires a meaningful attestation network — sparse data produces unreliable global scores.
 
 **Who will benefit:**
 Large-scale decentralised AI agent networks, federated multi-organisation systems where no
 central authority can be trusted to assign reputations, and cross-enterprise agent
 coordination (e.g. supply chain automation spanning multiple companies).
 
-**Enable when:** The agent mesh is large enough that direct attestation coverage is sparse
-and indirect trust propagation has signal value. This is a 2027–2028 problem for most
-organisations.
+**Enable when:** `quarkus.ledger.trust-score.eigentrust.enabled=true`. The agent mesh is large enough that direct attestation coverage is sparse and transitive propagation adds signal. For most organisations, direct Bayesian Beta scoring suffices until the actor count exceeds dozens of cross-attesting participants.
 
 **Don't dismiss it:** This feature is not here because it is fashionable. It is here because
 direct trust scoring without transitivity does not scale to large agent meshes. The

@@ -253,33 +253,44 @@ public interface LedgerConfig {
         double routingDeltaThreshold();
 
         /**
-         * When {@code true}, EigenTrust power iteration runs after the Bayesian Beta pass to
-         * compute transitive global trust scores across the agent mesh. Off by default — requires
-         * an established attestation network to produce meaningful results.
+         * EigenTrust power iteration settings (transitive global trust scores).
          *
-         * @return {@code true} if EigenTrust transitivity computation is enabled; {@code false} by default
+         * @return the EigenTrust sub-configuration
          */
-        @WithDefault("false")
-        boolean eigentrustEnabled();
+        EigenTrustConfig eigentrust();
 
-        /**
-         * EigenTrust dampening constant α in (0.0, 1.0). Higher values anchor the result
-         * closer to the pre-trusted distribution and improve convergence in cyclic graphs.
-         * The original EigenTrust paper recommends values in the range [0.1, 0.2].
-         *
-         * @return dampening constant (default 0.15)
-         */
-        @WithDefault("0.15")
-        double eigentrustAlpha();
+        /** EigenTrust power iteration settings. */
+        interface EigenTrustConfig {
 
-        /**
-         * Actor IDs that are unconditionally trusted and seed the EigenTrust eigenvector
-         * computation. Typically the identities of platform-level SYSTEM actors. When empty,
-         * a uniform distribution over all actors is used as the initial trust vector.
-         *
-         * @return list of pre-trusted actor IDs; empty by default
-         */
-        java.util.Optional<java.util.List<String>> preTrustedActors();
+            /**
+             * When {@code true}, EigenTrust power iteration runs after the Bayesian Beta pass
+             * to compute transitive global trust scores across the agent mesh. Off by default —
+             * requires an established attestation network to produce meaningful results.
+             *
+             * @return {@code true} if EigenTrust transitivity computation is enabled; {@code false} by default
+             */
+            @WithDefault("false")
+            boolean enabled();
+
+            /**
+             * Dampening constant α in (0.0, 1.0). Higher values anchor the result closer to
+             * the pre-trusted distribution and improve convergence in cyclic graphs.
+             * The original EigenTrust paper recommends values in the range [0.1, 0.2].
+             *
+             * @return dampening constant (default 0.15)
+             */
+            @WithDefault("0.15")
+            double alpha();
+
+            /**
+             * Actor IDs that are unconditionally trusted and seed the EigenTrust eigenvector
+             * computation. Typically the identities of platform-level SYSTEM actors. When empty,
+             * a uniform distribution over all actors is used as the initial trust vector.
+             *
+             * @return list of pre-trusted actor IDs; empty by default
+             */
+            java.util.Optional<java.util.List<String>> preTrustedActors();
+        }
 
         /**
          * Recomputation interval for trust scores expressed as a Quarkus duration string

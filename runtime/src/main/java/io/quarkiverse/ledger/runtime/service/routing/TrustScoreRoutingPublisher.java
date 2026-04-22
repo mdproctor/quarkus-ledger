@@ -16,6 +16,23 @@ import org.jboss.logging.Logger;
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 
+/**
+ * Dispatches CDI routing signals after each {@link io.quarkiverse.ledger.runtime.service.TrustScoreJob}
+ * computation run. Consumers observe the payload type that matches their granularity:
+ * {@link TrustScoreFullPayload} (all scores), {@link TrustScoreDeltaPayload} (changed actors only),
+ * or {@link TrustScoreComputedAt} (lightweight notification).
+ *
+ * <p>
+ * Observer presence is detected once at startup via {@link jakarta.enterprise.inject.spi.BeanManager}
+ * and cached — no per-run reflection. Delta computation (pre-read of previous scores) is skipped
+ * entirely when no {@link TrustScoreDeltaPayload} observer is registered.
+ *
+ * <p>
+ * {@link TrustScoreComputedAt} fires both {@code fire()} (for {@code @Observes} sync observers)
+ * and {@code fireAsync()} (for {@code @ObservesAsync} async observers) — CDI 4.x does not
+ * deliver {@code fire()} to async observers. {@link TrustScoreFullPayload} and
+ * {@link TrustScoreDeltaPayload} use only {@code fire()} because no async observers exist for them.
+ */
 @ApplicationScoped
 public class TrustScoreRoutingPublisher {
 
@@ -46,7 +63,6 @@ public class TrustScoreRoutingPublisher {
                 .resolveObserverMethods(new TrustScoreFullPayload(List.of())).isEmpty();
         hasDeltaObservers = !beanManager
                 .resolveObserverMethods(new TrustScoreDeltaPayload(List.of())).isEmpty();
-        // resolveObserverMethods returns both @Observes and @ObservesAsync observers
         hasNotifyObservers = !beanManager
                 .resolveObserverMethods(new TrustScoreComputedAt(Instant.EPOCH, 0)).isEmpty();
     }

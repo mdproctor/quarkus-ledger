@@ -231,65 +231,6 @@ No activation needed — this subclass is `@ApplicationScoped` (not `@Alternativ
 
 ---
 
----
-
-## Activating the built-in JPA repository
-
-`JpaLedgerEntryRepository` is marked `@Alternative`. CDI does not activate `@Alternative` beans automatically — this prevents ambiguity when your own `LedgerEntryRepository` is present.
-
-| Situation | What to do |
-|---|---|
-| You wrote a domain-specific `LedgerEntryRepository` (Step 4) | Nothing. `JpaLedgerEntryRepository` stays dormant. Your repo is the only active bean. |
-| Standalone deployment — no domain repo | Activate `JpaLedgerEntryRepository` explicitly (see below). |
-| Test or utility module that uses `TrustScoreJob` or other runtime services | Activate it — those services depend on `LedgerEntryRepository` internally. |
-
-### Option A — `quarkus.arc.selected-alternatives` (recommended for Quarkus apps)
-
-```properties
-# application.properties
-quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
-```
-
-This is the Quarkus-native way. It activates the alternative without requiring a `beans.xml`.
-
-### Option B — `beans.xml` (standard CDI, works in any CDI container)
-
-```xml
-<!-- src/main/resources/META-INF/beans.xml -->
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd"
-       version="4.0">
-    <alternatives>
-        <class>io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository</class>
-    </alternatives>
-</beans>
-```
-
-### Option C — Extend it (when you need domain-specific queries on top)
-
-Create a subclass with no `@Alternative` — it inherits all the base repository logic and CDI activates it normally:
-
-```java
-@ApplicationScoped
-public class MyLedgerEntryRepository extends JpaLedgerEntryRepository {
-
-    public List<MyLedgerEntry> findByTenantId(UUID tenantId) {
-        // domain-specific query on top of the full JPA base
-        return em.createQuery(
-            "SELECT e FROM MyLedgerEntry e WHERE e.tenantId = :t ORDER BY e.sequenceNumber",
-            MyLedgerEntry.class)
-            .setParameter("t", tenantId)
-            .getResultList();
-    }
-}
-```
-
-This is the pattern used by Tarkus and Qhorus — they extend `JpaLedgerEntryRepository` to add typed queries while inheriting the full polymorphic query implementation.
-
----
-
 ## Step 5 — Write to the ledger on domain events
 
 Inject your repository and `LedgerConfig` into the service that fires domain transitions:
@@ -339,7 +280,7 @@ public class OrderService {
     }
 
     private String buildDecisionContext(UUID orderId) {
-        // Return a JSON snapshot of the order state at this moment
+        // Order is your own domain entity (extends PanacheEntityBase) — not a ledger entity.
         Order order = Order.findById(orderId);
         return String.format("{\"status\":\"%s\",\"total\":%s}",
             order.status, order.total);
@@ -415,6 +356,63 @@ quarkus.ledger.trust-score.routing-enabled=false
 # quarkus.ledger.merkle.publish.url=https://your-checkpoint-log/
 # quarkus.ledger.merkle.publish.private-key=/path/to/ed25519-key.pem
 ```
+
+---
+
+## Activating the built-in JPA repository
+
+`JpaLedgerEntryRepository` is marked `@Alternative`. CDI does not activate `@Alternative` beans automatically — this prevents ambiguity when your own `LedgerEntryRepository` is present.
+
+| Situation | What to do |
+|---|---|
+| You wrote a domain-specific `LedgerEntryRepository` (Step 4) | Nothing. `JpaLedgerEntryRepository` stays dormant. Your repo is the only active bean. |
+| Standalone deployment — no domain repo | Activate `JpaLedgerEntryRepository` explicitly (see below). |
+| Test or utility module that uses `TrustScoreJob` or other runtime services | Activate it — those services depend on `LedgerEntryRepository` internally. |
+
+### Option A — `quarkus.arc.selected-alternatives` (recommended for Quarkus apps)
+
+```properties
+# application.properties
+quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
+```
+
+This is the Quarkus-native way. It activates the alternative without requiring a `beans.xml`.
+
+### Option B — `beans.xml` (standard CDI, works in any CDI container)
+
+```xml
+<!-- src/main/resources/META-INF/beans.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd"
+       version="4.0">
+    <alternatives>
+        <class>io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository</class>
+    </alternatives>
+</beans>
+```
+
+### Option C — Extend it (when you need domain-specific queries on top)
+
+Create a subclass with no `@Alternative` — it inherits all the base repository logic and CDI activates it normally:
+
+```java
+@ApplicationScoped
+public class MyLedgerEntryRepository extends JpaLedgerEntryRepository {
+
+    public List<MyLedgerEntry> findByTenantId(UUID tenantId) {
+        // domain-specific query on top of the full JPA base
+        return em.createQuery(
+            "SELECT e FROM MyLedgerEntry e WHERE e.tenantId = :t ORDER BY e.sequenceNumber",
+            MyLedgerEntry.class)
+            .setParameter("t", tenantId)
+            .getResultList();
+    }
+}
+```
+
+This is the pattern used by Tarkus and Qhorus — they extend `JpaLedgerEntryRepository` to add typed queries while inheriting the full polymorphic query implementation.
 
 ---
 

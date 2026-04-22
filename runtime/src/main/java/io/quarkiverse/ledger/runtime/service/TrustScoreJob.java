@@ -21,6 +21,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
+import io.quarkus.hibernate.orm.PersistenceUnit;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -51,6 +52,7 @@ public class TrustScoreJob {
     TrustScoreRoutingPublisher routingPublisher;
 
     @Inject
+    @PersistenceUnit("qhorus")
     EntityManager em;
 
     @Scheduled(every = "{quarkus.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")
@@ -111,7 +113,7 @@ public class TrustScoreJob {
                     score.attestationPositive(), score.attestationNegative(), now);
         }
 
-        if (config.trustScore().eigentrustEnabled()) {
+        if (config.trustScore().eigentrust().enabled()) {
             runEigenTrustPass(allEvents, attestationsByEntry);
         }
 
@@ -135,12 +137,12 @@ public class TrustScoreJob {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-        final Set<String> preTrustedActors = config.trustScore().preTrustedActors()
+        final Set<String> preTrustedActors = config.trustScore().eigentrust().preTrustedActors()
                 .map(LinkedHashSet::new)
                 .orElseGet(LinkedHashSet::new);
 
         final EigenTrustComputer eigenTrust = new EigenTrustComputer(
-                config.trustScore().eigentrustAlpha());
+                config.trustScore().eigentrust().alpha());
 
         final Map<String, Double> globalScores = eigenTrust.compute(
                 allAttestations, entryActorIndex, preTrustedActors);
