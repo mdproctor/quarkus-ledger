@@ -67,16 +67,21 @@ public class TrustScoreRoutingPublisher {
         if (hasNotifyObservers) {
             final TrustScoreComputedAt notifyPayload = new TrustScoreComputedAt(computedAt, current.size());
             try {
-                // fire() reaches @Observes (sync) observers; fireAsync() reaches @ObservesAsync observers
+                // fire() reaches @Observes (sync) observers
                 notifyEvent.fire(notifyPayload);
             } catch (final Exception e) {
                 log.warnf(e, "TrustScoreComputedAt sync observer failed — routing signal skipped");
             }
-            notifyEvent.fireAsync(notifyPayload)
-                    .exceptionally(ex -> {
-                        log.warnf(ex, "TrustScoreComputedAt async observer failed — routing signal skipped");
-                        return null;
-                    });
+            try {
+                // fireAsync() reaches @ObservesAsync (async) observers
+                notifyEvent.fireAsync(notifyPayload)
+                        .exceptionally(ex -> {
+                            log.warnf(ex, "TrustScoreComputedAt async observer failed — routing signal skipped");
+                            return null;
+                        });
+            } catch (final Exception e) {
+                log.warnf(e, "TrustScoreComputedAt fireAsync failed — routing signal skipped");
+            }
         }
 
         if (hasFullObservers) {
