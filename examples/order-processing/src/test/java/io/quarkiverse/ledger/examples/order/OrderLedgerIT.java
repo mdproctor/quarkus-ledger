@@ -190,9 +190,11 @@ class OrderLedgerIT {
 
     @Test
     void placeOrder_correlationId_fieldExistsInResponse() {
-        // correlationId is now a core field on LedgerEntry — the column exists in the schema.
-        // OrderService does not populate it in this example (no OTel wired up),
-        // but the field must be present in the API response (null is valid).
+        // The entity field is traceId (renamed from correlationId in the OTel refactor),
+        // but the API response key remains correlationId for stability — it is mapped via
+        // the LedgerEntryView record field name. OrderService does not populate it in this
+        // example (no OTel wired up), but the field must be present in the API response
+        // (null is valid).
         final String orderId = placeOrder("it-otel-1", "75.00");
 
         given()

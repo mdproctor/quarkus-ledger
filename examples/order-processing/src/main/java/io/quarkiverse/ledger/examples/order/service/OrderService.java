@@ -19,8 +19,6 @@ import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Order domain service.
@@ -143,20 +141,7 @@ public class OrderService {
             entry.attach(cs);
         }
 
-        if (ledgerConfig.hashChain().enabled()) {
-            entry.digest = LedgerMerkleTree.leafHash(entry);
-        }
-
         ledgerRepo.save(entry);
-
-        if (ledgerConfig.hashChain().enabled()) {
-            final java.util.List<LedgerMerkleFrontier> current =
-                    LedgerMerkleFrontier.findBySubjectId(entry.subjectId);
-            final java.util.List<LedgerMerkleFrontier> newFrontier =
-                    LedgerMerkleTree.append(entry.digest, current, entry.subjectId);
-            LedgerMerkleFrontier.delete("subjectId", entry.subjectId);
-            newFrontier.forEach(n -> n.persist());
-        }
 
         return entry;
     }

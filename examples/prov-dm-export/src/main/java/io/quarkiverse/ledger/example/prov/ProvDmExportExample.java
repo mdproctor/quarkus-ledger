@@ -37,7 +37,6 @@ public class ProvDmExportExample {
         e1.actorId = "classifier-agent-v2";
         e1.actorType = ActorType.AGENT;
         e1.actorRole = "Classifier";
-        e1 = (ProvAuditEntry) repo.save(e1);
         ComplianceSupplement cs = new ComplianceSupplement();
         cs.algorithmRef = "gpt-4o";
         cs.confidenceScore = 0.94;
@@ -47,7 +46,7 @@ public class ProvDmExportExample {
         cs.rationale = "Threshold exceeded; classified as high-priority";
         cs.decisionContext = "{\"inputScore\":0.94,\"threshold\":0.80}";
         e1.attach(cs);
-        e1.persist();
+        e1 = (ProvAuditEntry) repo.save(e1);
 
         // Entry 2: event from external WorkItem (ProvenanceSupplement)
         ProvAuditEntry e2 = new ProvAuditEntry();
@@ -57,13 +56,12 @@ public class ProvDmExportExample {
         e2.actorId = "orchestrator-system";
         e2.actorType = ActorType.SYSTEM;
         e2.actorRole = "Orchestrator";
-        e2 = (ProvAuditEntry) repo.save(e2);
         ProvenanceSupplement ps = new ProvenanceSupplement();
         ps.sourceEntityId = "wi-" + UUID.randomUUID();
         ps.sourceEntityType = "WorkItem";
         ps.sourceEntitySystem = "tarkus";
         e2.attach(ps);
-        e2.persist();
+        e2 = (ProvAuditEntry) repo.save(e2);
 
         // Entry 3: caused by entry 1 (cross-subject causality)
         ProvAuditEntry e3 = new ProvAuditEntry();

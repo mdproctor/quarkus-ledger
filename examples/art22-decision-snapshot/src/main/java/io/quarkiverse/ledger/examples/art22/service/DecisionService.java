@@ -6,14 +6,14 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
+import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Simulates an AI decision service that records each decision with a full
@@ -21,6 +21,9 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
  */
 @ApplicationScoped
 public class DecisionService {
+
+    @Inject
+    DecisionLedgerEntryRepository repo;
 
     @Transactional
     public DecisionLedgerEntry recordDecision(
@@ -33,9 +36,9 @@ public class DecisionService {
 
         final UUID subjectUuid = UUID.fromString(subjectId);
 
-        final List<DecisionLedgerEntry> existing = DecisionLedgerEntry
-                .list("subjectId = ?1 order by sequenceNumber desc", subjectUuid);
-        final int nextSeq = existing.isEmpty() ? 1 : existing.get(0).sequenceNumber + 1;
+        final int nextSeq = repo.findLatestBySubjectId(subjectUuid)
+                .map(e -> e.sequenceNumber + 1)
+                .orElse(1);
 
         final DecisionLedgerEntry entry = new DecisionLedgerEntry();
         entry.subjectId = subjectUuid;
@@ -58,21 +61,16 @@ public class DecisionService {
         cs.decisionContext = inputContext;
         entry.attach(cs);
 
-        entry.digest = LedgerMerkleTree.leafHash(entry);
-        entry.persist();
-
-        final List<LedgerMerkleFrontier> current =
-                LedgerMerkleFrontier.findBySubjectId(subjectUuid);
-        final List<LedgerMerkleFrontier> newFrontier =
-                LedgerMerkleTree.append(entry.digest, current, subjectUuid);
-        LedgerMerkleFrontier.delete("subjectId", subjectUuid);
-        newFrontier.forEach(n -> n.persist());
+        repo.save(entry);
 
         return entry;
     }
 
     public List<DecisionLedgerEntry> history(final String subjectId) {
-        return DecisionLedgerEntry.list(
-                "subjectId = ?1 order by sequenceNumber asc", UUID.fromString(subjectId));
+        final UUID subjectUuid = UUID.fromString(subjectId);
+        return repo.findBySubjectId(subjectUuid).stream()
+                .filter(e -> e instanceof DecisionLedgerEntry)
+                .map(e -> (DecisionLedgerEntry) e)
+                .toList();
     }
 }

@@ -1,131 +1,47 @@
 package io.quarkiverse.ledger.examples.order.ledger;
 
-import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 /**
  * Typed repository for {@link OrderLedgerEntry}.
  *
  * <p>
- * Implements {@link LedgerEntryRepository} so it can be injected wherever the
- * base SPI is expected (e.g. {@link io.quarkiverse.ledger.runtime.service.TrustScoreJob}).
+ * Extends {@link JpaLedgerEntryRepository} to inherit all SPI implementations.
+ * Domain-specific methods use an injected {@link EntityManager} directly.
  *
  * <p>
- * {@code JpaLedgerEntryRepository} from quarkus-ledger is {@code @Alternative},
- * so this bean wins without any additional configuration.
+ * {@code JpaLedgerEntryRepository} is {@code @Alternative} — this subclass
+ * activates it and wins without any extra CDI configuration.
  */
 @ApplicationScoped
-public class OrderLedgerEntryRepository implements LedgerEntryRepository {
+public class OrderLedgerEntryRepository extends JpaLedgerEntryRepository {
 
-    // -------------------------------------------------------------------------
-    // Typed convenience methods
-    // -------------------------------------------------------------------------
+    @Inject
+    EntityManager orderEm;
 
     public List<OrderLedgerEntry> findByOrderId(final UUID orderId) {
-        return OrderLedgerEntry.list(
-                "subjectId = ?1 ORDER BY sequenceNumber ASC", orderId);
+        return orderEm.createQuery(
+                "SELECT e FROM OrderLedgerEntry e WHERE e.subjectId = :sid ORDER BY e.sequenceNumber ASC",
+                OrderLedgerEntry.class)
+                .setParameter("sid", orderId)
+                .getResultList();
     }
 
     public Optional<OrderLedgerEntry> findLatestByOrderId(final UUID orderId) {
-        return OrderLedgerEntry
-                .find("subjectId = ?1 ORDER BY sequenceNumber DESC", orderId)
-                .firstResultOptional();
-    }
-
-    // -------------------------------------------------------------------------
-    // LedgerEntryRepository SPI
-    // -------------------------------------------------------------------------
-
-    @Override
-    public LedgerEntry save(final LedgerEntry entry) {
-        entry.persist();
-        return entry;
-    }
-
-    @Override
-    public List<LedgerEntry> findBySubjectId(final UUID subjectId) {
-        return LedgerEntry.list(
-                "subjectId = ?1 ORDER BY sequenceNumber ASC", subjectId);
-    }
-
-    @Override
-    public Optional<LedgerEntry> findLatestBySubjectId(final UUID subjectId) {
-        return LedgerEntry.find(
-                "subjectId = ?1 ORDER BY sequenceNumber DESC", subjectId)
-                .firstResultOptional();
-    }
-
-    @Override
-    public Optional<LedgerEntry> findById(final UUID id) {
-        return Optional.ofNullable(LedgerEntry.findById(id));
-    }
-
-    @Override
-    public List<LedgerAttestation> findAttestationsByEntryId(final UUID entryId) {
-        return LedgerAttestation.list(
-                "ledgerEntryId = ?1 ORDER BY occurredAt ASC", entryId);
-    }
-
-    @Override
-    public LedgerAttestation saveAttestation(final LedgerAttestation attestation) {
-        attestation.persist();
-        return attestation;
-    }
-
-    @Override
-    public List<LedgerEntry> findAllEvents() {
-        return LedgerEntry.find("entryType = ?1", LedgerEntryType.EVENT).list();
-    }
-
-    @Override
-    public Map<UUID, List<LedgerAttestation>> findAttestationsForEntries(final Set<UUID> entryIds) {
-        if (entryIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return LedgerAttestation.<LedgerAttestation> list("ledgerEntryId IN ?1", entryIds)
-                .stream()
-                .collect(Collectors.groupingBy(a -> a.ledgerEntryId));
-    }
-
-    @Override
-    public List<LedgerEntry> findByActorId(final String actorId,
-            final Instant from, final Instant to) {
-        return LedgerEntry.list(
-                "actorId = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
-                actorId, from, to);
-    }
-
-    @Override
-    public List<LedgerEntry> findByActorRole(final String actorRole,
-            final Instant from, final Instant to) {
-        return LedgerEntry.list(
-                "actorRole = ?1 AND occurredAt >= ?2 AND occurredAt <= ?3 ORDER BY occurredAt ASC",
-                actorRole, from, to);
-    }
-
-    @Override
-    public List<LedgerEntry> findByTimeRange(final Instant from, final Instant to) {
-        return LedgerEntry.list(
-                "occurredAt >= ?1 AND occurredAt <= ?2 ORDER BY occurredAt ASC",
-                from, to);
-    }
-
-    @Override
-    public List<LedgerEntry> findCausedBy(final UUID entryId) {
-        return LedgerEntry.list(
-                "causedByEntryId = ?1 ORDER BY occurredAt ASC", entryId);
+        return orderEm.createQuery(
+                "SELECT e FROM OrderLedgerEntry e WHERE e.subjectId = :sid ORDER BY e.sequenceNumber DESC",
+                OrderLedgerEntry.class)
+                .setParameter("sid", orderId)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
     }
 }

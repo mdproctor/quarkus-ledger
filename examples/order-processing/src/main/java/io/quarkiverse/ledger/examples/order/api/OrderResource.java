@@ -238,7 +238,7 @@ public class OrderResource {
         LedgerEntryView(final OrderLedgerEntry e, final List<LedgerAttestation> attestations) {
             this(e.id, e.sequenceNumber, e.commandType, e.eventType, e.orderStatus,
                     e.actorId, e.actorRole, e.supplementJson,
-                    e.digest, e.occurredAt, e.correlationId, attestations);
+                    e.digest, e.occurredAt, e.traceId, attestations);
         }
     }
 
