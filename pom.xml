@@ -79,6 +79,7 @@
       <id>with-examples</id>
       <modules>
         <module>examples/order-processing</module>
+        <module>examples/trust-score-routing</module>
       </modules>
     </profile>
     <profile>
