@@ -13,11 +13,13 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -44,6 +46,9 @@ public class TrustScoreJob {
     @Inject
     LedgerConfig config;
 
+    @Inject
+    TrustScoreRoutingPublisher routingPublisher;
+
     @Scheduled(every = "{quarkus.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")
     @Transactional
     public void computeTrustScores() {
@@ -60,6 +65,11 @@ public class TrustScoreJob {
      */
     @Transactional
     public void runComputation() {
+        // Pre-read previous scores only if a delta observer is registered
+        final Map<String, ActorTrustScore> previousSnapshot = routingPublisher.needsPreviousSnapshot()
+                ? trustRepo.findAll().stream().collect(Collectors.toMap(s -> s.actorId, s -> s))
+                : Map.of();
+
         final TrustScoreComputer computer = new TrustScoreComputer(
                 config.trustScore().decayHalfLifeDays());
         final Instant now = Instant.now();
@@ -94,6 +104,10 @@ public class TrustScoreJob {
         if (config.trustScore().eigentrustEnabled()) {
             runEigenTrustPass(allEvents, attestationsByEntry);
         }
+
+        // Routing signals — after all writes, within the same transaction
+        final List<ActorTrustScore> currentScores = trustRepo.findAll();
+        routingPublisher.publish(currentScores, previousSnapshot, now);
     }
 
     private void runEigenTrustPass(
