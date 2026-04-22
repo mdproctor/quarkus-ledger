@@ -116,7 +116,10 @@ public class TrustScoreJob {
         }
 
         // Routing signals — after all writes, within the same transaction
-        final List<ActorTrustScore> currentScores = trustRepo.findAll();
+        // Detach before publish so observers receive value snapshots, not managed entities
+        final List<ActorTrustScore> currentScores = trustRepo.findAll().stream()
+                .peek(em::detach)
+                .collect(Collectors.toList());
         routingPublisher.publish(currentScores, previousSnapshot, now);
     }
 
