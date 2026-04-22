@@ -120,11 +120,10 @@ public abstract class LedgerEntry {
 
     /**
      * OpenTelemetry trace ID linking this entry to a distributed trace.
-     * Use the W3C trace context format (32-char hex string).
-     * Set from the active OTel span context at capture time.
+     * W3C trace context format (32-char hex string).
      */
-    @Column(name = "correlation_id", length = 255)
-    public String correlationId;
+    @Column(name = "trace_id", length = 255)
+    public String traceId;
 
     /**
      * FK to the ledger entry that causally produced this entry.
