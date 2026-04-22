@@ -25,6 +25,7 @@ import io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**
  * Hibernate ORM implementation of {@link LedgerEntryRepository} using EntityManager directly.
@@ -64,6 +65,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     @Inject
+    @PersistenceUnit("qhorus")
     EntityManager em;
 
     @Inject
@@ -108,39 +110,43 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
         em.persist(entry);
 
         if (ledgerConfig.hashChain().enabled()) {
-            final List<LedgerMerkleFrontier> currentFrontier = em
-                    .createNamedQuery("LedgerMerkleFrontier.findBySubjectId", LedgerMerkleFrontier.class)
-                    .setParameter("subjectId", entry.subjectId)
-                    .getResultList();
-
-            final List<LedgerMerkleFrontier> newFrontier = LedgerMerkleTree.append(entry.digest, currentFrontier,
-                    entry.subjectId);
-
-            final Set<Integer> newLevels = newFrontier.stream()
-                    .map(n -> n.level)
-                    .collect(Collectors.toSet());
-            for (final LedgerMerkleFrontier old : currentFrontier) {
-                if (!newLevels.contains(old.level)) {
-                    em.createNamedQuery("LedgerMerkleFrontier.deleteBySubjectAndLevel")
-                            .setParameter("subjectId", entry.subjectId)
-                            .setParameter("level", old.level)
-                            .executeUpdate();
-                }
-            }
-
-            for (final LedgerMerkleFrontier node : newFrontier) {
-                em.createNamedQuery("LedgerMerkleFrontier.deleteBySubjectAndLevel")
-                        .setParameter("subjectId", entry.subjectId)
-                        .setParameter("level", node.level)
-                        .executeUpdate();
-                em.persist(node);
-            }
-
-            final String newRoot = LedgerMerkleTree.treeRoot(newFrontier);
-            merklePublisher.publish(entry.subjectId, entry.sequenceNumber, newRoot);
+            updateMerkleFrontier(entry);
         }
 
         return entry;
+    }
+
+    private void updateMerkleFrontier(final LedgerEntry entry) {
+        final List<LedgerMerkleFrontier> currentFrontier = em
+                .createNamedQuery("LedgerMerkleFrontier.findBySubjectId", LedgerMerkleFrontier.class)
+                .setParameter("subjectId", entry.subjectId)
+                .getResultList();
+
+        final List<LedgerMerkleFrontier> newFrontier = LedgerMerkleTree.append(entry.digest, currentFrontier,
+                entry.subjectId);
+
+        final Set<Integer> newLevels = newFrontier.stream()
+                .map(n -> n.level)
+                .collect(Collectors.toSet());
+        for (final LedgerMerkleFrontier old : currentFrontier) {
+            if (!newLevels.contains(old.level)) {
+                em.createNamedQuery("LedgerMerkleFrontier.deleteBySubjectAndLevel")
+                        .setParameter("subjectId", entry.subjectId)
+                        .setParameter("level", old.level)
+                        .executeUpdate();
+            }
+        }
+
+        for (final LedgerMerkleFrontier node : newFrontier) {
+            em.createNamedQuery("LedgerMerkleFrontier.deleteBySubjectAndLevel")
+                    .setParameter("subjectId", entry.subjectId)
+                    .setParameter("level", node.level)
+                    .executeUpdate();
+            em.persist(node);
+        }
+
+        final String newRoot = LedgerMerkleTree.treeRoot(newFrontier);
+        merklePublisher.publish(entry.subjectId, entry.sequenceNumber, newRoot);
     }
 
     /** {@inheritDoc} */
