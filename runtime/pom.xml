@@ -125,6 +125,7 @@
         </configuration>
       </plugin>
 
+      <!-- jandex-maven-plugin is not managed by the Quarkus BOM — pin explicitly -->
       <plugin>
         <groupId>io.smallrye</groupId>
         <artifactId>jandex-maven-plugin</artifactId>

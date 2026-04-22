@@ -232,7 +232,7 @@ public class OrderResource {
             String supplementJson,
             String digest,
             java.time.Instant occurredAt,
-            String correlationId,
+            String traceId,
             List<LedgerAttestation> attestations) {
 
         LedgerEntryView(final OrderLedgerEntry e, final List<LedgerAttestation> attestations) {

@@ -189,19 +189,17 @@ class OrderLedgerIT {
     }
 
     @Test
-    void placeOrder_correlationId_fieldExistsInResponse() {
-        // The entity field is traceId (renamed from correlationId in the OTel refactor),
-        // but the API response key remains correlationId for stability — it is mapped via
-        // the LedgerEntryView record field name. OrderService does not populate it in this
-        // example (no OTel wired up), but the field must be present in the API response
-        // (null is valid).
+    void placeOrder_traceId_fieldExistsInResponse() {
+        // traceId is auto-populated from the active OTel span at persist time (LedgerTraceListener).
+        // OrderService does not wire up OTel in this example so traceId is null, but the
+        // field must be present in the API response.
         final String orderId = placeOrder("it-otel-1", "75.00");
 
         given()
                 .when().get(BASE + "/" + orderId + "/ledger")
                 .then()
                 .statusCode(200)
-                .body("[0]", org.hamcrest.Matchers.hasKey("correlationId"));
+                .body("[0]", org.hamcrest.Matchers.hasKey("traceId"));
     }
 
     private String placeOrder(final String customerId, final String total) {
