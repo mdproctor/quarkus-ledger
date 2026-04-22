@@ -17,23 +17,38 @@ import io.quarkiverse.ledger.runtime.service.routing.TrustScoreFullPayload;
 @ApplicationScoped
 public class TestRoutingObservers {
 
-    public final List<TrustScoreFullPayload> fullReceived = new CopyOnWriteArrayList<>();
-    public final List<TrustScoreDeltaPayload> deltaReceived = new CopyOnWriteArrayList<>();
-    public final List<TrustScoreComputedAt> notifyReceived = new CopyOnWriteArrayList<>();
+    // Use lists accessed via methods — direct field access on a CDI proxy goes to
+    // the proxy's fields, not the underlying bean's fields. Method calls are proxied.
+    private final List<TrustScoreFullPayload> fullReceivedList = new CopyOnWriteArrayList<>();
+    private final List<TrustScoreDeltaPayload> deltaReceivedList = new CopyOnWriteArrayList<>();
+    private final List<TrustScoreComputedAt> notifyReceivedList = new CopyOnWriteArrayList<>();
+
+    /** Use this accessor in tests — goes through the CDI proxy → underlying bean. */
+    public List<TrustScoreFullPayload> fullReceived() {
+        return fullReceivedList;
+    }
+
+    public List<TrustScoreDeltaPayload> deltaReceived() {
+        return deltaReceivedList;
+    }
+
+    public List<TrustScoreComputedAt> notifyReceived() {
+        return notifyReceivedList;
+    }
 
     /** Reset between tests via @BeforeEach. */
     public static volatile CountDownLatch asyncLatch = new CountDownLatch(1);
 
     public void onFull(@Observes final TrustScoreFullPayload payload) {
-        fullReceived.add(payload);
+        fullReceivedList.add(payload);
     }
 
     public void onDelta(@Observes final TrustScoreDeltaPayload payload) {
-        deltaReceived.add(payload);
+        deltaReceivedList.add(payload);
     }
 
     public void onNotify(@Observes final TrustScoreComputedAt payload) {
-        notifyReceived.add(payload);
+        notifyReceivedList.add(payload);
     }
 
     public CompletionStage<Void> onNotifyAsync(@ObservesAsync final TrustScoreComputedAt payload) {
@@ -42,9 +57,9 @@ public class TestRoutingObservers {
     }
 
     public void reset() {
-        fullReceived.clear();
-        deltaReceived.clear();
-        notifyReceived.clear();
+        fullReceivedList.clear();
+        deltaReceivedList.clear();
+        notifyReceivedList.clear();
         asyncLatch = new CountDownLatch(1);
     }
 }

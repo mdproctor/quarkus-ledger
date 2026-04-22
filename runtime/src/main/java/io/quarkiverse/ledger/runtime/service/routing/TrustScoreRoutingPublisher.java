@@ -46,6 +46,7 @@ public class TrustScoreRoutingPublisher {
                 .resolveObserverMethods(new TrustScoreFullPayload(List.of())).isEmpty();
         hasDeltaObservers = !beanManager
                 .resolveObserverMethods(new TrustScoreDeltaPayload(List.of())).isEmpty();
+        // resolveObserverMethods returns both @Observes and @ObservesAsync observers
         hasNotifyObservers = !beanManager
                 .resolveObserverMethods(new TrustScoreComputedAt(Instant.EPOCH, 0)).isEmpty();
     }
@@ -64,11 +65,18 @@ public class TrustScoreRoutingPublisher {
         }
 
         if (hasNotifyObservers) {
+            final TrustScoreComputedAt notifyPayload = new TrustScoreComputedAt(computedAt, current.size());
             try {
-                notifyEvent.fire(new TrustScoreComputedAt(computedAt, current.size()));
+                // fire() reaches @Observes (sync) observers; fireAsync() reaches @ObservesAsync observers
+                notifyEvent.fire(notifyPayload);
             } catch (final Exception e) {
-                log.warnf(e, "TrustScoreComputedAt observer failed — routing signal skipped");
+                log.warnf(e, "TrustScoreComputedAt sync observer failed — routing signal skipped");
             }
+            notifyEvent.fireAsync(notifyPayload)
+                    .exceptionally(ex -> {
+                        log.warnf(ex, "TrustScoreComputedAt async observer failed — routing signal skipped");
+                        return null;
+                    });
         }
 
         if (hasFullObservers) {
