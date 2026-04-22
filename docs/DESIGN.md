@@ -338,6 +338,47 @@ cannot change faster than attestations arrive.
 
 ---
 
+## Agent Mesh Topology
+
+Three topologies are possible for deploying `quarkus-ledger` across a mesh of LLM agents.
+
+| Topology | Description | When appropriate |
+|---|---|---|
+| **Centralized** (current) | All agents write to one ledger instance | ✅ Correct for current ecosystem |
+| **Hierarchical** | Each node has a local ledger; a root orchestrator aggregates | When Claudony itself becomes distributed |
+| **Gossip-based** | Agents exchange attestations peer-to-peer and converge on a shared view | Only if adversarial agents are a real threat; significant complexity cost |
+
+### Recommendation: centralized
+
+For the current Tarkus / Qhorus / Claudony ecosystem, **centralized is correct**.
+Claudony is the natural orchestrator and the natural ledger owner — all agent decisions
+flow through it, so a single ledger gives complete visibility with no synchronisation
+complexity. The Merkle Mountain Range provides tamper evidence; the EigenTrust pass
+provides transitive reputation — both work best with a full global view of attestations.
+
+### When hierarchical becomes relevant
+
+If Claudony itself is distributed (multiple Claudony instances coordinating across
+datacentres), a hierarchical topology becomes appropriate:
+
+- Each Claudony instance maintains a local ledger for its agents.
+- A root aggregator periodically merges frontier hashes and runs the EigenTrust pass
+  over the combined attestation graph.
+- Merkle roots from each shard can be cross-attested for tamper evidence.
+
+No extension changes are required to support this — the current `LedgerEntry` model and
+trust engine are topology-agnostic. The aggregation layer is a consumer responsibility.
+
+### Why gossip is out of scope
+
+Gossip-based convergence requires conflict resolution, eventual consistency guarantees,
+and Byzantine-fault-tolerant attestation handling. This complexity is only warranted when
+agents are genuinely adversarial and cannot trust the orchestrator. That is not the threat
+model for the current ecosystem. If it becomes one, the right answer is a purpose-built
+consensus layer, not an extension to `quarkus-ledger`.
+
+---
+
 ## Configuration
 
 The extension is configured under the `quarkus.ledger` prefix via `application.properties` or environment variables.
@@ -459,6 +500,7 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **LLM agent identity model** | ✅ Done | Versioned persona names (`{model-family}:{persona}@{major}`); `agentConfigHash` on `ProvenanceSupplement` for config drift detection; DESIGN.md agent identity section; ADR 0004. Closes #23. |
 | **Trust score continuity across LLM sessions** | ✅ Done | Documented sparse/concurrent/scheduling behaviour in agent mesh deployments; `trust-score.schedule` config key (default `24h`, configurable for high-interaction meshes). Closes #24. |
 | **Agent identity versioning criteria** | ✅ Done | Concrete bump/no-bump criteria for CLAUDE.md changes; no inheritance API (clean break is safe default); pre-seeding via synthetic attestations documented. ADR 0004 updated. Closes #25. |
+| **Agent mesh topology** | ✅ Done | Centralized recommended for current ecosystem; hierarchical path documented for distributed Claudony; gossip ruled out. Closes #27. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
 | **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
