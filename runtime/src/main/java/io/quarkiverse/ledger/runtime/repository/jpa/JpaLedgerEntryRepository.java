@@ -44,10 +44,20 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
  * <p>
  * Marked {@code @Alternative} so that domain-specific extensions (e.g. Tarkus's
  * {@code JpaWorkItemLedgerEntryRepository}) can provide a single, unambiguous
- * {@code LedgerEntryRepository} bean without CDI conflicts. When no domain-specific
- * implementation is present, this class must be activated via {@code beans.xml}.
- * In embedded deployments with a subclass-specific repository, no activation is needed
- * — the subclass repository handles all polymorphic {@code LedgerEntry} queries.
+ * {@code LedgerEntryRepository} bean without CDI conflicts.
+ *
+ * <p>
+ * <b>Activation:</b> when no domain-specific repository is present (standalone deployments,
+ * test modules, or extensions that use runtime services like {@code TrustScoreJob} without
+ * a domain repo), activate this class via one of:
+ * <ul>
+ * <li>{@code quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}
+ * in {@code application.properties} (Quarkus-native, preferred)</li>
+ * <li>{@code <alternatives>} in {@code META-INF/beans.xml} (standard CDI)</li>
+ * <li>Subclass with {@code @ApplicationScoped} (inherits all polymorphic query logic)</li>
+ * </ul>
+ * When a domain-specific {@code LedgerEntryRepository} is present, no activation is needed —
+ * this class stays dormant.
  */
 @ApplicationScoped
 @Alternative

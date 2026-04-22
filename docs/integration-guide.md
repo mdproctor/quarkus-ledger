@@ -272,7 +272,66 @@ public class OrderLedgerEntryRepository implements LedgerEntryRepository {
 }
 ```
 
-> **CDI note:** `JpaLedgerEntryRepository` (from quarkus-ledger) is annotated `@Alternative` so it does not conflict with your repository when both are on the classpath. No extra configuration needed.
+> **CDI note:** `JpaLedgerEntryRepository` (from quarkus-ledger) is annotated `@Alternative` so it stays dormant when your own `LedgerEntryRepository` is on the classpath — CDI sees only your implementation. See [§ Activating the built-in JPA repository](#activating-the-built-in-jpa-repository) for when and how to activate it explicitly.
+
+---
+
+---
+
+## Activating the built-in JPA repository
+
+`JpaLedgerEntryRepository` is marked `@Alternative`. CDI does not activate `@Alternative` beans automatically — this prevents ambiguity when your own `LedgerEntryRepository` is present.
+
+| Situation | What to do |
+|---|---|
+| You wrote a domain-specific `LedgerEntryRepository` (Step 4) | Nothing. `JpaLedgerEntryRepository` stays dormant. Your repo is the only active bean. |
+| Standalone deployment — no domain repo | Activate `JpaLedgerEntryRepository` explicitly (see below). |
+| Test or utility module that uses `TrustScoreJob` or other runtime services | Activate it — those services depend on `LedgerEntryRepository` internally. |
+
+### Option A — `quarkus.arc.selected-alternatives` (recommended for Quarkus apps)
+
+```properties
+# application.properties
+quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
+```
+
+This is the Quarkus-native way. It activates the alternative without requiring a `beans.xml`.
+
+### Option B — `beans.xml` (standard CDI, works in any CDI container)
+
+```xml
+<!-- src/main/resources/META-INF/beans.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd"
+       version="4.0">
+    <alternatives>
+        <class>io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository</class>
+    </alternatives>
+</beans>
+```
+
+### Option C — Extend it (when you need domain-specific queries on top)
+
+Create a subclass with no `@Alternative` — it inherits all the base repository logic and CDI activates it normally:
+
+```java
+@ApplicationScoped
+public class MyLedgerEntryRepository extends JpaLedgerEntryRepository {
+
+    public List<MyLedgerEntry> findByTenantId(UUID tenantId) {
+        // domain-specific query on top of the full JPA base
+        return em.createQuery(
+            "SELECT e FROM MyLedgerEntry e WHERE e.tenantId = :t ORDER BY e.sequenceNumber",
+            MyLedgerEntry.class)
+            .setParameter("t", tenantId)
+            .getResultList();
+    }
+}
+```
+
+This is the pattern used by Tarkus and Qhorus — they extend `JpaLedgerEntryRepository` to add typed queries while inheriting the full polymorphic query implementation.
 
 ---
 
@@ -452,6 +511,73 @@ To invoke the job directly in tests (scheduler is typically disabled in test pro
 
 trustScoreJob.runComputation(); // @Transactional, safe to call directly
 ```
+
+---
+
+## Routing signals — reacting to trust score updates
+
+When `trust-score.routing-enabled=true`, `TrustScoreJob` fires CDI events after each computation run. Consumers observe the event type that matches the granularity they need:
+
+| Event type | What it carries | Strategy |
+|---|---|---|
+| `TrustScoreFullPayload` | All current `ActorTrustScore` rows | Rebuild a complete ranked list |
+| `TrustScoreDeltaPayload` | Only actors whose score changed beyond the threshold | Update an incremental cache |
+| `TrustScoreComputedAt` | `Instant computedAt` + `int actorCount` | Lightweight "scores refreshed" signal |
+
+Enable in `application.properties`:
+
+```properties
+quarkus.ledger.trust-score.enabled=true
+quarkus.ledger.trust-score.routing-enabled=true
+# Minimum score change to appear in a delta payload (default: 0.01)
+quarkus.ledger.trust-score.routing-delta-threshold=0.01
+```
+
+### Sync observer — rebuilding a ranked list
+
+```java
+@ApplicationScoped
+public class TaskRouter {
+
+    private volatile List<String> rankedAgents = List.of();
+
+    public void onScoresUpdated(@Observes TrustScoreFullPayload payload) {
+        rankedAgents = payload.scores().stream()
+            .sorted(Comparator.comparingDouble(s -> -s.trustScore))
+            .map(s -> s.actorId)
+            .toList();
+    }
+
+    public List<String> getRankedAgents() {
+        return new ArrayList<>(rankedAgents);
+    }
+}
+```
+
+The `@Observes` observer runs synchronously on the `TrustScoreJob` thread — keep it fast.
+
+### Async observer — background notification
+
+```java
+@ApplicationScoped
+public class RoutingSignalLogger {
+
+    private static final Logger log = Logger.getLogger(RoutingSignalLogger.class);
+
+    public CompletionStage<Void> onNotification(
+            @ObservesAsync TrustScoreComputedAt notification) {
+        log.infof("Trust scores refreshed at %s for %d actors",
+            notification.computedAt(), notification.actorCount());
+        return CompletableFuture.completedFuture(null);
+    }
+}
+```
+
+The `@ObservesAsync` observer is queued on the CDI-managed executor — safe for I/O, notifications, or cache invalidation.
+
+> **Important:** CDI's `event.fire()` delivers to `@Observes` (synchronous) observers inline. `event.fireAsync()` delivers to `@ObservesAsync` (asynchronous) observers on the managed executor. The two are separate calls — use the annotation that matches your observer's execution model.
+
+A runnable example is at `examples/trust-score-routing/`.
 
 ---
 
