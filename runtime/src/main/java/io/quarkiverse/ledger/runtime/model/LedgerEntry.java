@@ -12,6 +12,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -26,6 +27,7 @@ import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.quarkiverse.ledger.runtime.service.LedgerTraceListener;
 
 /**
  * Abstract base for all ledger entries.
@@ -63,6 +65,7 @@ import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "ledger_entry")
+@EntityListeners(LedgerTraceListener.class)
 public abstract class LedgerEntry {
 
     // ── Core identity ─────────────────────────────────────────────────────────
