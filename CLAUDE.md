@@ -89,6 +89,13 @@ a Java return-type conflict with `PanacheRepositoryBase.findById()`.
 `quarkus-ledger` provides model, SPI, services, and JPA implementations only. Tarkus and
 Qhorus each define their own REST/MCP endpoints on top.
 
+**`actorId` format for LLM agents**
+LLM agents are stateless; use versioned persona names so trust accumulates correctly
+across sessions: `"{model-family}:{persona}@{major}"` — e.g. `"claude:tarkus-reviewer@v1"`.
+Major version bump resets the trust baseline; tuning/bug-fix does not. See ADR 0004 and
+`docs/DESIGN.md` (Agent Identity Model) for concrete bump criteria and the no-inheritance
+rationale.
+
 ---
 
 ## Project Structure
