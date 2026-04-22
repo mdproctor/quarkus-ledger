@@ -70,7 +70,7 @@ public final class LedgerProvSerializer {
             entity.put("ledger:entryType", entry.entryType != null ? entry.entryType.name() : null);
             putIfNotNull(entity, "ledger:digest", entry.digest);
             entity.put("prov:generatedAtTime", formatInstant(entry.occurredAt));
-            putIfNotNull(entity, "ledger:correlationId", entry.correlationId);
+            putIfNotNull(entity, "ledger:traceId", entry.traceId);
 
             entry.compliance().ifPresent(cs -> {
                 putIfNotNull(entity, "ledger:algorithmRef", cs.algorithmRef);

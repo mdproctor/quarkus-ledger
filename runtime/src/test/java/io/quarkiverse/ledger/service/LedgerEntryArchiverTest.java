@@ -103,13 +103,13 @@ class LedgerEntryArchiverTest {
     }
 
     @Test
-    void toJson_correlationId_included() {
+    void toJson_traceId_included() {
         final TestEntry e = entry("agent-1");
-        e.correlationId = "trace-abc123";
+        e.traceId = "trace-abc123";
 
         final String json = LedgerEntryArchiver.toJson(e, List.of());
 
-        assertThat(json).contains("\"correlationId\":\"trace-abc123\"");
+        assertThat(json).contains("\"traceId\":\"trace-abc123\"");
     }
 
     @Test
@@ -126,12 +126,12 @@ class LedgerEntryArchiverTest {
     @Test
     void toJson_nullObservabilityFields_omitted() {
         final TestEntry e = entry("agent-1");
-        e.correlationId = null;
+        e.traceId = null;
         e.causedByEntryId = null;
 
         final String json = LedgerEntryArchiver.toJson(e, List.of());
 
-        assertThat(json).doesNotContain("correlationId");
+        assertThat(json).doesNotContain("traceId");
         assertThat(json).doesNotContain("causedByEntryId");
     }
 

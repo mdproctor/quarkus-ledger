@@ -91,11 +91,11 @@ class LedgerProvSerializerTest {
     void entity_nullFieldsOmitted() throws Exception {
         UUID sub = UUID.randomUUID();
         TestEntry e = entry(sub, 1, "actor-a");
-        e.correlationId = null;
+        e.traceId = null;
         e.digest = null;
         Map<String, Object> doc = parse(LedgerProvSerializer.toProvJsonLd(sub, List.of(e)));
         Map<String, Object> entity = asMap(asMap(doc.get("entity")).get("ledger:entry/" + e.id));
-        assertThat(entity).doesNotContainKey("ledger:correlationId");
+        assertThat(entity).doesNotContainKey("ledger:traceId");
         assertThat(entity).doesNotContainKey("ledger:digest");
     }
 
