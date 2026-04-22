@@ -430,7 +430,7 @@ These are excluded by design — consumers implement their own:
 | REST endpoints | Each domain has its own path structure, auth model, and response shape |
 | MCP tools | Domain-specific; Qhorus adds `list_events`, Tarkus has its own REST surface |
 | CDI capture observers | Each consumer wires its own service to its own domain events |
-| OTel trace ID auto-wiring | `correlationId` field exists; auto-population from OTel context is a future enhancement, left to consumers for now |
+| OTel trace ID auto-wiring | ✅ Done — `LedgerTraceListener` auto-populates `traceId` (formerly `correlationId`) from the active OTel span at persist time. Closes #30, #31. |
 | Event replay / CQRS projections | The ledger is an append-only audit record, not a source of truth for domain state |
 
 ---
@@ -460,9 +460,7 @@ public API (`LedgerEntry` core fields, `LedgerMerkleTree` canonical form, supple
 before submitting. The supplement architecture stabilises the surface — `attach()`,
 `compliance()`, `provenance()` are the public entry points.
 
-**OTel trace ID auto-wiring** — automatically populate `correlationId` from the active
-OTel span context. Could be provided as a base helper that capture services call, or
-wired directly in the extension using a CDI extension observer.
+**OTel trace ID auto-wiring** — ✅ Done. `correlationId` renamed to `traceId`. `LedgerTraceListener` auto-populates `traceId` from the active OTel span at persist time. Closed #30, #31.
 
 ### Longer-term (depends on CaseHub)
 
@@ -473,9 +471,7 @@ the Tarkus/Qhorus examples.
 **`@Alternative` activation documentation** — for standalone deployments that provide
 no domain repo, document (or provide) the `beans.xml` activation path.
 
-**Trust score routing signals** — `quarkus.ledger.trust-score.routing-enabled` is wired
-in config but not implemented. When enabled it should fire CDI events that routing layers
-(e.g. CaseHub task assignment) can observe to prefer high-trust actors.
+**Trust score routing signals** — ✅ Done. `TrustScoreRoutingPublisher` fires CDI events (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`) after each nightly batch run; sync/async per-consumer. Closes #33.
 
 ---
 
@@ -502,5 +498,6 @@ in config but not implemented. When enabled it should fire CDI events that routi
 | **Agent identity versioning criteria** | ✅ Done | Concrete bump/no-bump criteria for CLAUDE.md changes; no inheritance API (clean break is safe default); pre-seeding via synthetic attestations documented. ADR 0004 updated. Closes #25. |
 | **Agent mesh topology** | ✅ Done | Centralized recommended for current ecosystem; hierarchical path documented for distributed Claudony; gossip ruled out. Closes #27. |
 | **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
-| **OTel correlation wiring** | ⬜ Pending | Auto-populate correlationId from active span |
+| **OTel trace ID auto-wiring** | ✅ Done | `LedgerTraceListener` (`@ApplicationScoped` JPA entity listener, `@PrePersist` populates `traceId`), `LedgerTraceIdProvider` SPI, `OtelTraceIdProvider` (`@DefaultBean`). `correlationId` renamed to `traceId`. Closes #30, #31. |
+| **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |

@@ -1,6 +1,6 @@
 # Quarkus Ledger — Research & Strategic Directions
 
-Research conducted 2026-04-16. Last updated 2026-04-20. Sources: web search + Google Scholar sweep across audit
+Research conducted 2026-04-16. Last updated 2026-04-22. Sources: web search + Google Scholar sweep across audit
 ledger cryptography, trust algorithms, EU/GDPR compliance, AI accountability, and
 distributed systems causality literature.
 
@@ -24,22 +24,22 @@ auditability of AI decisions, regulatory compliance.
 | 7 | **W3C PROV-DM JSON-LD export** | ~~M~~ | ~~Medium~~ | ✅ Done | `LedgerProvSerializer` + `LedgerProvExportService` shipped. See `docs/prov-dm-mapping.md`. |
 | 8 | **Merkle tree upgrade to hash chain** | ~~L~~ | ~~Medium~~ | ✅ Done | `LedgerMerkleTree` (RFC 9162 MMR), `LedgerVerificationService`, `LedgerMerklePublisher`. ADR 0002. |
 | 9 | **Privacy / pseudonymisation (GDPR Art.17 right to erasure)** | ~~L~~ | ~~High~~ | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs; `InternalActorIdentityProvider` (UUID tokens, `actor_identity` table); `LedgerErasureService` (token severing, returns `ErasureResult`). Axiom 7 ✅. Issue #29 closed. |
-| 10 | **LLM agent mesh trust coordination** | L | Medium | ★★★ | How to apply trust scoring to short-lived Claude sessions. Key question: `actorId` maps to behavioral identity (CLAUDE.md + memory), not session. See GitHub epic #22 and child issues #23–#27. |
-| 11 | **EigenTrust transitive propagation** | M | Medium | ★★★ | Current model computes direct attestation scores only. True EigenTrust propagates trust transitively through the mesh via eigenvector computation. Meaningful when agent mesh is sparse. See GitHub issue #26. |
+| 10 | **LLM agent mesh trust coordination** | ~~L~~ | ~~Medium~~ | ✅ Done | Versioned persona names, trust continuity, versioning criteria, mesh topology documented. Issues #23–#27 closed. |
+| 11 | **EigenTrust transitive propagation** | ~~M~~ | ~~Medium~~ | ✅ Done | `EigenTrustComputer` (power iteration, dangling-node fix, pre-trusted seed), `global_trust_score` on `ActorTrustScore`. Closes #26. |
 | 12 | **EERP reputation chains (per-interaction history)** | L | Medium | ★★ | Full interaction history per actor enables collusion detection. Significant data model change. Overkill for the current 3-consumer ecosystem. |
 | 13 | **Zero-knowledge proofs** | XL | Low (now) | ★ | Technically compelling but JVM tooling is immature and no current consumer has a privacy-vs-auditability conflict requiring it. Monitor the space. |
+| 14 | **Trust score routing signals** | ~~S~~ | ~~Medium~~ | ✅ Done | `TrustScoreRoutingPublisher`, three payload types, CDI event dispatch, sync/async per-consumer. Closes #33. |
 
 ---
 
 ## What's Next
 
-Items 1–9 are all complete. The remaining open work:
+Items 1–11 and item 14 are all complete. The remaining open research directions:
 
 | Priority | Item | Why |
 |---|---|---|
-| ★★★ | **LLM agent mesh** (#10, epic #22) | How Claudony and its agents accumulate trust across short-lived sessions. Agent identity model (#23) is the prerequisite for everything else in the epic. |
-| ★★★ | **EigenTrust transitivity** (#11, issue #26) | Makes trust scoring useful in sparse agent meshes. Research task before any implementation. |
-| ★★ | **EERP reputation chains** (#12) | Collusion detection. Only valuable at scale. |
+| ★★ | **EERP reputation chains** (#12) | Collusion detection. Only valuable at scale — current 3-consumer ecosystem is too small. |
+| ★ | **Zero-knowledge proofs** (#13) | JVM tooling immature, no current need. Monitor space. |
 
 ---
 
