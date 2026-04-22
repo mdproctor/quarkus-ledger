@@ -244,6 +244,15 @@ public interface LedgerConfig {
         boolean routingEnabled();
 
         /**
+         * Minimum absolute change in trust score for an actor to appear in a
+         * {@code TrustScoreDeltaPayload}. Prevents noise from floating-point drift.
+         *
+         * @return delta threshold (default 0.01)
+         */
+        @WithDefault("0.01")
+        double routingDeltaThreshold();
+
+        /**
          * When {@code true}, EigenTrust power iteration runs after the Bayesian Beta pass to
          * compute transitive global trust scores across the agent mesh. Off by default — requires
          * an established attestation network to produce meaningful results.

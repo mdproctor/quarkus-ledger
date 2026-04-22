@@ -81,7 +81,7 @@ public class TrustScoreRoutingPublisher {
 
         if (hasDeltaObservers) {
             try {
-                final double threshold = 0.01;
+                final double threshold = config.trustScore().routingDeltaThreshold();
                 final List<TrustScoreDelta> deltas = computeDeltas(current, previousSnapshot, threshold);
                 deltaEvent.fire(new TrustScoreDeltaPayload(deltas));
             } catch (final Exception e) {
