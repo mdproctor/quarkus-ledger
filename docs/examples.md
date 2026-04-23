@@ -1,407 +1,262 @@
 # Examples
 
-Complete worked example — order processing domain.
-
-This example shows `quarkus-ledger` used in a Quarkus application that tracks an order lifecycle. Every state transition — placement, payment, fulfilment, cancellation — becomes an immutable ledger entry with hash-chain tamper evidence and optional peer attestation.
+Each example is a standalone Maven project that demonstrates one capability of `quarkus-ledger`.
+They are runnable with `mvn quarkus:dev` and include integration tests. Use them as
+production-grade starting points for your own integration — copy the pattern, adapt the domain.
 
 ---
 
-## Entity: OrderLedgerEntry
+## The Supplement System
 
+Supplements are optional structured extensions to a `LedgerEntry`. When unused, they add no
+columns to the base table and no overhead to queries — each supplement type lives in its own
+joined table. An entry can carry multiple supplements simultaneously.
+
+### ComplianceSupplement
+
+`ComplianceSupplement` carries the fields required by GDPR Article 22 and EU AI Act Article 12
+for automated decisions. Attach it to any entry where the system made a decision that could
+have legal or significant effects on an individual.
+
+| Field | Purpose |
+|---|---|
+| `decisionContext` | JSON snapshot of system state at decision time. The "what did it know?" evidence — satisfies Arts.13–15 right to information about personal data used. |
+| `algorithmRef` | Which model or rule version produced the decision. Critical for post-hoc audit when a model is updated or rolled back. |
+| `confidenceScore` | Numerical certainty [0.0–1.0]. Required for meaningful explainability — "the model was 94% confident" is informative; a binary outcome alone is not. |
+| `humanOverrideAvailable` | GDPR Art.22(2)(b) — explicit boolean flag documenting whether a human can intervene in this decision pathway. |
+| `contestationUri` | Where to submit a challenge. Art.22 requires a contestation mechanism; this field makes it machine-readable and directly linkable. |
+| `rationale` | Narrative explanation of the decision in plain language. |
+| `planRef` | Reference to the policy or rule set this decision applied — e.g. `"classification-policy-v3"`. |
+| `evidence` | Supporting evidence string — e.g. a document ID or feature vector hash. |
+| `detail` | Additional context explaining the methodology or constraints — e.g. "Scores above 0.7 trigger mandatory human review." |
+
+### ProvenanceSupplement
+
+`ProvenanceSupplement` records the upstream source of a ledger entry — which external entity,
+in which system, triggered this event. It enables data lineage across system boundaries: an
+MLOps pipeline can trace a decision back to the workflow instance that initiated it, or an
+audit tool can correlate ledger entries with the upstream CRM or task system.
+
+| Field | Purpose |
+|---|---|
+| `sourceEntityId` | Identifier of the upstream entity that triggered this ledger entry — e.g. a WorkItem UUID, a CRM record ID. |
+| `sourceEntityType` | Type of that entity — e.g. `"CreditApplication"`, `"WorkflowInstance"`. Enables consumers to join against the right upstream table. |
+| `sourceEntitySystem` | The system that owns it — e.g. `"quarkus-flow"`, `"credit-platform"`. Scopes the `sourceEntityId` namespace. |
+| `agentConfigHash` | SHA-256 hex digest of the LLM agent's configuration (system prompts, tool list, model parameters) at session start. Detects configuration drift within a versioned persona: if the hash changes between entries, the agent's behaviour may have shifted even without a version bump. |
+
+---
+
+## Runnable Examples
+
+### [order-processing](../examples/order-processing/)
+
+**Demonstrates:** JPA JOINED inheritance, per-subject hash chain, attestations, audit query API
+
+**Key pattern:**
 ```java
-package com.example.order.ledger;
-
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import jakarta.persistence.*;
-import java.util.UUID;
-
-/**
- * Ledger entry for the Order aggregate.
- *
- * subjectId (inherited) = orderId — scopes sequence numbering and hash chain per order.
- */
 @Entity
 @Table(name = "order_ledger_entry")
 @DiscriminatorValue("ORDER")
 public class OrderLedgerEntry extends LedgerEntry {
-
-    /** The Order this entry belongs to — mirrors subjectId with a typed field. */
     @Column(name = "order_id", nullable = false)
     public UUID orderId;
 
-    /** The actor's declared intent — e.g. "PlaceOrder", "CancelOrder". */
     @Column(name = "command_type")
-    public String commandType;
+    public String commandType;  // "PlaceOrder", "ShipOrder"
 
-    /** The observable fact after execution — e.g. "OrderPlaced", "OrderCancelled". */
     @Column(name = "event_type")
-    public String eventType;
+    public String eventType;    // "OrderPlaced", "OrderShipped"
 
-    /** The order status after this transition. */
     @Column(name = "order_status")
-    public String orderStatus;
+    public String orderStatus;  // snapshot at transition time
 }
 ```
 
----
-
-## Flyway migration
-
-```sql
--- V1004__order_ledger_entry.sql  (V1000–V1003 are reserved by quarkus-ledger)
-CREATE TABLE order_ledger_entry (
-    id           UUID         NOT NULL,
-    order_id     UUID         NOT NULL,
-    command_type VARCHAR(100),
-    event_type   VARCHAR(100),
-    order_status VARCHAR(50),
-    CONSTRAINT pk_order_ledger_entry PRIMARY KEY (id),
-    CONSTRAINT fk_order_ledger_entry FOREIGN KEY (id) REFERENCES ledger_entry (id)
-);
-
-CREATE INDEX idx_ole_order_id ON order_ledger_entry (order_id);
-```
+**Run:** `cd examples/order-processing && mvn quarkus:dev`
 
 ---
 
-## Repository
+### [art22-decision-snapshot](../examples/art22-decision-snapshot/)
 
+**Demonstrates:** GDPR Art.22 `ComplianceSupplement` — `algorithmRef`, `confidenceScore`,
+`contestationUri`, `humanOverrideAvailable`
+
+**Key pattern:**
 ```java
-package com.example.order.ledger;
-
-import io.quarkiverse.ledger.runtime.model.*;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import java.util.*;
-import java.util.stream.Collectors;
-
-@ApplicationScoped
-public class OrderLedgerEntryRepository implements LedgerEntryRepository {
-
-    // Typed convenience methods
-
-    public List<OrderLedgerEntry> findByOrderId(UUID orderId) {
-        return OrderLedgerEntry.list(
-            "subjectId = ?1 ORDER BY sequenceNumber ASC", orderId);
-    }
-
-    public Optional<OrderLedgerEntry> findLatestByOrderId(UUID orderId) {
-        return OrderLedgerEntry
-            .find("subjectId = ?1 ORDER BY sequenceNumber DESC", orderId)
-            .firstResultOptional();
-    }
-
-    // LedgerEntryRepository SPI
-
-    @Override public LedgerEntry save(LedgerEntry e) { e.persist(); return e; }
-
-    @Override
-    public List<LedgerEntry> findBySubjectId(UUID id) {
-        return LedgerEntry.list("subjectId = ?1 ORDER BY sequenceNumber ASC", id);
-    }
-
-    @Override
-    public Optional<LedgerEntry> findLatestBySubjectId(UUID id) {
-        return LedgerEntry.find("subjectId = ?1 ORDER BY sequenceNumber DESC", id)
-                          .firstResultOptional();
-    }
-
-    @Override
-    public Optional<LedgerEntry> findEntryById(UUID id) {
-        return Optional.ofNullable(LedgerEntry.findById(id));
-    }
-
-    @Override
-    public List<LedgerAttestation> findAttestationsByEntryId(UUID entryId) {
-        return LedgerAttestation.list("ledgerEntryId = ?1 ORDER BY occurredAt ASC", entryId);
-    }
-
-    @Override
-    public LedgerAttestation saveAttestation(LedgerAttestation a) { a.persist(); return a; }
-
-    @Override
-    public List<LedgerEntry> findAllEvents() {
-        return LedgerEntry.find("entryType = ?1", LedgerEntryType.EVENT).list();
-    }
-
-    @Override
-    public Map<UUID, List<LedgerAttestation>> findAttestationsForEntries(Set<UUID> ids) {
-        if (ids.isEmpty()) return Collections.emptyMap();
-        return LedgerAttestation.<LedgerAttestation>list("ledgerEntryId IN ?1", ids)
-            .stream().collect(Collectors.groupingBy(a -> a.ledgerEntryId));
-    }
-}
+ComplianceSupplement cs = new ComplianceSupplement();
+cs.algorithmRef           = "risk-model-v3";
+cs.confidenceScore        = 0.88;
+cs.contestationUri        = "https://example.com/challenge/" + subjectId;
+cs.humanOverrideAvailable = true;
+cs.decisionContext        = "{\"creditScore\":720}";
+entry.attach(cs);
+repo.save(entry);
 ```
+
+**Run:** `cd examples/art22-decision-snapshot && mvn quarkus:dev`
 
 ---
 
-## Capture service
+### [art12-compliance](../examples/art12-compliance/)
 
+**Demonstrates:** EU AI Act Art.12 retention enforcement, audit query API (`findByActorId`,
+`findByTimeRange`)
+
+**Key pattern:**
 ```java
-package com.example.order.ledger;
+// Query entries by actor within a time range — Art.12 retention audit
+List<LedgerEntry> entries = repo.findByActorId(actorId, from, to);
 
-import com.example.order.model.Order;
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.*;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.UUID;
-
-@ApplicationScoped
-public class OrderLedgerCapture {
-
-    @Inject OrderLedgerEntryRepository repo;
-    @Inject LedgerConfig config;
-
-    private static final Map<String, String[]> EVENT_META = Map.of(
-        "placed",    new String[]{"PlaceOrder",   "OrderPlaced",    "Customer"},
-        "paid",      new String[]{"PayOrder",     "OrderPaid",      "PaymentSystem"},
-        "shipped",   new String[]{"ShipOrder",    "OrderShipped",   "Fulfilment"},
-        "delivered", new String[]{"DeliverOrder", "OrderDelivered", "Carrier"},
-        "cancelled", new String[]{"CancelOrder",  "OrderCancelled", "Customer"}
-    );
-
-    @Transactional
-    public void record(UUID orderId, String transition, String actor, Order currentState) {
-        if (!config.enabled()) return;
-
-        String[] meta = EVENT_META.getOrDefault(transition,
-            new String[]{transition, transition + "Occurred", "System"});
-
-        int nextSeq = repo.findLatestByOrderId(orderId)
-                          .map(e -> e.sequenceNumber + 1)
-                          .orElse(1);
-
-        OrderLedgerEntry entry = new OrderLedgerEntry();
-        entry.subjectId      = orderId;
-        entry.orderId        = orderId;
-        entry.sequenceNumber = nextSeq;
-        entry.entryType      = LedgerEntryType.EVENT;
-        entry.commandType    = meta[0];
-        entry.eventType      = meta[1];
-        entry.actorId        = actor;
-        entry.actorType      = ActorType.HUMAN;
-        entry.actorRole      = meta[2];
-        entry.orderStatus    = currentState.status.name();
-        // Set before hash computation — @PrePersist is too late
-        entry.occurredAt     = Instant.now().truncatedTo(ChronoUnit.MILLIS);
-
-        if (config.decisionContext().enabled()) {
-            final ComplianceSupplement cs = new ComplianceSupplement();
-            cs.decisionContext = String.format(
-                "{\"status\":\"%s\",\"total\":%s,\"customerId\":\"%s\"}",
-                currentState.status, currentState.total, currentState.customerId);
-            entry.attach(cs);
-        }
-
-        // Merkle leaf hash and frontier update handled automatically by repo.save()
-        repo.save(entry);
-    }
-}
+// Query all entries within a retention window
+List<LedgerEntry> all = repo.findByTimeRange(from, to);
 ```
+
+**Run:** `cd examples/art12-compliance && mvn quarkus:dev`
 
 ---
 
-## Domain service (wiring it together)
+### [merkle-verification](../examples/merkle-verification/)
 
+**Demonstrates:** Merkle Mountain Range inclusion proofs, offline chain verification without
+database access
+
+**Key pattern:**
 ```java
-package com.example.order;
+// Get the current tree root for a subject
+String root = verification.treeRoot(subjectId);
 
-import com.example.order.ledger.OrderLedgerCapture;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import java.util.UUID;
+// Generate an inclusion proof for a specific entry
+InclusionProof proof = verification.inclusionProof(entryId);
 
-@ApplicationScoped
-public class OrderService {
-
-    @Inject OrderRepository orderRepo;
-    @Inject OrderLedgerCapture ledger;
-
-    @Transactional
-    public void placeOrder(UUID orderId, String customerId) {
-        Order order = new Order(orderId, customerId, OrderStatus.PLACED);
-        orderRepo.persist(order);
-        ledger.record(orderId, "placed", customerId, order);
-    }
-
-    @Transactional
-    public void shipOrder(UUID orderId, String fulfilmentAgent) {
-        Order order = orderRepo.findById(orderId);
-        order.status = OrderStatus.SHIPPED;
-        ledger.record(orderId, "shipped", fulfilmentAgent, order);
-    }
-
-    @Transactional
-    public void cancelOrder(UUID orderId, String actor, String reason) {
-        Order order = orderRepo.findById(orderId);
-        order.status = OrderStatus.CANCELLED;
-        ledger.record(orderId, "cancelled", actor, order);
-    }
-}
+// Verify the proof offline — no DB, no service call required
+boolean valid = LedgerMerkleTree.verifyProof(proof, root);
 ```
+
+**Run:** `cd examples/merkle-verification && mvn quarkus:dev`
 
 ---
 
-## REST endpoint — retrieve audit trail
+### [prov-dm-export](../examples/prov-dm-export/)
 
+**Demonstrates:** W3C PROV-DM JSON-LD export from `LedgerProvExportService`, entries with
+both `ProvenanceSupplement` and `ComplianceSupplement`, `causedByEntryId` causal chaining
+
+**Key pattern:**
 ```java
-package com.example.order.api;
+// Entry 1: AI decision with ComplianceSupplement
+e1.attach(complianceSupplement);
+e1 = (ProvAuditEntry) repo.save(e1);
 
-import com.example.order.ledger.OrderLedgerEntry;
-import com.example.order.ledger.OrderLedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+// Entry 2: upstream event with ProvenanceSupplement
+e2.attach(provenanceSupplement);
+repo.save(e2);
 
-@Path("/orders/{id}/ledger")
-@Produces(MediaType.APPLICATION_JSON)
-public class OrderLedgerResource {
+// Entry 3: caused by Entry 1 — appears as wasDerivedFrom edge in PROV graph
+e3.causedByEntryId = e1.id;
+repo.save(e3);
 
-    @Inject OrderLedgerEntryRepository repo;
-    @Inject LedgerVerificationService verificationService;
-
-    /** Return the full audit trail for an order. */
-    @GET
-    public List<OrderLedgerEntry> getLedger(@PathParam("id") UUID orderId) {
-        return repo.findByOrderId(orderId);
-    }
-
-    /** Verify Merkle tree integrity. Returns 200 with {intact: true/false}. */
-    @GET
-    @Path("/verify")
-    public Map<String, Object> verifyChain(@PathParam("id") UUID orderId) {
-        boolean intact = verificationService.verify(orderId);
-        return Map.of("intact", intact);
-    }
-
-    /** Post a peer attestation on a specific ledger entry. */
-    @POST
-    @Path("/{entryId}/attestations")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void postAttestation(
-            @PathParam("id") UUID orderId,
-            @PathParam("entryId") UUID entryId,
-            AttestationRequest req) {
-
-        LedgerAttestation a = new LedgerAttestation();
-        a.ledgerEntryId = entryId;
-        a.subjectId     = orderId;
-        a.attestorId    = req.attestorId;
-        a.attestorType  = req.attestorType;
-        a.verdict       = req.verdict;
-        a.confidence    = req.confidence;
-        repo.saveAttestation(a);
-    }
-
-    record AttestationRequest(
-        String attestorId,
-        io.quarkiverse.ledger.runtime.model.ActorType attestorType,
-        io.quarkiverse.ledger.runtime.model.AttestationVerdict verdict,
-        double confidence
-    ) {}
-}
+// Export full subject as PROV-DM JSON-LD
+String jsonLd = exportService.exportSubject(subjectId);
 ```
+
+**Run:** `cd examples/prov-dm-export && mvn quarkus:dev`
 
 ---
 
-## Test: verifying ledger entries
+### [trust-score-routing](../examples/trust-score-routing/)
 
+**Demonstrates:** CDI routing signals after trust score computation — `@Observes TrustScoreFullPayload`
+(sync, full ranked list) and `@ObservesAsync TrustScoreComputedAt` (async, lightweight notification)
+
+**Key pattern:**
 ```java
-package com.example.order.ledger;
+// Sync observer: rebuild ranked agent list on every full recompute
+public void onScoresUpdated(@Observes TrustScoreFullPayload payload) {
+    rankedAgents = payload.scores().stream()
+            .sorted(Comparator.comparingDouble(s -> -s.trustScore))
+            .map(s -> s.actorId)
+            .toList();
+}
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.List;
-import java.util.UUID;
-
-import jakarta.inject.Inject;
-
-import org.junit.jupiter.api.Test;
-
-import com.example.order.OrderService;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
-import io.quarkus.test.TestTransaction;
-import io.quarkus.test.junit.QuarkusTest;
-
-@QuarkusTest
-@TestTransaction
-class OrderLedgerTest {
-
-    @Inject OrderService orderService;
-    @Inject OrderLedgerEntryRepository ledgerRepo;
-    @Inject LedgerVerificationService verificationService;
-
-    @Test
-    void placeOrder_createsLedgerEntry() {
-        UUID orderId = UUID.randomUUID();
-        orderService.placeOrder(orderId, "customer-1");
-
-        List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
-        assertEquals(1, entries.size());
-
-        OrderLedgerEntry e = entries.get(0);
-        assertEquals("PlaceOrder", e.commandType);
-        assertEquals("OrderPlaced", e.eventType);
-        assertEquals("customer-1", e.actorId);
-        assertEquals(LedgerEntryType.EVENT, e.entryType);
-        assertEquals(orderId, e.subjectId);
-        assertEquals(1, e.sequenceNumber);
-        assertNotNull(e.digest);
-    }
-
-    @Test
-    void fullLifecycle_merkleTreeIsValid() {
-        UUID orderId = UUID.randomUUID();
-        orderService.placeOrder(orderId, "customer-1");
-        orderService.shipOrder(orderId, "fulfilment-agent");
-
-        List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
-        assertEquals(2, entries.size());
-        // Each entry has a Merkle leaf hash set automatically by save()
-        entries.forEach(e -> assertNotNull(e.digest));
-        // Merkle Mountain Range integrity check via LedgerVerificationService
-        assertTrue(verificationService.verify(orderId));
-    }
-
-    @Test
-    void cancelOrder_decisionContextCaptured() {
-        UUID orderId = UUID.randomUUID();
-        orderService.placeOrder(orderId, "customer-1");
-        orderService.cancelOrder(orderId, "customer-1", "Changed my mind");
-
-        List<OrderLedgerEntry> entries = ledgerRepo.findByOrderId(orderId);
-        OrderLedgerEntry cancel = entries.get(1);
-        // Decision context is stored in ComplianceSupplement, accessible via supplementJson
-        assertNotNull(cancel.supplementJson);
-        assertTrue(cancel.supplementJson.contains("CANCELLED"));
-    }
+// Async observer: log refresh signal without blocking the job thread
+public CompletionStage<Void> onNotification(
+        @ObservesAsync TrustScoreComputedAt notification) {
+    log.infof("Scores refreshed at %s for %d actors",
+            notification.computedAt(), notification.actorCount());
+    return CompletableFuture.completedFuture(null);
 }
 ```
 
+**Run:** `cd examples/trust-score-routing && mvn quarkus:dev`
+
 ---
 
-## Runnable examples
+### [privacy-pseudonymisation](../examples/privacy-pseudonymisation/)
 
-| Example | What it shows |
-|---|---|
-| [`examples/order-processing/`](../examples/order-processing/) | Full order lifecycle — place, ship, deliver, cancel with hash chain and attestations |
-| [`examples/art22-decision-snapshot/`](../examples/art22-decision-snapshot/) | AI decision service with GDPR Art.22 `ComplianceSupplement` |
-| [`examples/art12-compliance/`](../examples/art12-compliance/) | EU AI Act Art.12 retention job and audit query API |
-| [`examples/merkle-verification/`](../examples/merkle-verification/) | Merkle Mountain Range inclusion proofs and offline verification |
-| [`examples/prov-dm-export/`](../examples/prov-dm-export/) | W3C PROV-DM JSON-LD export from ledger entries |
-| [`examples/trust-score-routing/`](../examples/trust-score-routing/) | CDI routing signals (`TrustScoreFullPayload`, `TrustScoreComputedAt`) after trust score computation |
+**Demonstrates:** Actor tokenisation (raw identity replaced with UUID token on save),
+`ComplianceSupplement.detail`, `ProvenanceSupplement.agentConfigHash`, GDPR Art.17 erasure
+
+**Key pattern:**
+```java
+// Raw identity — pseudonymised automatically by repo.save()
+entry.actorId = "alice@example.com";
+
+// detail explains the decision logic in plain language
+cs.detail = "Risk score computed from income, credit history, and debt ratio. " +
+        "Scores above 0.7 trigger mandatory human review.";
+
+// agentConfigHash binds the entry to the agent's config at session start
+ps.agentConfigHash = sha256HexOfSystemPromptAndToolList;
+
+// Art.17: severs the token→identity mapping; audit record survives intact
+ErasureResult result = erasureService.erase("alice@example.com");
+```
+
+**Run:** `cd examples/privacy-pseudonymisation && mvn quarkus:dev`
+
+---
+
+### [eigentrust-mesh](../examples/eigentrust-mesh/)
+
+**Demonstrates:** EigenTrust transitive trust propagation — how `globalTrustScore` differs
+from the local Bayesian `trustScore` when peers attest each other's work
+
+**Key pattern:**
+```java
+// Three agents with different reliability — A endorsed, B mixed, C flagged
+attest(AGENT_B, entryA, AttestationVerdict.SOUND,      0.9, t);
+attest(AGENT_A, entryB, AttestationVerdict.CHALLENGED,  0.8, t);
+attest(AGENT_A, entryC, AttestationVerdict.FLAGGED,     0.95, t);
+
+// Run Bayesian Beta + EigenTrust power iteration
+trustScoreJob.runComputation();
+
+// trustScore: local Bayesian Beta (verdicts received by this actor)
+// globalTrustScore: EigenTrust result (trust from trustworthy sources weighted higher)
+List<ActorTrustScore> scores = trustRepo.findAll();
+```
+
+**Run:** `cd examples/eigentrust-mesh && mvn quarkus:dev`
+
+---
+
+### [otel-trace-wiring](../examples/otel-trace-wiring/)
+
+**Demonstrates:** OTel trace auto-wiring — `LedgerEntry.traceId` populated from the active
+span with zero call-site code
+
+**Key pattern:**
+```java
+// No traceId code here — LedgerTraceListener reads the active OTel span on persist
+repo.save(entry);
+
+// traceId is set; response proves it persisted to the database
+return Response.status(201)
+        .entity(new EventResponse(entry.id, entry.traceId))
+        .build();
+```
+
+**Run:** `cd examples/otel-trace-wiring && mvn quarkus:dev`
 
 ---
 
@@ -412,4 +267,5 @@ class OrderLedgerTest {
 | [quarkus-tarkus](https://github.com/mdproctor/quarkus-tarkus) | `WorkItemLedgerEntry` | Task lifecycle — create, claim, start, complete, reject, delegate |
 | [quarkus-qhorus](https://github.com/mdproctor/quarkus-qhorus) | `AgentMessageLedgerEntry` | AI agent telemetry — tool calls with duration, token count, context refs |
 
-Both include full integration test suites that exercise Merkle tree verification, sequence numbering, decision context, attestations, and trust score computation.
+Both include full integration test suites that exercise Merkle tree verification, sequence
+numbering, decision context, attestations, and trust score computation.
