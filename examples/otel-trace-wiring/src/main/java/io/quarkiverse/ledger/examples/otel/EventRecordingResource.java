@@ -53,6 +53,9 @@ public class EventRecordingResource {
     @Consumes(APPLICATION_JSON)
     @Transactional
     public Response recordEvent(EventRequest request) {
+        if (request == null || request.name() == null || request.actorId() == null) {
+            return Response.status(400).build();
+        }
         RecordedEventLedgerEntry entry = new RecordedEventLedgerEntry();
         entry.subjectId = UUID.randomUUID();
         entry.sequenceNumber = 1;
