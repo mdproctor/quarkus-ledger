@@ -70,9 +70,10 @@ Domain-specific subclass fields and supplement fields are excluded — canonical
 domain-agnostic. The leaf hash is `SHA-256(0x00 | canonicalBytes)` per RFC 9162.
 The Merkle Mountain Range (stored frontier) replaces the old linear chain.
 
-**`correlationId` and `causedByEntryId` are core fields**
+**`traceId` and `causedByEntryId` are core fields**
 Both OTel trace linking and causal relationships are structural — present on every entry where
-relevant. They live on `LedgerEntry` directly (not in supplements). `findCausedBy(UUID entryId)`
+relevant. They live on `LedgerEntry` directly (not in supplements). `traceId` is auto-populated
+from the active OTel span at persist time via `LedgerTraceListener`. `findCausedBy(UUID entryId)`
 traverses causal chains one hop at a time. The test for core vs supplement: is the field
 relevant to every consumer, every entry, every time? If yes → core. If no → supplement.
 
@@ -129,7 +130,13 @@ quarkus-ledger/
 │           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
 │           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (pure Java)
 │           ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
-│           └── TrustScoreJob.java           — @Scheduled nightly recomputation
+│           ├── TrustScoreJob.java           — @Scheduled nightly recomputation
+│           └── routing/
+│               ├── TrustScoreRoutingPublisher.java — CDI event dispatch after trust score computation
+│               ├── TrustScoreFullPayload.java      — all current scores (strategy: rebuild ranked list)
+│               ├── TrustScoreDeltaPayload.java     — changed actors only (strategy: incremental cache)
+│               ├── TrustScoreComputedAt.java       — lightweight notification (strategy: signal only)
+│               └── TrustScoreDelta.java            — single actor score change value type
 │       └── privacy/
 │           ├── ActorIdentityProvider.java   — SPI: tokenise/resolve/erase actor identities
 │           ├── DecisionContextSanitiser.java — SPI: sanitise decisionContext JSON before persist

@@ -454,11 +454,10 @@ counters, and `global_trust_score` (EigenTrust). `TrustScoreJob` runs nightly wh
 
 ### Medium-term
 
-**Quarkiverse submission** — structurally ready (quarkiverse-parent, CI workflows,
-full docs, 159 tests across runtime + examples). Needs a stability decision on the
-public API (`LedgerEntry` core fields, `LedgerMerkleTree` canonical form, supplement API)
-before submitting. The supplement architecture stabilises the surface — `attach()`,
-`compliance()`, `provenance()` are the public entry points.
+**Submission target under review** — external feedback suggests `quarkus-ledger` may not
+qualify as a Quarkus extension under Quarkiverse criteria; SmallRye is under consideration
+as an alternative. Structurally ready (192 tests, full docs, CI). Parked pending target
+decision — see `IDEAS.md` (2026-04-23 entry).
 
 **OTel trace ID auto-wiring** — ✅ Done. `correlationId` renamed to `traceId`. `LedgerTraceListener` auto-populates `traceId` from the active OTel span at persist time. Closed #30, #31.
 
@@ -496,7 +495,7 @@ the Tarkus/Qhorus examples.
 | **Trust score continuity across LLM sessions** | ✅ Done | Documented sparse/concurrent/scheduling behaviour in agent mesh deployments; `trust-score.schedule` config key (default `24h`, configurable for high-interaction meshes). Closes #24. |
 | **Agent identity versioning criteria** | ✅ Done | Concrete bump/no-bump criteria for CLAUDE.md changes; no inheritance API (clean break is safe default); pre-seeding via synthetic attestations documented. ADR 0004 updated. Closes #25. |
 | **Agent mesh topology** | ✅ Done | Centralized recommended for current ecosystem; hierarchical path documented for distributed Claudony; gossip ruled out. Closes #27. |
-| **Quarkiverse submission** | ⬜ Pending | API stabilisation (LedgerEntry core fields, LedgerMerkleTree canonical form, supplement API) + submission PR |
+| **Submission target decision** | ⬜ Pending | Quarkiverse vs SmallRye — external feedback questions whether this qualifies as a Quarkus extension. See IDEAS.md 2026-04-23. |
 | **OTel trace ID auto-wiring** | ✅ Done | `LedgerTraceListener` (`@ApplicationScoped` JPA entity listener, `@PrePersist` populates `traceId`), `LedgerTraceIdProvider` SPI, `OtelTraceIdProvider` (`@DefaultBean`). `correlationId` renamed to `traceId`. Closes #30, #31. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
