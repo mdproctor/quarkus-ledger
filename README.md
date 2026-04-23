@@ -320,6 +320,9 @@ All keys are under `quarkus.ledger`:
 | [Runnable Example — Merkle Verification](examples/merkle-verification/) | `mvn quarkus:dev` — inclusion proofs and offline chain verification |
 | [Runnable Example — PROV-DM export](examples/prov-dm-export/) | `mvn quarkus:dev` — W3C PROV-DM JSON-LD export from audit entries |
 | [Runnable Example — Trust Score Routing](examples/trust-score-routing/) | `mvn quarkus:dev` — CDI routing signals after trust score computation |
+| [Runnable Example — Privacy and Pseudonymisation](examples/privacy-pseudonymisation/) | `mvn quarkus:dev` — actor tokenisation, `agentConfigHash`, `detail` field, GDPR Art.17 erasure |
+| [Runnable Example — EigenTrust Mesh](examples/eigentrust-mesh/) | `mvn quarkus:dev` — multi-agent trust mesh, transitive trust vs direct Bayesian scoring |
+| [Runnable Example — OTel Trace Wiring](examples/otel-trace-wiring/) | `mvn quarkus:dev` — `traceId` auto-populated from active OTel span, zero call-site code |
 
 ---
 

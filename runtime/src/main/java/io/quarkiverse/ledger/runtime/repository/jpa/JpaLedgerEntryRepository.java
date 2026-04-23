@@ -25,7 +25,6 @@ import io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
-import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**
  * Hibernate ORM implementation of {@link LedgerEntryRepository} using EntityManager directly.
@@ -65,7 +64,6 @@ import io.quarkus.hibernate.orm.PersistenceUnit;
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     @Inject
-    @PersistenceUnit("qhorus")
     EntityManager em;
 
     @Inject
