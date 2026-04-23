@@ -107,7 +107,23 @@
       "Bash(jar -xf /Users/mdproctor/.m2/repository/io/quarkus/quarkus-hibernate-reactive-panache/3.31.1/quarkus-hibernate-reactive-panache-3.31.1-sources.jar)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl /Users/mdproctor/claude/quarkus-ledger/.worktrees/feature-reactive/runtime)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl runtime -Dtest=ReactiveRepositoryIT)",
-      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean compile -pl runtime)"
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean compile -pl runtime)",
+      "Bash(python3 *)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -f examples/privacy-pseudonymisation/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -f examples/eigentrust-mesh/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn clean test -f examples/otel-trace-wiring/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl casehub-ledger -f /Users/mdproctor/dev/casehub-engine/pom.xml)",
+      "Bash(gh repo *)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -pl casehub-ledger -f /Users/mdproctor/dev/casehub-engine/pom.xml -Dtest=\"CaseLedgerEventCaptureTest#merkleChain*\")",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn install -pl casehub-ledger -f /Users/mdproctor/dev/casehub-engine/pom.xml -DskipTests -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/otel-trace-wiring/pom.xml -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/privacy-pseudonymisation/pom.xml -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/eigentrust-mesh/pom.xml -q)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/privacy-pseudonymisation/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/otel-trace-wiring/pom.xml)",
+      "Bash(xargs kill *)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/eigentrust-mesh/pom.xml)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/otel-trace-wiring/pom.xml -Dtest=OtelTraceWiringIT#postEvent_missingBody_returns400OrSimilar)"
     ]
   }
 }

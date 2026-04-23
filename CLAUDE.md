@@ -40,7 +40,7 @@ in V1000–V1004 and always present when `quarkus-ledger` is on the classpath.
 
 | Element | Value |
 |---|---|
-| GitHub repo | `mdproctor/quarkus-ledger` (→ `quarkiverse/quarkus-ledger` when submitted) |
+| GitHub repo | `casehubio/quarkus-ledger` (→ `quarkiverse/quarkus-ledger` when submitted) |
 | groupId | `io.quarkiverse.ledger` |
 | Parent artifactId | `quarkus-ledger-parent` |
 | Runtime artifactId | `quarkus-ledger` |
@@ -217,7 +217,7 @@ relevant migration file in place. Treat every schema change as a clean-slate des
 ## Work Tracking
 
 **Issue tracking:** enabled
-**GitHub repo:** mdproctor/quarkus-ledger
+**GitHub repo:** casehubio/quarkus-ledger
 **Changelog:** GitHub Releases (run `gh release create --generate-notes` at milestones)
 
 **Automatic behaviours (Claude follows these at all times in this project):**
