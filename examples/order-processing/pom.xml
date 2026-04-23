@@ -24,7 +24,7 @@
 
   <properties>
     <quarkus.version>3.32.2</quarkus.version>
-    <quarkus-ledger.version>1.0.0-SNAPSHOT</quarkus-ledger.version>
+    <quarkus-ledger.version>0.2-SNAPSHOT</quarkus-ledger.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>

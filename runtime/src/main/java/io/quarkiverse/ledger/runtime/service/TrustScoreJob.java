@@ -21,6 +21,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
+import io.quarkus.hibernate.orm.PersistenceUnit;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -51,6 +52,7 @@ public class TrustScoreJob {
     TrustScoreRoutingPublisher routingPublisher;
 
     @Inject
+    @PersistenceUnit("qhorus")
     EntityManager em;
 
     @Scheduled(every = "{quarkus.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")

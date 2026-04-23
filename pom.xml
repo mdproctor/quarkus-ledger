@@ -12,7 +12,7 @@
 
   <groupId>io.quarkiverse.ledger</groupId>
   <artifactId>quarkus-ledger-parent</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Quarkus Ledger - Parent</name>
@@ -24,10 +24,23 @@
     <module>deployment</module>
   </modules>
 
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>casehubio GitHub Packages</name>
+      <url>https://maven.pkg.github.com/casehubio/quarkus-ledger</url>
+    </repository>
+    <snapshotRepository>
+      <id>github</id>
+      <name>casehubio GitHub Packages</name>
+      <url>https://maven.pkg.github.com/casehubio/quarkus-ledger</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <scm>
-    <connection>scm:git:git@github.com:mdproctor/quarkus-ledger.git</connection>
-    <developerConnection>scm:git:git@github.com:mdproctor/quarkus-ledger.git</developerConnection>
-    <url>https://github.com/mdproctor/quarkus-ledger</url>
+    <connection>scm:git:https://github.com/casehubio/quarkus-ledger.git</connection>
+    <developerConnection>scm:git:https://github.com/casehubio/quarkus-ledger.git</developerConnection>
+    <url>https://github.com/casehubio/quarkus-ledger</url>
     <tag>HEAD</tag>
   </scm>
 
