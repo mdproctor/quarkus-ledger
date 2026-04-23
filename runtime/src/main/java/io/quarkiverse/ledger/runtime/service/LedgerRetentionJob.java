@@ -20,6 +20,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.quarkus.hibernate.orm.PersistenceUnit;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -48,6 +49,7 @@ public class LedgerRetentionJob {
     LedgerEntryRepository ledgerRepo;
 
     @Inject
+    @PersistenceUnit("qhorus")
     EntityManager entityManager;
 
     @Inject
