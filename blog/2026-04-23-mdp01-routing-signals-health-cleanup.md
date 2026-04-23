@@ -98,16 +98,3 @@ commit at HEAD. Reset, force push, done. But it's a useful reminder that subagen
 scope can drift silently in directions that look coherent at the commit level but
 are architecturally wrong for the project.
 
-## Closing the ledger on 38 issues
-
-The session also completed the GitHub issue tracking setup. All 38 issues covering
-the project's full commit history are now closed, with `docs/retro-issues.md` as the
-permanent mapping. Phase 2 enforcement — check whether an issue exists before
-writing code, flag cross-cutting concerns — is now live in CLAUDE.md.
-
-I attempted to backfill `Refs #N` footers into 25 historical commit messages using
-`git filter-repo`. That hit a cascade of problems: filter-repo removes the `origin`
-remote on every run by design; `--force-with-lease` rejects after a history rewrite
-because the remote tracking ref is stale; and the session ended with a bad commit
-on origin that needed cleaning up. The historical commits don't have backlinked
-footers. The issues exist on GitHub. Close enough.
