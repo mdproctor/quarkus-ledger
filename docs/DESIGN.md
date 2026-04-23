@@ -463,9 +463,7 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 
 ### Longer-term (depends on CaseHub)
 
-**CaseHub consumer** — CaseHub will likely add a `CaseLedgerEntry` subclass covering
-orchestration workflow transitions. Pattern is established; implementation follows
-the Tarkus/Qhorus examples.
+**CaseLedgerEntry** — CaseHub (`/Users/mdproctor/dev/casehub-engine`) is an active project managing case lifecycle (`CaseInstance`, states: RUNNING/WAITING/SUSPENDED/COMPLETED/FAULTED/CANCELLED). It has a lightweight `EventLog` but no ledger integration yet. Pattern established; blocked on CaseHub Epic #131 (WorkBroker integration — event model still evolving). Aggregate: `CaseInstance.uuid` → `subjectId`. Tracked in #39.
 
 **`@Alternative` activation documentation** — ✅ Done. `integration-guide.md` covers all three activation paths (`quarkus.arc.selected-alternatives`, `beans.xml`, subclass extension) with a decision table. Misleading "no extra configuration needed" note corrected.
 
@@ -498,4 +496,4 @@ the Tarkus/Qhorus examples.
 | **Submission target decision** | ⬜ Pending | Quarkiverse vs SmallRye — external feedback questions whether this qualifies as a Quarkus extension. See IDEAS.md 2026-04-23. |
 | **OTel trace ID auto-wiring** | ✅ Done | `LedgerTraceListener` (`@ApplicationScoped` JPA entity listener, `@PrePersist` populates `traceId`), `LedgerTraceIdProvider` SPI, `OtelTraceIdProvider` (`@DefaultBean`). `correlationId` renamed to `traceId`. Closes #30, #31. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
-| **CaseHub consumer** | ⬜ Pending | Depends on CaseHub integration work |
+| **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |
