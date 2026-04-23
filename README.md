@@ -1,6 +1,18 @@
 # Quarkus Ledger
 
-A Quarkus extension providing a domain-agnostic immutable audit ledger for any Quarkus application.
+A domain-agnostic immutable audit ledger for Quarkus applications — built for regulated AI systems, compliance-heavy workflows, and any domain where you need to prove what happened, when, and who was responsible.
+
+---
+
+## Why it exists
+
+The problem with audit logs is that teams build them after the first compliance review, when the compliance officer explains that `INSERT INTO events(user_id, action, timestamp)` is assertion, not evidence. The log exists; the log could have been altered; there is no way to know.
+
+Add tamper evidence, and the next question arrives: where did this decision originate? Then: can you show the model that made it was reliable over time? Then: this data subject wants their information erased from the record.
+
+Each answer normally requires a separate system. `quarkus-ledger` covers all of it: cryptographic tamper proofs, W3C PROV-DM provenance, GDPR Art.17 pseudonymisation and erasure, Bayesian Beta trust scoring with EigenTrust transitivity across agent meshes. Every capability is opt-in and zero-overhead when unused.
+
+The EU AI Act (Article 12) mandates tamper-evident audit trails for high-risk AI systems — enforcement began August 2026. This library was built for that requirement.
 
 ---
 
@@ -30,7 +42,7 @@ Three built-in supplement types carry optional fields that not every consumer ne
 | Supplement | Table | Fields | When to use |
 |---|---|---|---|
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | GDPR Art.22 / EU AI Act Art.12 automated decision auditability |
-| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` | Entry driven by an external workflow or orchestration system |
+| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem`, `agentConfigHash` | Entry driven by an external workflow or orchestration system; or LLM agent binding its configuration for drift detection |
 
 OTel trace linkage (`traceId`) and cross-subject causality (`causedByEntryId`) are core fields on every entry — not supplements.
 
@@ -69,7 +81,7 @@ attestation.attestorType  = ActorType.AGENT;
 attestation.verdict       = AttestationVerdict.SOUND; // SOUND | FLAGGED | ENDORSED | CHALLENGED
 attestation.confidence    = 0.95;
 attestation.evidence      = "Checked against policy-v2";
-attestation.persist();
+repo.saveAttestation(attestation);
 ```
 
 Verdicts feed the Bayesian Beta trust scoring system when it is enabled.
@@ -81,6 +93,80 @@ A nightly `@Scheduled` job recomputes a trust score `[0.0, 1.0]` per actor from 
 Disabled by default. Enable once attestation history has accumulated — early scores with sparse data are unreliable.
 
 Scores are stored in `actor_trust_score` and queryable via `ActorTrustScoreRepository`.
+
+### EigenTrust transitivity (optional)
+
+When the actor mesh is large enough that direct attestation history is sparse, EigenTrust power iteration computes global trust shares via transitive propagation — if A trusts B, and B trusts C, A gains an indirect signal toward C. Runs as a post-pass after the Bayesian Beta job. Disabled by default.
+
+### Trust score routing signals (optional)
+
+When trust scores are enabled, downstream consumers — routing layers, task assignment engines — can subscribe to score updates via CDI events rather than polling. Three payload types let each consumer choose its granularity:
+
+```java
+// Sync observer — full ranked list after every computation
+void onScores(@Observes TrustScoreFullPayload payload) {
+    rankedAgents = payload.scores().stream()
+        .sorted(Comparator.comparingDouble(s -> -s.trustScore))
+        .map(s -> s.actorId).toList();
+}
+
+// Async observer — lightweight "scores refreshed" signal
+CompletionStage<Void> onNotify(@ObservesAsync TrustScoreComputedAt notification) {
+    log.infof("Scores refreshed at %s for %d actors",
+        notification.computedAt(), notification.actorCount());
+    return CompletableFuture.completedFuture(null);
+}
+```
+
+### W3C PROV-DM JSON-LD export
+
+Any subject's full audit trail can be serialised as a [W3C PROV-DM](https://www.w3.org/TR/prov-dm/) JSON-LD document — the standard interchange format for provenance data in regulatory and MLOps contexts:
+
+```java
+@Inject LedgerProvExportService provExport;
+
+String jsonLd = provExport.exportSubject(orderId);
+// → valid PROV-JSON-LD with entities, activities, agents, and wasGeneratedBy / used / wasAssociatedWith relations
+```
+
+See [docs/prov-dm-mapping.md](docs/prov-dm-mapping.md) for the complete field mapping.
+
+### Privacy / pseudonymisation — GDPR Art.17
+
+Two SPIs intercept every write, replacing raw identity with an opaque UUID token and optionally redacting PII from decision context blobs:
+
+```java
+// ActorIdentityProvider — tokenise/resolve/erase actor identities
+// DecisionContextSanitiser — strip PII from decisionContext JSON before persist
+```
+
+The built-in `InternalActorIdentityProvider` activates when `quarkus.ledger.identity.tokenisation.enabled=true`. Erasure severs the token mapping — the ledger record survives, the link to a real person does not:
+
+```java
+@Inject LedgerErasureService erasureService;
+
+ErasureResult result = erasureService.erase("alice@example.com");
+// result.mappingFound()       → true if a token existed
+// result.affectedEntryCount() → number of entries carrying the token
+```
+
+### EU AI Act Art.12 retention enforcement (optional)
+
+A scheduled `LedgerRetentionJob` enforces a configurable operational window. Entries older than `quarkus.ledger.retention.operational-days` (default 180 — the EU AI Act minimum) are archived to `ledger_entry_archive` and removed from the live table. Archive-before-delete is on by default; set `archive-before-delete=false` to delete directly. Disabled by default.
+
+### Causal chaining
+
+`causedByEntryId` links any ledger entry to the entry that caused it across subjects. One-hop traversal:
+
+```java
+List<LedgerEntry> effects = repo.findCausedBy(triggerEntryId);
+```
+
+Recursive chain reconstruction is the caller's responsibility — one hop at a time keeps the SPI simple and the query cost explicit.
+
+### OTel trace auto-wiring
+
+`traceId` is automatically populated from the active OpenTelemetry span at persist time via `LedgerTraceListener`. No call-site code needed. When no OTel SDK is present or no span is active, `traceId` stays null — zero overhead, no configuration required.
 
 ---
 
@@ -230,6 +316,8 @@ All keys are under `quarkus.ledger`:
 | [Examples](docs/examples.md) | Complete worked example — order processing domain |
 | [Runnable Example — Order Processing](examples/order-processing/) | `mvn quarkus:dev` — order lifecycle with ledger, hash chain, attestations |
 | [Runnable Example — GDPR Art.22](examples/art22-decision-snapshot/) | `mvn quarkus:dev` — AI decision service with full Art.22 compliance supplement |
+| [Runnable Example — EU AI Act Art.12](examples/art12-compliance/) | `mvn quarkus:dev` — retention enforcement and audit query API |
+| [Runnable Example — Merkle Verification](examples/merkle-verification/) | `mvn quarkus:dev` — inclusion proofs and offline chain verification |
 | [Runnable Example — PROV-DM export](examples/prov-dm-export/) | `mvn quarkus:dev` — W3C PROV-DM JSON-LD export from audit entries |
 | [Runnable Example — Trust Score Routing](examples/trust-score-routing/) | `mvn quarkus:dev` — CDI routing signals after trust score computation |
 

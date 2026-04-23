@@ -27,6 +27,10 @@ The capabilities are grouped by concern. Each has an applicability rating:
 | Decision context snapshots | ★★★★★ | Supplement — explicit attach | GDPR Art.22 / EU AI Act Art.12 |
 | Privacy / pseudonymisation | ★★★★★ | `false` | GDPR Art.17 right to erasure |
 | Provenance tracking | ★★★★★ | Supplement — explicit attach | Data lineage, MLOps, governance |
+| W3C PROV-DM JSON-LD export | ★★★☆☆ | Always available | Regulatory interchange, auditor reports |
+| Causal chaining | ★★★☆☆ | Always available | Cross-subject causal traversal |
+| OTel trace auto-wiring | ★★★☆☆ | Auto when OTel present | Audit↔observability correlation |
+| EU AI Act Art.12 retention | ★★★★★ | `false` | Mandatory retention window enforcement |
 | Peer attestation | ★★★★☆ | `true` | Multi-party verification, AI agent trust |
 | Bayesian Beta trust scoring | ★★★☆☆ | `false` | Actor reliability confidence |
 | EigenTrust transitivity | ★★☆☆☆ | `false` | Decentralised agent mesh trust |
@@ -226,6 +230,46 @@ write site.
 
 ---
 
+### W3C PROV-DM JSON-LD Export ★★★☆☆
+
+`LedgerProvExportService` serialises any subject's complete audit trail as a [W3C PROV-DM](https://www.w3.org/TR/prov-dm/) JSON-LD document — the standard interchange format for provenance data. Each `LedgerEntry` maps to a PROV entity, activity, and agent; relationships (`wasGeneratedBy`, `used`, `wasAssociatedWith`, `wasDerivedFrom`) capture the causal structure.
+
+```java
+@Inject LedgerProvExportService provExport;
+String jsonLd = provExport.exportSubject(subjectId);
+```
+
+**Why enterprises need this:**
+Regulatory data lineage submissions, auditor-facing provenance reports, and interoperability with MLOps platforms that consume PROV-DM natively. The W3C standard means the output can be validated and consumed by external tools without bespoke parsing.
+
+**Enable when:** You need to export a subject's audit trail to an external system, produce a human-readable provenance report, or submit to a compliance framework that accepts PROV-DM. Auto-activated CDI bean — no configuration needed.
+
+---
+
+### Causal Chaining ★★★☆☆
+
+`causedByEntryId` links any ledger entry to the entry that triggered it — across subjects and consumers. This models the "was derived from" relationship in distributed workflows: a risk alert caused by a credit decision caused by an order placement.
+
+```java
+List<LedgerEntry> effects = repo.findCausedBy(triggerEntryId); // one hop
+```
+
+Recursive traversal is the caller's responsibility — each hop is explicit, which keeps query cost visible. The field is nullable and optional; attach it only at write sites where a causal predecessor is known.
+
+**Enable when:** Your domain has chained decisions where traceability matters — AI pipelines, multi-step approvals, event-driven workflows where one record triggers another. Set `entry.causedByEntryId = trigger.id` at the write site.
+
+---
+
+### OTel Trace Auto-Wiring ★★★☆☆
+
+`traceId` on every `LedgerEntry` is automatically populated from the active OpenTelemetry span at persist time, via a `@PrePersist` entity listener (`LedgerTraceListener`). No call-site changes required. If no OTel SDK is present, or no span is active, `traceId` stays null — zero overhead, zero configuration.
+
+This links every ledger write to its distributed trace, enabling correlation between audit records and observability data: you can jump from a trace in Jaeger to the exact ledger entry that was written during that span.
+
+**Enable when:** Always on if OTel is on the classpath. Override the provider SPI (`LedgerTraceIdProvider`) if you need to populate `traceId` from a source other than `Span.current()`.
+
+---
+
 ## Trust and Reputation
 
 ### Peer Attestation ★★★★☆
@@ -324,6 +368,24 @@ coordination (e.g. supply chain automation spanning multiple companies).
 direct trust scoring without transitivity does not scale to large agent meshes. The
 foundation (immutable log, peer attestation, Bayesian Beta) is being built correctly so that
 EigenTrust can be layered on without architectural rework.
+
+---
+
+### Trust Score Routing Signals ★★☆☆☆
+
+When trust scores are computed, downstream consumers — routing layers, task assignment engines, load balancers — need to know about changes without polling the database. `TrustScoreRoutingPublisher` fires CDI events after each `TrustScoreJob` run.
+
+Three payload types let each consumer choose its granularity:
+
+| Payload | Carries | When to use |
+|---|---|---|
+| `TrustScoreFullPayload` | All current `ActorTrustScore` rows | Rebuild a complete ranked list |
+| `TrustScoreDeltaPayload` | Only actors whose score changed | Update an incremental cache |
+| `TrustScoreComputedAt` | `Instant computedAt` + `int actorCount` | Lightweight "scores refreshed" signal |
+
+Consumers declare which granularity they want by the payload type they `@Observes`. Sync and async dispatch are per-consumer: `@Observes` runs inline; `@ObservesAsync` runs on the CDI managed executor. Note: in CDI 4.x, `event.fire()` delivers only to `@Observes` observers; `event.fireAsync()` is required separately for `@ObservesAsync`.
+
+**Enable when:** `quarkus.ledger.trust-score.routing-enabled=true`. Requires trust scoring to be enabled first. Most useful when consumers need to update routing decisions as actor reliability changes over time.
 
 ---
 
