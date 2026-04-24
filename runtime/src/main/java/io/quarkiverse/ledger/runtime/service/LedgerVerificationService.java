@@ -11,9 +11,9 @@ import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
-import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**
  * CDI bean exposing Merkle tree verification operations.
@@ -26,7 +26,7 @@ public class LedgerVerificationService {
     LedgerEntryRepository ledgerRepo;
 
     @Inject
-    @PersistenceUnit("qhorus")
+    @LedgerPersistenceUnit
     EntityManager em;
 
     /** Return the current Merkle tree root for a subject. */

@@ -25,6 +25,17 @@ public interface LedgerConfig {
     boolean enabled();
 
     /**
+     * Name of the datasource / persistence unit quarkus-ledger should use.
+     * Defaults to empty — uses the default (unnamed) persistence unit.
+     * Set to a named datasource when the application does not configure a default
+     * persistence unit, e.g. {@code quarkus.ledger.datasource=mydb}.
+     *
+     * @return the persistence unit name, or empty to use the default
+     */
+    @WithDefault("")
+    java.util.Optional<String> datasource();
+
+    /**
      * Hash chain tamper-evidence settings.
      *
      * @return the hash chain sub-configuration

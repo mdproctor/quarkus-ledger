@@ -20,6 +20,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
+import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider;
 import io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
@@ -64,6 +65,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     @Inject
+    @LedgerPersistenceUnit
     EntityManager em;
 
     @Inject

@@ -6,8 +6,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkus.arc.DefaultBean;
-import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**
  * CDI producer for {@link ActorIdentityProvider} and {@link DecisionContextSanitiser}.
@@ -29,7 +29,7 @@ public class LedgerPrivacyProducer {
     LedgerConfig config;
 
     @Inject
-    @PersistenceUnit("qhorus")
+    @LedgerPersistenceUnit
     EntityManager em;
 
     @Produces

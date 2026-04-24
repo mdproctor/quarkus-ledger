@@ -11,8 +11,8 @@ import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 import io.quarkiverse.ledger.runtime.model.ActorType;
+import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
-import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**
  * JPA / EntityManager implementation of {@link ActorTrustScoreRepository}.
@@ -25,7 +25,7 @@ import io.quarkus.hibernate.orm.PersistenceUnit;
 public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
 
     @Inject
-    @PersistenceUnit("qhorus")
+    @LedgerPersistenceUnit
     EntityManager em;
 
     /** {@inheritDoc} */

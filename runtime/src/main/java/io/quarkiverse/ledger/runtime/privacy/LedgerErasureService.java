@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.ActorIdentity;
-import io.quarkus.hibernate.orm.PersistenceUnit;
+import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 
 /**
  * CDI bean for processing GDPR Art.17 erasure requests.
@@ -25,7 +25,7 @@ public class LedgerErasureService {
     ActorIdentityProvider actorIdentityProvider;
 
     @Inject
-    @PersistenceUnit("qhorus")
+    @LedgerPersistenceUnit
     EntityManager em;
 
     /**

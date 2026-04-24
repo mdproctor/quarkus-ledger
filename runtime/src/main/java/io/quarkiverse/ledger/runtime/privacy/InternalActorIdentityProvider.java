@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.persistence.EntityManager;
 
 import io.quarkiverse.ledger.runtime.model.ActorIdentity;
+import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 
 /**
  * Built-in token-based actor identity provider backed by the {@code actor_identity} table.
@@ -21,7 +22,7 @@ public class InternalActorIdentityProvider implements ActorIdentityProvider {
 
     private final EntityManager em;
 
-    public InternalActorIdentityProvider(final EntityManager em) {
+    public InternalActorIdentityProvider(@LedgerPersistenceUnit final EntityManager em) {
         this.em = em;
     }
 
