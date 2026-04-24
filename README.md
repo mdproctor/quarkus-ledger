@@ -292,6 +292,7 @@ All keys are under `quarkus.ledger`:
 | Key | Default | Description |
 |---|---|---|
 | `quarkus.ledger.enabled` | `true` | Master switch — disables all ledger writes when false |
+| `quarkus.ledger.datasource` | _(empty)_ | Named persistence unit to use. Empty = default datasource. Set when your app has only a named datasource (e.g. `quarkus.ledger.datasource=mydb`) |
 | `quarkus.ledger.hash-chain.enabled` | `true` | Compute and store SHA-256 digests |
 | `quarkus.ledger.decision-context.enabled` | `true` | Gate: populate `ComplianceSupplement.decisionContext` |
 | `quarkus.ledger.evidence.enabled` | `false` | Gate: populate `ComplianceSupplement.evidence` |

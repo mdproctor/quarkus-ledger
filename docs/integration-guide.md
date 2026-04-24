@@ -330,6 +330,9 @@ Add to `application.properties`:
 # Master switch (default: true)
 quarkus.ledger.enabled=true
 
+# Named datasource — set when your app has no default datasource (optional)
+# quarkus.ledger.datasource=mydb
+
 # Merkle leaf hash computation (RFC 9162 domain separation) — enables tamper detection (default: true)
 quarkus.ledger.hash-chain.enabled=true
 
