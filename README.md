@@ -201,7 +201,7 @@ Reference implementations:
 <dependency>
   <groupId>io.quarkiverse.ledger</groupId>
   <artifactId>quarkus-ledger</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -210,7 +210,7 @@ Reference implementations:
 <dependency>
   <groupId>io.quarkiverse.ledger</groupId>
   <artifactId>quarkus-ledger-deployment</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
 

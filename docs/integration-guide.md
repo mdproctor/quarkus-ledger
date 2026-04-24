@@ -27,7 +27,7 @@ ledger_entry (base — created by quarkus-ledger V1000)
 <dependency>
   <groupId>io.quarkiverse.ledger</groupId>
   <artifactId>quarkus-ledger</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -37,7 +37,7 @@ ledger_entry (base — created by quarkus-ledger V1000)
 <dependency>
   <groupId>io.quarkiverse.ledger</groupId>
   <artifactId>quarkus-ledger-deployment</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
 
