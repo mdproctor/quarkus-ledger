@@ -123,7 +123,9 @@
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/otel-trace-wiring/pom.xml)",
       "Bash(xargs kill *)",
       "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/eigentrust-mesh/pom.xml)",
-      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/otel-trace-wiring/pom.xml -Dtest=OtelTraceWiringIT#postEvent_missingBody_returns400OrSimilar)"
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 26\\) mvn test -f /Users/mdproctor/claude/quarkus-ledger/examples/otel-trace-wiring/pom.xml -Dtest=OtelTraceWiringIT#postEvent_missingBody_returns400OrSimilar)",
+      "Bash(gh api *)",
+      "Bash(gh run *)"
     ]
   }
 }
