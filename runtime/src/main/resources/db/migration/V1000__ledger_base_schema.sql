@@ -53,7 +53,7 @@ CREATE TABLE ledger_attestation (
     attestor_role    VARCHAR(100),
     verdict          VARCHAR(20)     NOT NULL,
     evidence         TEXT,
-    confidence       DOUBLE          NOT NULL,
+    confidence       DOUBLE PRECISION          NOT NULL,
     occurred_at      TIMESTAMP       NOT NULL,
     CONSTRAINT pk_ledger_attestation PRIMARY KEY (id),
     CONSTRAINT fk_attestation_entry FOREIGN KEY (ledger_entry_id) REFERENCES ledger_entry (id)

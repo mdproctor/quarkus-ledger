@@ -49,7 +49,7 @@ CREATE TABLE ledger_supplement_compliance (
     -- GDPR Art.22 / EU AI Act Art.12
     decision_context         TEXT,
     algorithm_ref            VARCHAR(500),
-    confidence_score         DOUBLE,
+    confidence_score         DOUBLE PRECISION,
     contestation_uri         VARCHAR(2000),
     human_override_available BOOLEAN,
     CONSTRAINT pk_ledger_supplement_compliance PRIMARY KEY (id),
