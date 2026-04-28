@@ -98,7 +98,7 @@ The Merkle Mountain Range (stored frontier) replaces the old linear chain.
 **`traceId` and `causedByEntryId` are core fields**
 Both OTel trace linking and causal relationships are structural — present on every entry where
 relevant. They live on `LedgerEntry` directly (not in supplements). `traceId` is auto-populated
-from the active OTel span at persist time via `LedgerTraceListener`. `findCausedBy(UUID entryId)`
+from the active OTel span at persist time via the `LedgerEntryEnricher` pipeline (`LedgerTraceListener`). `findCausedBy(UUID entryId)`
 traverses causal chains one hop at a time. The test for core vs supplement: is the field
 relevant to every consumer, every entry, every time? If yes → core. If no → supplement.
 
@@ -146,6 +146,9 @@ quarkus-ledger/
 │       │   ├── ActorTrustScoreRepository.java     — SPI
 │       │   └── jpa/                              — JPA implementations (EntityManager-based)
 │       └── service/
+│           ├── LedgerEntryEnricher.java         — SPI: pluggable @PrePersist enrichment pipeline
+│           ├── TraceIdEnricher.java             — auto-populates traceId from active OTel span
+│           ├── LedgerTraceListener.java         — @EntityListeners runner: iterates LedgerEntryEnricher pipeline, non-fatal
 │           ├── LedgerMerkleTree.java        — Merkle Mountain Range algorithm (pure static)
 │           ├── LedgerVerificationService.java — treeRoot / inclusionProof / verify (CDI bean)
 │           ├── LedgerMerklePublisher.java   — Ed25519 signed tlog-checkpoint (opt-in CDI bean)
