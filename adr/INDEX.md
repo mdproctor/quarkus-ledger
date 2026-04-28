@@ -8,3 +8,4 @@
 | [0004](0004-llm-agent-identity-model.md) | LLM agent identity model: versioned persona names | Accepted | 2026-04-21 |
 | [0005](0005-ledger-entry-enricher-spi.md) | LedgerEntry Enricher SPI | Accepted | 2026-04-28 |
 | [0006](0006-actor-trust-score-discriminator-model.md) | ActorTrustScore discriminator model | Accepted | 2026-04-28 |
+| [0007](0007-decay-function-spi.md) | DecayFunction SPI extraction | Accepted | 2026-04-28 |
