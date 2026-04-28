@@ -134,7 +134,7 @@ quarkus-ledger/
 │       ├── model/
 │       │   ├── LedgerEntry.java             — abstract base entity (JOINED inheritance)
 │       │   ├── LedgerAttestation.java       — peer attestation entity
-│       │   ├── ActorTrustScore.java         — nightly-computed reputation entity
+│       │   ├── ActorTrustScore.java         — trust score entity; discriminator model (GLOBAL|CAPABILITY|DIMENSION) × scope_key
 │       │   ├── LedgerMerkleFrontier.java    — Merkle frontier node entity (log₂(N) rows per subject)
 │       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION
 │       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM

@@ -57,7 +57,7 @@ from base entries — trust scoring works across all consumers.
 |---|---|---|
 | `ledger_entry` | V1000 | Base audit record (discriminator column: `dtype`) |
 | `ledger_attestation` | V1000 | Peer verdicts — FK to `ledger_entry.id` |
-| `actor_trust_score` | V1001 | Nightly Bayesian Beta trust scores per actor |
+| `actor_trust_score` | V1001 | Trust scores — discriminator model `(actor_id, score_type, scope_key)` |
 | `ledger_supplement_compliance` | V1002 | ComplianceSupplement joined table |
 | `ledger_supplement_provenance` | V1002 | ProvenanceSupplement joined table |
 | `ledger_entry_archive` | V1003 | Archive records before retention deletion |
@@ -445,8 +445,12 @@ decisions accumulate into a Beta distribution: `α` for positive verdicts (SOUND
 `weight = 2^(-ageInDays / decayHalfLifeDays)` using the attestation's own timestamp.
 Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
 
-`ActorTrustScore` stores `trust_score`, `alpha_value`, `beta_value`, diagnostic
-counters, and `global_trust_score` (EigenTrust). `TrustScoreJob` runs nightly when enabled.
+`ActorTrustScore` uses a discriminator model keyed by `(actor_id, score_type, scope_key)`.
+`score_type` is `GLOBAL` (classic cross-decision Beta score), `CAPABILITY` (scoped to a
+capability tag — wired by #61), or `DIMENSION` (scoped to a trust dimension — wired by #62).
+`scope_key` is null for GLOBAL rows; the unique constraint uses `NULLS NOT DISTINCT` to
+enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows; capability and dimension
+computation is added by #61 and #62 respectively.
 
 **EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
