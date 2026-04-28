@@ -23,6 +23,13 @@ import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
  * Upsert is a find-then-update to remain compatible with H2 and PostgreSQL without
  * database-specific SQL. The unique constraint (actor_id, score_type, scope_key) with
  * NULLS NOT DISTINCT prevents duplicate GLOBAL rows at the database level.
+ *
+ * <p>
+ * Upsert assumption: each {@code (actorId, scoreType, scopeKey)} triple is upserted at most
+ * once per transaction. Calling {@code upsert()} twice for the same triple in a single
+ * transaction may produce a duplicate row if Hibernate does not flush before the second
+ * find. Under the default {@code FlushModeType.AUTO}, named queries trigger a flush, so
+ * this is safe in practice. Do not disable auto-flush in a context that calls upsert.
  */
 @ApplicationScoped
 public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
@@ -44,6 +51,11 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
     public Optional<ActorTrustScore> findByActorIdAndTypeAndKey(
             final String actorId, final ScoreType scoreType, final String scopeKey) {
         if (scopeKey == null) {
+            if (scoreType != ScoreType.GLOBAL) {
+                throw new IllegalArgumentException(
+                        "scopeKey must not be null for score type " + scoreType
+                                + " — null scopeKey is only valid for GLOBAL scores");
+            }
             return em.createNamedQuery("ActorTrustScore.findGlobalByActorId", ActorTrustScore.class)
                     .setParameter("actorId", actorId)
                     .setParameter("scoreType", scoreType)

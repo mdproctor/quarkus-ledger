@@ -22,7 +22,7 @@ CREATE TABLE actor_trust_score (
     actor_id             VARCHAR(255)     NOT NULL,
     score_type           VARCHAR(20)      NOT NULL DEFAULT 'GLOBAL',
     scope_key            VARCHAR(255),
-    actor_type           VARCHAR(20),
+    actor_type           VARCHAR(20),          -- Nullable: populated by TrustScoreJob on first upsert; may be absent for actors with no EVENT entries
     trust_score          DOUBLE PRECISION NOT NULL,
     global_trust_score   DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     alpha_value          DOUBLE PRECISION NOT NULL,
