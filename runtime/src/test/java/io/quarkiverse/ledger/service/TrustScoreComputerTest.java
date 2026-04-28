@@ -17,6 +17,7 @@ import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.runtime.service.DecayFunction;
 import io.quarkiverse.ledger.runtime.service.TrustScoreComputer;
 
 /**
@@ -454,6 +455,84 @@ class TrustScoreComputerTest {
                 List.of(entry2), Map.of(entry2.id, List.of(full)), now);
 
         assertThat(scoreOver.trustScore()).isCloseTo(scoreFull.trustScore(), within(0.001));
+    }
+
+    // ── Valence multiplier ────────────────────────────────────────────────────
+
+    @Test
+    void flaggedWithMultiplier_decaysSlowerThanSound() {
+        // FLAGGED with multiplier=0.5 contributes half the base recency weight to β
+        final DecayFunction halfPersistence = (age, verdict) -> {
+            final double base = Math.pow(2.0, -(double) age / 90);
+            return verdict == AttestationVerdict.FLAGGED || verdict == AttestationVerdict.CHALLENGED
+                    ? base * 0.5
+                    : base;
+        };
+        final TrustScoreComputer computer = new TrustScoreComputer(halfPersistence);
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation flagged = attestation(entry.id, AttestationVerdict.FLAGGED, 1.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(flagged)), now);
+
+        // Without multiplier: β = 1 + 1.0 = 2.0, score = 0.333
+        // With multiplier=0.5: β = 1 + 0.5 = 1.5, score = 1/2.5 = 0.4
+        assertThat(score.trustScore()).isCloseTo(1.0 / 2.5, within(0.001));
+        assertThat(score.beta()).isCloseTo(1.5, within(0.001));
+    }
+
+    @Test
+    void multiplierOnePointZero_matchesPreviousUnweightedBehaviour() {
+        // At multiplier=1.0, FLAGGED behaves identically to the pre-#55 calculation
+        final DecayFunction noAsymmetry = (age, verdict) -> Math.pow(2.0, -(double) age / 90);
+        final TrustScoreComputer withSpi = new TrustScoreComputer(noAsymmetry);
+        final TrustScoreComputer withInt = new TrustScoreComputer(90);
+
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation flagged = attestation(entry.id, AttestationVerdict.FLAGGED, 1.0);
+        final TrustScoreComputer.ActorScore spiScore = withSpi.compute(
+                List.of(entry), Map.of(entry.id, List.of(flagged)), now);
+
+        final TestLedgerEntry entry2 = decision("actor2", now);
+        final LedgerAttestation flagged2 = attestation(entry2.id, AttestationVerdict.FLAGGED, 1.0);
+        final TrustScoreComputer.ActorScore intScore = withInt.compute(
+                List.of(entry2), Map.of(entry2.id, List.of(flagged2)), now);
+
+        assertThat(spiScore.trustScore()).isCloseTo(intScore.trustScore(), within(0.001));
+    }
+
+    @Test
+    void challengedVerdict_usesValenceMultiplier() {
+        final DecayFunction halfPersistence = (age, verdict) -> {
+            final double base = Math.pow(2.0, -(double) age / 90);
+            return verdict == AttestationVerdict.FLAGGED || verdict == AttestationVerdict.CHALLENGED
+                    ? base * 0.5
+                    : base;
+        };
+        final TrustScoreComputer computer = new TrustScoreComputer(halfPersistence);
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation challenged = attestation(entry.id, AttestationVerdict.CHALLENGED, 1.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(challenged)), now);
+
+        // Same as FLAGGED with 0.5 multiplier: β = 1.5, score = 0.4
+        assertThat(score.beta()).isCloseTo(1.5, within(0.001));
+    }
+
+    @Test
+    void soundAndEndorsed_unaffectedByValenceMultiplier() {
+        // SOUND always uses multiplier=1.0 regardless of DecayFunction implementation
+        final DecayFunction alwaysHalf = (age, verdict) -> 0.5; // flat weight for all
+        final TrustScoreComputer computer = new TrustScoreComputer(alwaysHalf);
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation sound = attestation(entry.id, AttestationVerdict.SOUND, 1.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(sound)), now);
+
+        // weight=0.5 → α = 1 + 0.5 = 1.5, score = 1.5/2.5 = 0.6
+        assertThat(score.trustScore()).isCloseTo(0.6, within(0.001));
     }
 
     // ── Default half-life ─────────────────────────────────────────────────────
