@@ -397,6 +397,51 @@ class TrustScoreComputerTest {
     }
 
     @Test
+    void confidence_scales_beta_contribution() {
+        // actor-full: FLAGGED confidence=1.0 → β += 1.0 → score = 1/3 ≈ 0.333
+        // actor-half: FLAGGED confidence=0.5 → β += 0.5 → score = 1/2.5 = 0.4
+        // actor-full should score lower (more negative contribution)
+        final TestLedgerEntry full = decision("actor-full", now);
+        final TestLedgerEntry half = decision("actor-half", now);
+        final LedgerAttestation att1 = attestation(full.id, AttestationVerdict.FLAGGED, 1.0);
+        final LedgerAttestation att2 = attestation(half.id, AttestationVerdict.FLAGGED, 0.5);
+
+        final TrustScoreComputer.ActorScore scoreA = computer.compute(
+                List.of(full), Map.of(full.id, List.of(att1)), now);
+        final TrustScoreComputer.ActorScore scoreB = computer.compute(
+                List.of(half), Map.of(half.id, List.of(att2)), now);
+
+        assertThat(scoreA.trustScore()).isLessThan(scoreB.trustScore());
+    }
+
+    @Test
+    void confidence_negative_clamped_to_zero() {
+        // confidence=-1.0 → clamp → 0.0 → weight=0 → prior only → score=0.5
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation att = attestation(entry.id, AttestationVerdict.FLAGGED, -1.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(att)), now);
+
+        assertThat(score.trustScore()).isCloseTo(0.5, within(0.001));
+    }
+
+    @Test
+    void zero_confidence_negative_does_not_overturn() {
+        // confidence=0.0 → weight=0 → β unchanged → overturnedCount must stay 0
+        // attestationNegative is a raw verdict count — it still records the verdict
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation att = attestation(entry.id, AttestationVerdict.FLAGGED, 0.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(att)), now);
+
+        assertThat(score.overturnedCount()).isEqualTo(0);
+        assertThat(score.attestationNegative()).isEqualTo(1);
+        assertThat(score.trustScore()).isCloseTo(0.5, within(0.001));
+    }
+
+    @Test
     void confidence_above_one_is_clamped_to_one() {
         final TestLedgerEntry entry = decision("actor", now);
         final LedgerAttestation over = attestation(entry.id, AttestationVerdict.SOUND, 2.0);
