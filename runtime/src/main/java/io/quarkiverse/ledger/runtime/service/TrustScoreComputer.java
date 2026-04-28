@@ -18,8 +18,12 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  * <p>
  * Algorithm: start with prior Beta(1, 1). For each attestation across all of an actor's
  * decisions, compute {@code recencyWeight = 2^(-ageInDays / halfLifeDays)} using the
- * attestation's own {@code occurredAt}. SOUND/ENDORSED increments α; FLAGGED/CHALLENGED
- * increments β. Score = α/(α+β), clamped to [0.0, 1.0].
+ * attestation's own {@code occurredAt}.
+ * SOUND/ENDORSED increments α by {@code recencyWeight × confidence};
+ * FLAGGED/CHALLENGED increments β by {@code recencyWeight × confidence}.
+ * Confidence is clamped to [0.0, 1.0]. confidence=0.0 contributes nothing to the
+ * score; confidence=1.0 is equivalent to the previous unweighted behaviour.
+ * Score = α/(α+β), clamped to [0.0, 1.0].
  *
  * <p>
  * Properties: no history → 0.5 (maximum uncertainty). Unattested decisions contribute
@@ -91,13 +95,15 @@ public final class TrustScoreComputer {
                 final long ageInDays = java.time.Duration.between(attestationTime, now).toDays();
                 final double recencyWeight = Math.pow(2.0, -(double) ageInDays / halfLifeDays);
 
+                final double weight = recencyWeight * Math.max(0.0, Math.min(1.0, attestation.confidence));
+
                 if (attestation.verdict == AttestationVerdict.SOUND
                         || attestation.verdict == AttestationVerdict.ENDORSED) {
-                    alpha += recencyWeight;
+                    alpha += weight;
                     totalPositive++;
                 } else if (attestation.verdict == AttestationVerdict.FLAGGED
                         || attestation.verdict == AttestationVerdict.CHALLENGED) {
-                    beta += recencyWeight;
+                    beta += weight;
                     totalNegative++;
                     hasNegative = true;
                 }

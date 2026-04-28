@@ -65,8 +65,22 @@ class TrustScoreComputerTest {
         a.attestorId = "peer";
         a.attestorType = ActorType.HUMAN;
         a.verdict = verdict;
-        a.confidence = 0.9;
+        a.confidence = 1.0;
         a.occurredAt = occurredAt;
+        return a;
+    }
+
+    /** Attestation at occurredAt=now with explicit confidence for confidence-weighting tests. */
+    private LedgerAttestation attestation(final UUID entryId, final AttestationVerdict verdict,
+            final double confidence) {
+        final LedgerAttestation a = new LedgerAttestation();
+        a.id = UUID.randomUUID();
+        a.ledgerEntryId = entryId;
+        a.attestorId = "peer";
+        a.attestorType = ActorType.HUMAN;
+        a.verdict = verdict;
+        a.confidence = confidence;
+        a.occurredAt = now;
         return a;
     }
 
@@ -336,6 +350,65 @@ class TrustScoreComputerTest {
 
         assertThat(score.trustScore()).isGreaterThanOrEqualTo(0.0);
         assertThat(score.trustScore()).isLessThanOrEqualTo(1.0);
+    }
+
+    // ── Confidence weighting ──────────────────────────────────────────────────
+
+    @Test
+    void confidence_scales_alpha_contribution() {
+        // actor-full: confidence=1.0 → full recency weight
+        // actor-half: confidence=0.5 → half recency weight
+        // actor-full must score higher
+        final TestLedgerEntry full = decision("actor-full", now);
+        final TestLedgerEntry half = decision("actor-half", now);
+        final LedgerAttestation att1 = attestation(full.id, AttestationVerdict.SOUND, 1.0);
+        final LedgerAttestation att2 = attestation(half.id, AttestationVerdict.SOUND, 0.5);
+
+        final TrustScoreComputer.ActorScore scoreA = computer.compute(
+                List.of(full), Map.of(full.id, List.of(att1)), now);
+        final TrustScoreComputer.ActorScore scoreB = computer.compute(
+                List.of(half), Map.of(half.id, List.of(att2)), now);
+
+        assertThat(scoreA.trustScore()).isGreaterThan(scoreB.trustScore());
+    }
+
+    @Test
+    void confidence_zero_contributes_nothing() {
+        // confidence=0.0 → weight=0.0 → prior only → α=1, β=1 → score=0.5
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation att = attestation(entry.id, AttestationVerdict.SOUND, 0.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(att)), now);
+
+        assertThat(score.trustScore()).isCloseTo(0.5, within(0.001));
+    }
+
+    @Test
+    void confidence_one_matches_previous_unweighted_behaviour() {
+        // Prior Beta(1,1) + 1 positive at full weight → α=2, β=1 → 2/3 ≈ 0.667
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation att = attestation(entry.id, AttestationVerdict.SOUND, 1.0);
+
+        final TrustScoreComputer.ActorScore score = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(att)), now);
+
+        assertThat(score.trustScore()).isCloseTo(2.0 / 3.0, within(0.001));
+    }
+
+    @Test
+    void confidence_above_one_is_clamped_to_one() {
+        final TestLedgerEntry entry = decision("actor", now);
+        final LedgerAttestation over = attestation(entry.id, AttestationVerdict.SOUND, 2.0);
+        final LedgerAttestation full = attestation(entry.id, AttestationVerdict.SOUND, 1.0);
+
+        final TrustScoreComputer.ActorScore scoreOver = computer.compute(
+                List.of(entry), Map.of(entry.id, List.of(over)), now);
+        final TestLedgerEntry entry2 = decision("actor2", now);
+        final TrustScoreComputer.ActorScore scoreFull = computer.compute(
+                List.of(entry2), Map.of(entry2.id, List.of(full)), now);
+
+        assertThat(scoreOver.trustScore()).isCloseTo(scoreFull.trustScore(), within(0.001));
     }
 
     // ── Default half-life ─────────────────────────────────────────────────────
