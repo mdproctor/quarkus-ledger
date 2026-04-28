@@ -156,7 +156,10 @@ quarkus-ledger/
 │           │   ├── InclusionProof.java       — Merkle inclusion proof value type
 │           │   └── ProofStep.java            — single sibling node in a proof path
 │           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
-│           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (pure Java)
+│           ├── DecayFunction.java           — SPI: attestation decay weight (ageInDays, verdict) → weight
+│           ├── ExponentialDecayFunction.java — @DefaultBean: 2^(-age/halfLife) × valence multiplier (FLAGGED slower decay)
+│           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring; delegates decay to DecayFunction (pure Java)
+│           ├── TrustGateService.java        — CDI bean: trust threshold enforcement (meetsThreshold, currentScore)
 │           ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
 │           ├── TrustScoreJob.java           — @Scheduled nightly recomputation
 │           └── routing/
@@ -177,7 +180,7 @@ quarkus-ledger/
 │           └── LedgerSupplementSerializer.java — JSON serialiser for supplementJson
 │   └── src/main/resources/db/migration/
 │       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables
-│       ├── V1001__actor_trust_score.sql     — actor_trust_score table (trust_score + global_trust_score)
+│       ├── V1001__actor_trust_score.sql     — actor_trust_score discriminator model (UUID PK, score_type GLOBAL|CAPABILITY|DIMENSION, scope_key, NULLS NOT DISTINCT)
 │       ├── V1002__ledger_supplement.sql     — supplement tables + drops moved columns
 │       ├── V1003__ledger_entry_archive.sql  — ledger_entry_archive table
 │       └── V1004__actor_identity.sql        — actor_identity pseudonymisation table

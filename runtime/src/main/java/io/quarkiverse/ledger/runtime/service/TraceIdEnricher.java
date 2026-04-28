@@ -19,6 +19,10 @@ public class TraceIdEnricher implements LedgerEntryEnricher {
         this.traceIdProvider = traceIdProvider;
     }
 
+    /**
+     * Idempotent — if {@code traceId} is already set, does nothing.
+     * Safe to call multiple times on the same entry under retried transactions.
+     */
     @Override
     public void enrich(final LedgerEntry entry) {
         if (entry.traceId != null) {

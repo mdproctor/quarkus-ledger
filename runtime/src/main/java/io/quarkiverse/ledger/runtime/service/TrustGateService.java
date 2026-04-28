@@ -55,10 +55,10 @@ public class TrustGateService {
      * Phase 2: will query {@code ScoreType.CAPABILITY} for {@code capabilityTag} before
      * falling back to global.
      *
-     * @param actorId       the actor identity string
+     * @param actorId the actor identity string
      * @param capabilityTag the capability tag (e.g. {@code "security-review"}) — ignored in Phase 1;
-     *                      Phase 2 implementer must add a null guard before using this value
-     * @param minTrust      minimum trust score in [0.0, 1.0]
+     *        Phase 2 implementer must add a null guard before using this value
+     * @param minTrust minimum trust score in [0.0, 1.0]
      * @return {@code true} if the actor meets the threshold for this capability
      */
     public boolean meetsThreshold(final String actorId, final String capabilityTag,
