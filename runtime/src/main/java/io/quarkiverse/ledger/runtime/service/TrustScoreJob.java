@@ -107,7 +107,8 @@ public class TrustScoreJob {
 
             final TrustScoreComputer.ActorScore score = computer.compute(decisions, attestationsByEntry, now);
 
-            trustRepo.upsert(actorId, actorType, score.trustScore(),
+            trustRepo.upsert(actorId, ActorTrustScore.ScoreType.GLOBAL, null,
+                    actorType, score.trustScore(),
                     score.decisionCount(), score.overturnedCount(),
                     score.alpha(), score.beta(),
                     score.attestationPositive(), score.attestationNegative(), now);

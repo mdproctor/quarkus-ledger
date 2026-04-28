@@ -3,6 +3,7 @@ package io.quarkiverse.ledger.runtime.repository.jpa;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -10,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
 import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
@@ -18,8 +20,9 @@ import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
  * JPA / EntityManager implementation of {@link ActorTrustScoreRepository}.
  *
  * <p>
- * Upsert is implemented as a find-then-update to remain compatible with both H2 (dev/test)
- * and PostgreSQL (production) without requiring database-specific SQL syntax.
+ * Upsert is a find-then-update to remain compatible with H2 and PostgreSQL without
+ * database-specific SQL. The unique constraint (actor_id, score_type, scope_key) with
+ * NULLS NOT DISTINCT prevents duplicate GLOBAL rows at the database level.
  */
 @ApplicationScoped
 public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
@@ -28,25 +31,58 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
     @LedgerPersistenceUnit
     EntityManager em;
 
-    /** {@inheritDoc} */
     @Override
     public Optional<ActorTrustScore> findByActorId(final String actorId) {
-        return Optional.ofNullable(em.find(ActorTrustScore.class, actorId));
+        return em.createNamedQuery("ActorTrustScore.findGlobalByActorId", ActorTrustScore.class)
+                .setParameter("actorId", actorId)
+                .setParameter("scoreType", ScoreType.GLOBAL)
+                .getResultStream()
+                .findFirst();
     }
 
-    /** {@inheritDoc} */
+    @Override
+    public Optional<ActorTrustScore> findByActorIdAndTypeAndKey(
+            final String actorId, final ScoreType scoreType, final String scopeKey) {
+        if (scopeKey == null) {
+            return em.createNamedQuery("ActorTrustScore.findGlobalByActorId", ActorTrustScore.class)
+                    .setParameter("actorId", actorId)
+                    .setParameter("scoreType", scoreType)
+                    .getResultStream()
+                    .findFirst();
+        }
+        return em.createNamedQuery("ActorTrustScore.findByActorIdAndTypeAndKey", ActorTrustScore.class)
+                .setParameter("actorId", actorId)
+                .setParameter("scoreType", scoreType)
+                .setParameter("scopeKey", scopeKey)
+                .getResultStream()
+                .findFirst();
+    }
+
+    @Override
+    public List<ActorTrustScore> findByActorIdAndScoreType(
+            final String actorId, final ScoreType scoreType) {
+        return em.createNamedQuery("ActorTrustScore.findByActorIdAndScoreType", ActorTrustScore.class)
+                .setParameter("actorId", actorId)
+                .setParameter("scoreType", scoreType)
+                .getResultList();
+    }
+
     @Override
     @Transactional
-    public void upsert(final String actorId, final ActorType actorType, final double trustScore,
+    public void upsert(final String actorId, final ScoreType scoreType, final String scopeKey,
+            final ActorType actorType, final double trustScore,
             final int decisionCount, final int overturnedCount,
             final double alpha, final double beta,
             final int attestationPositive, final int attestationNegative,
             final Instant lastComputedAt) {
 
-        ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        ActorTrustScore score = findByActorIdAndTypeAndKey(actorId, scoreType, scopeKey).orElse(null);
         if (score == null) {
             score = new ActorTrustScore();
+            score.id = UUID.randomUUID();
             score.actorId = actorId;
+            score.scoreType = scoreType;
+            score.scopeKey = scopeKey;
         }
         score.actorType = actorType;
         score.trustScore = trustScore;
@@ -60,18 +96,15 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
         em.merge(score);
     }
 
-    /** {@inheritDoc} */
     @Override
     @Transactional
     public void updateGlobalTrustScore(final String actorId, final double globalTrustScore) {
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
-        if (score != null) {
+        findByActorId(actorId).ifPresent(score -> {
             score.globalTrustScore = globalTrustScore;
             em.merge(score);
-        }
+        });
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<ActorTrustScore> findAll() {
         return em.createNamedQuery("ActorTrustScore.findAll", ActorTrustScore.class)
