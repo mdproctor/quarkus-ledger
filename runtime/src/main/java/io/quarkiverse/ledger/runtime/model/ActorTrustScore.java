@@ -46,6 +46,7 @@ public class ActorTrustScore {
     }
 
     @Id
+    @Column(name = "id", nullable = false)
     public UUID id;
 
     @Column(name = "actor_id", nullable = false)
