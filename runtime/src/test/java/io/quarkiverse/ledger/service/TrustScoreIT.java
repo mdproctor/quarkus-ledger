@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
+import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
 import io.quarkus.test.junit.QuarkusTest;
@@ -47,6 +48,9 @@ class TrustScoreIT {
     LedgerEntryRepository repo;
 
     @Inject
+    ActorTrustScoreRepository trustRepo;
+
+    @Inject
     EntityManager em;
 
     // ── Happy path: no history → neutral score ────────────────────────────────
@@ -61,7 +65,7 @@ class TrustScoreIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        final ActorTrustScore score = trustRepo.findByActorId(actorId).orElse(null);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isCloseTo(0.5, within(0.01));
         assertThat(score.alpha).isCloseTo(1.0, within(0.01));
@@ -83,7 +87,7 @@ class TrustScoreIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        final ActorTrustScore score = trustRepo.findByActorId(actorId).orElse(null);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isGreaterThan(0.75);
         assertThat(score.alpha).isGreaterThan(score.beta);
@@ -104,7 +108,7 @@ class TrustScoreIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        final ActorTrustScore score = trustRepo.findByActorId(actorId).orElse(null);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isLessThan(0.4);
         assertThat(score.beta).isGreaterThan(score.alpha);
@@ -126,7 +130,7 @@ class TrustScoreIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        final ActorTrustScore score = trustRepo.findByActorId(actorId).orElse(null);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isCloseTo(2.0 / 3.0, within(0.02));
         assertThat(score.alpha).isCloseTo(2.0, within(0.05));
@@ -151,7 +155,7 @@ class TrustScoreIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        final ActorTrustScore score = trustRepo.findByActorId(actorId).orElse(null);
         assertThat(score).isNotNull();
         // α ≈ 2.0, β ≈ 1.25 → score ≈ 2.0/3.25 ≈ 0.615
         assertThat(score.trustScore).isGreaterThan(0.5);

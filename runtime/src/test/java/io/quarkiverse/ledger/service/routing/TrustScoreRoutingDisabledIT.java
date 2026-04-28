@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
+import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
 import io.quarkiverse.ledger.service.LedgerTestFixtures;
@@ -38,6 +39,9 @@ class TrustScoreRoutingDisabledIT {
 
     @Inject
     LedgerEntryRepository repo;
+
+    @Inject
+    ActorTrustScoreRepository trustRepo;
 
     @Inject
     EntityManager em;
@@ -73,7 +77,7 @@ class TrustScoreRoutingDisabledIT {
 
         trustScoreJob.runComputation();
 
-        final ActorTrustScore score = em.find(ActorTrustScore.class, actorId);
+        final ActorTrustScore score = trustRepo.findByActorId(actorId).orElse(null);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isGreaterThan(0.5);
     }
