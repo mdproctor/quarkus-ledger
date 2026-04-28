@@ -105,7 +105,9 @@ public final class TrustScoreComputer {
                         || attestation.verdict == AttestationVerdict.CHALLENGED) {
                     beta += weight;
                     totalNegative++;
-                    hasNegative = true;
+                    if (weight > 0.0) {
+                        hasNegative = true;
+                    }
                 }
             }
             if (hasNegative) {
