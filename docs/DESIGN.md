@@ -430,7 +430,7 @@ These are excluded by design — consumers implement their own:
 | REST endpoints | Each domain has its own path structure, auth model, and response shape |
 | MCP tools | Domain-specific; Qhorus adds `list_events`, Tarkus has its own REST surface |
 | CDI capture observers | Each consumer wires its own service to its own domain events |
-| OTel trace ID auto-wiring | ✅ Done — `LedgerTraceListener` auto-populates `traceId` (formerly `correlationId`) from the active OTel span at persist time. Closes #30, #31. |
+| OTel trace ID auto-wiring | ✅ Done — `TraceIdEnricher` auto-populates `traceId` from the active OTel span via the `LedgerEntryEnricher` pipeline (`LedgerTraceListener`). Closes #30, #31, #67. |
 | Event replay / CQRS projections | The ledger is an append-only audit record, not a source of truth for domain state |
 
 ---
@@ -459,7 +459,7 @@ qualify as a Quarkus extension under Quarkiverse criteria; SmallRye is under con
 as an alternative. Structurally ready (192 tests, full docs, CI). Parked pending target
 decision — see `IDEAS.md` (2026-04-23 entry).
 
-**OTel trace ID auto-wiring** — ✅ Done. `correlationId` renamed to `traceId`. `LedgerTraceListener` auto-populates `traceId` from the active OTel span at persist time. Closed #30, #31.
+**OTel trace ID auto-wiring** — ✅ Done. `LedgerTraceListener` runs the `LedgerEntryEnricher` pipeline at `@PrePersist`. `TraceIdEnricher` populates `traceId` from the active OTel span. New enrichers register by implementing `LedgerEntryEnricher` as a CDI bean — used by #59 (ProvenanceCaptureEnricher). Closed #30, #31, #67.
 
 ### Longer-term (depends on CaseHub)
 
@@ -494,6 +494,6 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Agent identity versioning criteria** | ✅ Done | Concrete bump/no-bump criteria for CLAUDE.md changes; no inheritance API (clean break is safe default); pre-seeding via synthetic attestations documented. ADR 0004 updated. Closes #25. |
 | **Agent mesh topology** | ✅ Done | Centralized recommended for current ecosystem; hierarchical path documented for distributed Claudony; gossip ruled out. Closes #27. |
 | **Submission target decision** | ⬜ Pending | Quarkiverse vs SmallRye — external feedback questions whether this qualifies as a Quarkus extension. See IDEAS.md 2026-04-23. |
-| **OTel trace ID auto-wiring** | ✅ Done | `LedgerTraceListener` (`@ApplicationScoped` JPA entity listener, `@PrePersist` populates `traceId`), `LedgerTraceIdProvider` SPI, `OtelTraceIdProvider` (`@DefaultBean`). `correlationId` renamed to `traceId`. Closes #30, #31. |
+| **OTel trace ID auto-wiring** | ✅ Done | `LedgerEntryEnricher` SPI + `LedgerTraceListener` pipeline runner; `TraceIdEnricher` populates `traceId` from active OTel span. `correlationId` renamed to `traceId`. Closes #30, #31, #67. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |
