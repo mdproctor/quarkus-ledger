@@ -73,6 +73,7 @@ public class TrustScoreJob {
     public void runComputation() {
         // Pre-read previous scores only if a delta observer is registered.
         // Entities are detached so subsequent upserts do not mutate the snapshot values.
+        // TODO #61: restrict to GLOBAL rows when CAPABILITY/DIMENSION rows are added
         final Map<String, ActorTrustScore> previousSnapshot;
         if (routingPublisher.needsPreviousSnapshot()) {
             previousSnapshot = trustRepo.findAll().stream()
