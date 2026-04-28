@@ -17,29 +17,42 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  *
  * <p>
  * Algorithm: start with prior Beta(1, 1). For each attestation across all of an actor's
- * decisions, compute {@code recencyWeight = 2^(-ageInDays / halfLifeDays)} using the
- * attestation's own {@code occurredAt}.
- * SOUND/ENDORSED increments α by {@code recencyWeight × confidence};
- * FLAGGED/CHALLENGED increments β by {@code recencyWeight × confidence}.
- * Confidence is clamped to [0.0, 1.0]. confidence=0.0 contributes nothing to the
- * score; confidence=1.0 is equivalent to the previous unweighted behaviour.
- * Score = α/(α+β), clamped to [0.0, 1.0].
+ * decisions, compute a decay weight via the injected {@link DecayFunction} using the
+ * attestation's own {@code occurredAt}. SOUND/ENDORSED increments α by
+ * {@code decayWeight × confidence}; FLAGGED/CHALLENGED increments β by
+ * {@code decayWeight × confidence}. Score = α/(α+β), clamped to [0.0, 1.0].
+ *
+ * <p>
+ * The default {@link ExponentialDecayFunction} applies exponential decay with an
+ * asymmetric valence multiplier — FLAGGED attestations decay slower, persisting longer
+ * as negative evidence.
  *
  * <p>
  * Properties: no history → 0.5 (maximum uncertainty). Unattested decisions contribute
- * nothing — they do not inflate the score. More evidence yields higher confidence:
- * 1 positive → ≈0.667; 100 positives → ≈0.990. Old negative attestations fade naturally
- * via recency weighting on β.
+ * nothing — they do not inflate the score.
  */
 public final class TrustScoreComputer {
 
-    private final int halfLifeDays;
+    private final DecayFunction decayFunction;
 
     /**
+     * CDI/production constructor — delegates decay to the supplied {@link DecayFunction}.
+     *
+     * @param decayFunction the decay strategy to apply
+     */
+    public TrustScoreComputer(final DecayFunction decayFunction) {
+        this.decayFunction = decayFunction;
+    }
+
+    /**
+     * Convenience constructor for unit tests — uses simple exponential decay
+     * ({@code 2^(-ageInDays / halfLifeDays)}) with no valence asymmetry.
+     *
      * @param halfLifeDays recency decay half-life in days; values ≤ 0 default to 90
      */
     public TrustScoreComputer(final int halfLifeDays) {
-        this.halfLifeDays = halfLifeDays > 0 ? halfLifeDays : 90;
+        final int effective = halfLifeDays > 0 ? halfLifeDays : 90;
+        this.decayFunction = (ageInDays, verdict) -> Math.pow(2.0, -(double) ageInDays / effective);
     }
 
     /**
@@ -49,9 +62,9 @@ public final class TrustScoreComputer {
      * @param alpha final α value (prior 1.0 + positive recency-weighted contributions)
      * @param beta final β value (prior 1.0 + negative recency-weighted contributions)
      * @param decisionCount number of EVENT entries evaluated
-     * @param overturnedCount number of decisions with at least one negative attestation
-     * @param attestationPositive total positive attestation count
-     * @param attestationNegative total negative attestation count
+     * @param overturnedCount number of decisions with at least one positive-weight negative attestation
+     * @param attestationPositive total positive attestation count (raw, regardless of weight)
+     * @param attestationNegative total negative attestation count (raw, regardless of weight)
      */
     public record ActorScore(
             double trustScore,
@@ -93,9 +106,8 @@ public final class TrustScoreComputer {
             for (final LedgerAttestation attestation : attestations) {
                 final Instant attestationTime = attestation.occurredAt != null ? attestation.occurredAt : now;
                 final long ageInDays = java.time.Duration.between(attestationTime, now).toDays();
-                final double recencyWeight = Math.pow(2.0, -(double) ageInDays / halfLifeDays);
-
-                final double weight = recencyWeight * Math.max(0.0, Math.min(1.0, attestation.confidence));
+                final double decayWeight = decayFunction.weight(ageInDays, attestation.verdict);
+                final double weight = decayWeight * Math.max(0.0, Math.min(1.0, attestation.confidence));
 
                 if (attestation.verdict == AttestationVerdict.SOUND
                         || attestation.verdict == AttestationVerdict.ENDORSED) {

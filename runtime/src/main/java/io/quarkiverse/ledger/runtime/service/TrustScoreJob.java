@@ -52,6 +52,9 @@ public class TrustScoreJob {
     TrustScoreRoutingPublisher routingPublisher;
 
     @Inject
+    DecayFunction decayFunction;
+
+    @Inject
     @LedgerPersistenceUnit
     EntityManager em;
 
@@ -83,8 +86,7 @@ public class TrustScoreJob {
             previousSnapshot = Map.of();
         }
 
-        final TrustScoreComputer computer = new TrustScoreComputer(
-                config.trustScore().decayHalfLifeDays());
+        final TrustScoreComputer computer = new TrustScoreComputer(decayFunction);
         final Instant now = Instant.now();
 
         final List<LedgerEntry> allEvents = ledgerRepo.findAllEvents();
