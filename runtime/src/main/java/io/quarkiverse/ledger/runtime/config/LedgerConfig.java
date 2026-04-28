@@ -92,6 +92,13 @@ public interface LedgerConfig {
      */
     IdentityConfig identity();
 
+    /**
+     * Decay function settings for trust score computation.
+     *
+     * @return the decay sub-configuration
+     */
+    DecayConfig decay();
+
     /** Merkle Mountain Range and external publishing settings. */
     interface MerkleConfig {
 
@@ -348,5 +355,24 @@ public interface LedgerConfig {
             @WithDefault("false")
             boolean enabled();
         }
+    }
+
+    /** Decay function settings. */
+    interface DecayConfig {
+
+        /**
+         * Valence multiplier applied to FLAGGED and CHALLENGED attestation decay weights.
+         * Values less than 1.0 slow the decay — the attestation persists longer in the
+         * trust model. At 0.5 (default), a FLAGGED attestation takes twice as long to
+         * fade as a SOUND one of the same age.
+         *
+         * <p>
+         * Range: 0.1 (very persistent) to 1.0 (no asymmetry — same as SOUND).
+         * At 1.0, behaviour is identical to pre-#55.
+         *
+         * @return flagged persistence multiplier (default 0.5)
+         */
+        @WithDefault("0.5")
+        double flaggedPersistenceMultiplier();
     }
 }
