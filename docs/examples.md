@@ -247,7 +247,7 @@ span with zero call-site code
 
 **Key pattern:**
 ```java
-// No traceId code here — LedgerTraceListener reads the active OTel span on persist
+// No traceId code here — TraceIdEnricher reads the active OTel span via the enricher pipeline
 repo.save(entry);
 
 // traceId is set; response proves it persisted to the database

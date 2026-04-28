@@ -262,11 +262,11 @@ Recursive traversal is the caller's responsibility — each hop is explicit, whi
 
 ### OTel Trace Auto-Wiring ★★★☆☆
 
-`traceId` on every `LedgerEntry` is automatically populated from the active OpenTelemetry span at persist time, via a `@PrePersist` entity listener (`LedgerTraceListener`). No call-site changes required. If no OTel SDK is present, or no span is active, `traceId` stays null — zero overhead, zero configuration.
+`traceId` on every `LedgerEntry` is automatically populated from the active OpenTelemetry span at persist time. `LedgerTraceListener` runs the `LedgerEntryEnricher` pipeline at `@PrePersist`; `TraceIdEnricher` reads `Span.current()` and sets `traceId`. No call-site changes required. If no OTel SDK is present, or no span is active, `traceId` stays null — zero overhead, zero configuration.
 
 This links every ledger write to its distributed trace, enabling correlation between audit records and observability data: you can jump from a trace in Jaeger to the exact ledger entry that was written during that span.
 
-**Enable when:** Always on if OTel is on the classpath. Override the provider SPI (`LedgerTraceIdProvider`) if you need to populate `traceId` from a source other than `Span.current()`.
+**Enable when:** Always on if OTel is on the classpath. To populate `traceId` from a custom source, implement `LedgerEntryEnricher` as a CDI bean and set `entry.traceId` there. The built-in `TraceIdEnricher` guards against overwriting an already-set value, so a higher-priority enricher can take precedence.
 
 ---
 
