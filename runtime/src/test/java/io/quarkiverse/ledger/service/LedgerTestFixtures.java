@@ -60,7 +60,7 @@ public final class LedgerTestFixtures {
             att.attestorId = "compliance-bot";
             att.attestorType = ActorType.AGENT;
             att.verdict = verdictOrNull;
-            att.confidence = 0.9;
+            att.confidence = 1.0;
             att.occurredAt = attestationTime.truncatedTo(ChronoUnit.MILLIS);
             em.persist(att);
         }
