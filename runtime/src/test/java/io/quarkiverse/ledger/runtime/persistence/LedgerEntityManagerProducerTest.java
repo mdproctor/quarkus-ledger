@@ -132,6 +132,11 @@ class LedgerEntityManagerProducerTest {
         }
 
         @Override
+        public DecayConfig decay() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public RetentionConfig retention() {
             throw new UnsupportedOperationException();
         }
