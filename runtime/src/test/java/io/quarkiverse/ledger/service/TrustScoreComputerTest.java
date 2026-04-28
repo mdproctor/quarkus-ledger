@@ -522,17 +522,29 @@ class TrustScoreComputerTest {
 
     @Test
     void soundAndEndorsed_unaffectedByValenceMultiplier() {
-        // SOUND always uses multiplier=1.0 regardless of DecayFunction implementation
-        final DecayFunction alwaysHalf = (age, verdict) -> 0.5; // flat weight for all
-        final TrustScoreComputer computer = new TrustScoreComputer(alwaysHalf);
-        final TestLedgerEntry entry = decision("actor", now);
-        final LedgerAttestation sound = attestation(entry.id, AttestationVerdict.SOUND, 1.0);
+        // A verdict-discriminating function applies 0.5× to FLAGGED/CHALLENGED, 1.0× to SOUND/ENDORSED.
+        // Under this function: SOUND at age=0 → weight=1.0; FLAGGED at age=0 → weight=0.5.
+        // The SOUND actor must score higher than the FLAGGED actor — proving discrimination.
+        final DecayFunction asymmetric = (age,
+                verdict) -> (verdict == AttestationVerdict.FLAGGED || verdict == AttestationVerdict.CHALLENGED)
+                        ? 0.5
+                        : 1.0;
+        final TrustScoreComputer computer = new TrustScoreComputer(asymmetric);
 
-        final TrustScoreComputer.ActorScore score = computer.compute(
-                List.of(entry), Map.of(entry.id, List.of(sound)), now);
+        final TestLedgerEntry soundEntry = decision("actor-sound", now);
+        final LedgerAttestation sound = attestation(soundEntry.id, AttestationVerdict.SOUND, 1.0);
+        final TrustScoreComputer.ActorScore soundScore = computer.compute(
+                List.of(soundEntry), Map.of(soundEntry.id, List.of(sound)), now);
 
-        // weight=0.5 → α = 1 + 0.5 = 1.5, score = 1.5/2.5 = 0.6
-        assertThat(score.trustScore()).isCloseTo(0.6, within(0.001));
+        final TestLedgerEntry flaggedEntry = decision("actor-flagged", now);
+        final LedgerAttestation flagged = attestation(flaggedEntry.id, AttestationVerdict.FLAGGED, 1.0);
+        final TrustScoreComputer.ActorScore flaggedScore = computer.compute(
+                List.of(flaggedEntry), Map.of(flaggedEntry.id, List.of(flagged)), now);
+
+        // SOUND: α=2.0, β=1.0 → score=0.667. FLAGGED: α=1.0, β=1.5 → score=0.4
+        assertThat(soundScore.alpha()).isCloseTo(2.0, within(0.001));
+        assertThat(flaggedScore.beta()).isCloseTo(1.5, within(0.001));
+        assertThat(soundScore.trustScore()).isGreaterThan(flaggedScore.trustScore());
     }
 
     // ── Default half-life ─────────────────────────────────────────────────────
