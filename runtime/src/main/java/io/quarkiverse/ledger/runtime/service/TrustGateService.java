@@ -5,6 +5,7 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 
 /**
@@ -76,5 +77,17 @@ public class TrustGateService {
      */
     public Optional<Double> currentScore(final String actorId) {
         return repository.findByActorId(actorId).map(s -> s.trustScore);
+    }
+
+    /**
+     * Returns the full {@link ActorTrustScore} entity for the given actor, or empty if no score
+     * has been computed yet. Use this when the caller needs metrics beyond the scalar score
+     * (e.g. decisionCount, overturnedCount, attestation counts).
+     *
+     * @param actorId the actor identity string
+     * @return the full score entity, or empty
+     */
+    public Optional<ActorTrustScore> findScore(final String actorId) {
+        return repository.findByActorId(actorId);
     }
 }
