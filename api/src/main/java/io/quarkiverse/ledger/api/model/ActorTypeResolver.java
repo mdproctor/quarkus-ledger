@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.quarkiverse.ledger.api.model;
 
 /**
  * Canonical utility for deriving an {@link ActorType} from an actor ID string.

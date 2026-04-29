@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.quarkiverse.ledger.api.spi;
 
 import java.util.Optional;
 

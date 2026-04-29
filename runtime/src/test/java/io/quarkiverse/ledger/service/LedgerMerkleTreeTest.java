@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.api.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
 import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
 import io.quarkiverse.ledger.runtime.service.model.InclusionProof;

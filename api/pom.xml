@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.quarkiverse.ledger</groupId>
+    <artifactId>quarkus-ledger-parent</artifactId>
+    <version>0.2-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>quarkus-ledger-api</artifactId>
+  <name>Quarkus Ledger - API</name>
+  <description>Domain model and SPI interfaces — no JPA, safe for any module to depend on</description>
+
+  <dependencies>
+    <!-- Jakarta Persistence annotations (@MappedSuperclass, @Transient) — no runtime dependency -->
+    <dependency>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Jackson for supplement serialization only — no JPA -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Mutiny for reactive SPI -->
+    <dependency>
+      <groupId>io.smallrye.reactive</groupId>
+      <artifactId>mutiny</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>

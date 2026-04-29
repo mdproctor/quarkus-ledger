@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.quarkiverse.ledger.api.spi.LedgerTraceIdProvider;
 import io.quarkus.arc.DefaultBean;
 
 /**

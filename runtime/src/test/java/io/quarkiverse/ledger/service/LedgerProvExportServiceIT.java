@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
+import io.quarkiverse.ledger.api.model.ActorType;
+import io.quarkiverse.ledger.api.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;

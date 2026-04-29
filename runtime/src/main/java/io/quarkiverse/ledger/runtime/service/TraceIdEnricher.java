@@ -3,6 +3,7 @@ package io.quarkiverse.ledger.runtime.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.quarkiverse.ledger.api.spi.LedgerTraceIdProvider;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 
 /**

@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
+import io.quarkiverse.ledger.api.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 
 /**

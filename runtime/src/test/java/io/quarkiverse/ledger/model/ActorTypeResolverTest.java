@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.ActorTypeResolver;
+import io.quarkiverse.ledger.api.model.ActorType;
+import io.quarkiverse.ledger.api.model.ActorTypeResolver;
 
 class ActorTypeResolverTest {
 

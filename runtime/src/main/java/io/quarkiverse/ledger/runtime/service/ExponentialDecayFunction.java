@@ -3,8 +3,8 @@ package io.quarkiverse.ledger.runtime.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.quarkiverse.ledger.api.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
 import io.quarkus.arc.DefaultBean;
 
 /**

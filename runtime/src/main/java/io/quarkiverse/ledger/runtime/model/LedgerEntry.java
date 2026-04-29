@@ -23,6 +23,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import io.quarkiverse.ledger.api.model.ActorType;
+import io.quarkiverse.ledger.api.model.LedgerEntryType;
 import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
 import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;

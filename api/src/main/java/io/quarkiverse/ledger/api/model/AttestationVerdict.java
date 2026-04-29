@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.quarkiverse.ledger.api.model;
 
 /**
  * The formal verdict recorded in a {@link LedgerAttestation}.

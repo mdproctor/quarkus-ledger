@@ -15,6 +15,13 @@
 
   <dependencies>
 
+    <!-- Ledger API — domain POJOs, SPI interfaces, enums -->
+    <dependency>
+      <groupId>io.quarkiverse.ledger</groupId>
+      <artifactId>quarkus-ledger-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
     <!-- Persistence: plain JPA / EntityManager -->
     <dependency>
       <groupId>io.quarkus</groupId>

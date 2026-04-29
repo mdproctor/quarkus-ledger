@@ -10,9 +10,9 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
+import io.quarkiverse.ledger.api.model.ActorTrustScore.ScoreType;
+import io.quarkiverse.ledger.api.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 

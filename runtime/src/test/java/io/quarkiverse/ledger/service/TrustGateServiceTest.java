@@ -9,9 +9,9 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import io.quarkiverse.ledger.api.model.ActorTrustScore.ScoreType;
+import io.quarkiverse.ledger.api.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.service.TrustGateService;
 

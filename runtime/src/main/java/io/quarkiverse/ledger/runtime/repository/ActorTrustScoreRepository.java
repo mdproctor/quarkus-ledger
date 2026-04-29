@@ -4,9 +4,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import io.quarkiverse.ledger.api.model.ActorTrustScore.ScoreType;
+import io.quarkiverse.ledger.api.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.runtime.model.ActorType;
 
 /** SPI for persisting and querying {@link ActorTrustScore} records. */
 public interface ActorTrustScoreRepository {

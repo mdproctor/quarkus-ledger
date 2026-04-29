@@ -13,9 +13,9 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
+import io.quarkiverse.ledger.api.model.ActorType;
 import io.quarkiverse.ledger.runtime.config.LedgerConfig;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
@@ -76,10 +76,12 @@ public class TrustScoreJob {
     public void runComputation() {
         // Pre-read previous scores only if a delta observer is registered.
         // Entities are detached so subsequent upserts do not mutate the snapshot values.
-        // TODO #61: restrict to GLOBAL rows when CAPABILITY/DIMENSION rows are added
+        // GLOBAL rows only — CAPABILITY/DIMENSION rows have multiple rows per actor and would
+        // cause Collectors.toMap to throw on duplicate actorId keys.
         final Map<String, ActorTrustScore> previousSnapshot;
         if (routingPublisher.needsPreviousSnapshot()) {
             previousSnapshot = trustRepo.findAll().stream()
+                    .filter(s -> s.scoreType == ActorTrustScore.ScoreType.GLOBAL)
                     .peek(s -> em.detach(s))
                     .collect(Collectors.toMap(s -> s.actorId, s -> s));
         } else {

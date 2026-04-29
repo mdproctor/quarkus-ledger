@@ -13,8 +13,8 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
+import io.quarkiverse.ledger.api.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkiverse.ledger.runtime.service.TrustScoreJob;

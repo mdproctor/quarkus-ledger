@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
+import io.quarkiverse.ledger.api.model.AttestationVerdict;
 import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
 import io.quarkiverse.ledger.runtime.model.LedgerEntry;
 
@@ -105,7 +105,7 @@ public final class TrustScoreComputer {
 
             for (final LedgerAttestation attestation : attestations) {
                 final Instant attestationTime = attestation.occurredAt != null ? attestation.occurredAt : now;
-                final long ageInDays = java.time.Duration.between(attestationTime, now).toDays();
+                final long ageInDays = Math.max(0, java.time.Duration.between(attestationTime, now).toDays());
                 final double decayWeight = decayFunction.weight(ageInDays, attestation.verdict);
                 final double weight = decayWeight * Math.max(0.0, Math.min(1.0, attestation.confidence));
 
