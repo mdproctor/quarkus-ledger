@@ -31,19 +31,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Delete stale SNAPSHOT versions from GitHub Packages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          for PKG in casehub-ledger casehub-ledger-api casehub-ledger-parent casehub-ledger-deployment; do
-            for VER_ID in $(gh api "orgs/casehubio/packages/maven/${PKG}/versions" \
-                --jq '[.[] | select(.name | startswith("0.2-SNAPSHOT"))] | .[].id' 2>/dev/null || true); do
-              echo "Deleting ${PKG} version ${VER_ID}"
-              gh api --method DELETE "orgs/casehubio/packages/maven/${PKG}/versions/${VER_ID}" 2>/dev/null || true
-            done
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Publish to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: mvn --batch-mode deploy -DskipTests
