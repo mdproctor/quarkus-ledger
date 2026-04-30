@@ -1,10 +1,10 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.quarkiverse.ledger.api.spi.LedgerTraceIdProvider;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.api.spi.LedgerTraceIdProvider;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Enricher that auto-populates {@link LedgerEntry#traceId} from the active OTel span.

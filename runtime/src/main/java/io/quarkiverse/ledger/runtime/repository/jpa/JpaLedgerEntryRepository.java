@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.repository.jpa;
+package io.casehub.ledger.runtime.repository.jpa;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -15,17 +15,17 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.api.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
-import io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider;
-import io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.api.model.LedgerEntryType;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.privacy.ActorIdentityProvider;
+import io.casehub.ledger.runtime.privacy.DecisionContextSanitiser;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerMerklePublisher;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
 
 /**
  * Hibernate ORM implementation of {@link LedgerEntryRepository} using EntityManager directly.
@@ -52,7 +52,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
  * test modules, or extensions that use runtime services like {@code TrustScoreJob} without
  * a domain repo), activate this class via one of:
  * <ul>
- * <li>{@code quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}
+ * <li>{@code quarkus.arc.selected-alternatives=io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}
  * in {@code application.properties} (Quarkus-native, preferred)</li>
  * <li>{@code <alternatives>} in {@code META-INF/beans.xml} (standard CDI)</li>
  * <li>Subclass with {@code @ApplicationScoped} (inherits all polymorphic query logic)</li>

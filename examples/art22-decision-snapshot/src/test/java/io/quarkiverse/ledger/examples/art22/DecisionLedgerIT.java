@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.art22;
+package io.casehub.ledger.examples.art22;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;

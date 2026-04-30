@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
@@ -26,6 +26,6 @@ import jakarta.persistence.UniqueConstraint;
 @NamedQuery(name = "ActorTrustScore.findGlobalByActorId", query = "SELECT s FROM ActorTrustScore s WHERE s.actorId = :actorId AND s.scoreType = :scoreType AND s.scopeKey IS NULL")
 @NamedQuery(name = "ActorTrustScore.findByActorIdAndScoreType", query = "SELECT s FROM ActorTrustScore s WHERE s.actorId = :actorId AND s.scoreType = :scoreType")
 @NamedQuery(name = "ActorTrustScore.findByActorIdAndTypeAndKey", query = "SELECT s FROM ActorTrustScore s WHERE s.actorId = :actorId AND s.scoreType = :scoreType AND s.scopeKey = :scopeKey")
-public class ActorTrustScore extends io.quarkiverse.ledger.api.model.ActorTrustScore {
+public class ActorTrustScore extends io.casehub.ledger.api.model.ActorTrustScore {
 
 }

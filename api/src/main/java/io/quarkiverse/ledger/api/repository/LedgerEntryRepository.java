@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.repository;
+package io.casehub.ledger.api.repository;
 
 import java.time.Instant;
 import java.util.List;
@@ -7,8 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.api.model.LedgerAttestation;
-import io.quarkiverse.ledger.api.model.LedgerEntry;
+import io.casehub.ledger.api.model.LedgerAttestation;
+import io.casehub.ledger.api.model.LedgerEntry;
 
 /**
  * SPI for persisting and querying {@link LedgerEntry} and {@link LedgerAttestation} records.

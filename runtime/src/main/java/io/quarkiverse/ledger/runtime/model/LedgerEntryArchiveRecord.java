@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.util.UUID;
 
@@ -17,11 +17,11 @@ import jakarta.persistence.Table;
  *
  * <p>
  * Archive records are written only when
- * {@code quarkus.ledger.retention.archive-before-delete=true} (the default).
+ * {@code casehub.ledger.retention.archive-before-delete=true} (the default).
  */
 @Entity
 @Table(name = "ledger_entry_archive")
-public class LedgerEntryArchiveRecord extends io.quarkiverse.ledger.api.model.LedgerEntryArchiveRecord {
+public class LedgerEntryArchiveRecord extends io.casehub.ledger.api.model.LedgerEntryArchiveRecord {
 
     @PrePersist
     void prePersist() {

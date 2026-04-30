@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model;
+package io.casehub.ledger.api.model;
 
 import java.util.UUID;
 

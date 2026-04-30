@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Serialises a subject's ledger history as a W3C PROV-DM JSON-LD document.

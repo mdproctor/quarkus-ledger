@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service.routing;
+package io.casehub.ledger.service.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,10 +14,10 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.api.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
-import io.quarkiverse.ledger.service.LedgerTestFixtures;
+import io.casehub.ledger.api.model.AttestationVerdict;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.service.LedgerTestFixtures;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -132,7 +132,7 @@ class TrustScoreRoutingIT {
         assertThat(observers.fullReceived()).hasSize(1);
         final var scores = observers.fullReceived().get(0).scores();
         org.assertj.core.api.Assertions.assertThatThrownBy(
-                () -> scores.add(new io.quarkiverse.ledger.runtime.model.ActorTrustScore()))
+                () -> scores.add(new io.casehub.ledger.runtime.model.ActorTrustScore()))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.Optional;
 
@@ -9,7 +9,7 @@ import java.util.Optional;
  * The default implementation is pass-through — existing consumers see zero behaviour change.
  * Replace with a custom CDI bean to plug in any pseudonymisation strategy.
  * The built-in {@code InternalActorIdentityProvider} activates when
- * {@code quarkus.ledger.identity.tokenisation.enabled=true}.
+ * {@code casehub.ledger.identity.tokenisation.enabled=true}.
  */
 public interface ActorIdentityProvider {
 

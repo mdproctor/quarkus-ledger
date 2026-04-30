@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,13 +23,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.api.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerTraceListener;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.api.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplementSerializer;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.service.LedgerTraceListener;
 
 /**
  * Abstract base for all ledger entries.
@@ -43,7 +43,7 @@ import io.quarkiverse.ledger.runtime.service.LedgerTraceListener;
  * <h2>Supplements</h2>
  * <p>
  * Optional cross-cutting concerns are handled by
- * {@link io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement} subclasses
+ * {@link io.casehub.ledger.runtime.model.supplement.LedgerSupplement} subclasses
  * attached via {@link #attach(LedgerSupplement)}:
  * <ul>
  * <li>{@link ComplianceSupplement} — GDPR Art.22 decision snapshot, governance</li>
@@ -117,7 +117,7 @@ public abstract class LedgerEntry {
 
     /**
      * RFC 9162 leaf hash: {@code SHA-256(0x00 | canonicalFields)}.
-     * Null when hash chain is disabled ({@code quarkus.ledger.hash-chain.enabled=false}).
+     * Null when hash chain is disabled ({@code casehub.ledger.hash-chain.enabled=false}).
      */
     public String digest;
 
@@ -136,7 +136,7 @@ public abstract class LedgerEntry {
      *
      * <p>
      * Enables cross-system causal chain traversal via
-     * {@link io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
+     * {@link io.casehub.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
      * When Claudony orchestrates Tarkus → Qhorus, each downstream entry's
      * {@code causedByEntryId} points to its upstream cause.
      */

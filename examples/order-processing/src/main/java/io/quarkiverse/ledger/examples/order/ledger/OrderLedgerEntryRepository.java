@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.order.ledger;
+package io.casehub.ledger.examples.order.ledger;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,7 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 /**
  * Typed repository for {@link OrderLedgerEntry}.

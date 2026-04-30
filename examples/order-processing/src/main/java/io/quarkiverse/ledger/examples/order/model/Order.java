@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.order.model;
+package io.casehub.ledger.examples.order.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;

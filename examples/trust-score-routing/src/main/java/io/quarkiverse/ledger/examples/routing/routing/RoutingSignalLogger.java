@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.routing.routing;
+package io.casehub.ledger.examples.routing.routing;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -9,7 +9,7 @@ import jakarta.enterprise.event.ObservesAsync;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreComputedAt;
+import io.casehub.ledger.runtime.service.routing.TrustScoreComputedAt;
 
 @ApplicationScoped
 public class RoutingSignalLogger {

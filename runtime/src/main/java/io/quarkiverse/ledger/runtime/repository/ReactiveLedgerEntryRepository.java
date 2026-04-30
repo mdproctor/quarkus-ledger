@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.repository;
+package io.casehub.ledger.runtime.repository;
 
 import java.time.Instant;
 import java.util.List;
@@ -7,8 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 import io.smallrye.mutiny.Uni;
 
 /**

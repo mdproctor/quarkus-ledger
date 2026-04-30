@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,13 +9,13 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider;
+import io.casehub.ledger.runtime.privacy.ActorIdentityProvider;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
 /**
- * Integration tests for {@link io.quarkiverse.ledger.runtime.privacy.InternalActorIdentityProvider}.
+ * Integration tests for {@link io.casehub.ledger.runtime.privacy.InternalActorIdentityProvider}.
  *
  * <p>
  * Runs with tokenisation enabled against an isolated H2 database.

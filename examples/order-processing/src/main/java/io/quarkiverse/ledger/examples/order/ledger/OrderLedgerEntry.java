@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.order.ledger;
+package io.casehub.ledger.examples.order.ledger;
 
 import java.util.UUID;
 
@@ -7,7 +7,7 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Domain-specific ledger entry for the Order aggregate.

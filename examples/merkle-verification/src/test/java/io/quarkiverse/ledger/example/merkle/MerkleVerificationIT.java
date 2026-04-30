@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.example.merkle;
+package io.casehub.ledger.example.merkle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,7 +8,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest

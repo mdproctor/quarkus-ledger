@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model.supplement;
+package io.casehub.ledger.api.model.supplement;
 
 /**
  * Supplement carrying compliance, governance, and GDPR Art.22 decision snapshot fields.

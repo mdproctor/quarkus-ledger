@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model;
+package io.casehub.ledger.api.model;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -7,10 +7,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.api.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.api.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.api.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.api.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.api.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.api.model.supplement.LedgerSupplement;
+import io.casehub.ledger.api.model.supplement.LedgerSupplementSerializer;
+import io.casehub.ledger.api.model.supplement.ProvenanceSupplement;
 
 /**
  * Abstract base for all ledger entries.
@@ -24,7 +24,7 @@ import io.quarkiverse.ledger.api.model.supplement.ProvenanceSupplement;
  * <h2>Supplements</h2>
  * <p>
  * Optional cross-cutting concerns are handled by
- * {@link io.quarkiverse.ledger.api.model.supplement.LedgerSupplement} subclasses
+ * {@link io.casehub.ledger.api.model.supplement.LedgerSupplement} subclasses
  * attached via {@link #attach(LedgerSupplement)}:
  * <ul>
  * <li>{@link ComplianceSupplement} — GDPR Art.22 decision snapshot, governance</li>
@@ -83,7 +83,7 @@ public abstract class LedgerEntry {
 
     /**
      * RFC 9162 leaf hash: {@code SHA-256(0x00 | canonicalFields)}.
-     * Null when hash chain is disabled ({@code quarkus.ledger.hash-chain.enabled=false}).
+     * Null when hash chain is disabled ({@code casehub.ledger.hash-chain.enabled=false}).
      */
     public String digest;
 

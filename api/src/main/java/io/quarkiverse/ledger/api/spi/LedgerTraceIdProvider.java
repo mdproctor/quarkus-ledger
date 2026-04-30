@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.spi;
+package io.casehub.ledger.api.spi;
 
 import java.util.Optional;
 

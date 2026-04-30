@@ -1,16 +1,16 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.quarkiverse.ledger.api.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.api.model.AttestationVerdict;
+import io.casehub.ledger.runtime.config.LedgerConfig;
 import io.quarkus.arc.DefaultBean;
 
 /**
  * Default decay function: exponential decay {@code 2^(-ageInDays / halfLifeDays)} with an
  * asymmetric valence multiplier. FLAGGED/CHALLENGED attestations use a multiplier < 1.0
- * (configurable via {@code quarkus.ledger.decay.flagged-persistence-multiplier}), causing
+ * (configurable via {@code casehub.ledger.decay.flagged-persistence-multiplier}), causing
  * them to decay slower — they persist longer as negative evidence in the trust model.
  */
 @ApplicationScoped

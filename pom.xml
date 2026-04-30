@@ -4,20 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>io.quarkiverse</groupId>
-    <artifactId>quarkiverse-parent</artifactId>
-    <version>21</version>
-  </parent>
-
-  <groupId>io.quarkiverse.ledger</groupId>
-  <artifactId>quarkus-ledger-parent</artifactId>
+  <groupId>io.casehub</groupId>
+  <artifactId>casehub-ledger-parent</artifactId>
   <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Quarkus Ledger - Parent</name>
-  <description>Quarkiverse extension — immutable audit ledger with hash chain, peer attestations, and EigenTrust reputation for Quarkus applications</description>
-  <url>https://github.com/mdproctor/quarkus-ledger</url>
+  <name>CaseHub Ledger - Parent</name>
+  <description>CaseHub extension — immutable audit ledger with hash chain, peer attestations, and EigenTrust reputation for Quarkus applications</description>
+  <url>https://github.com/casehubio/ledger</url>
 
   <modules>
     <module>api</module>
@@ -29,19 +23,19 @@
     <repository>
       <id>github</id>
       <name>casehubio GitHub Packages</name>
-      <url>https://maven.pkg.github.com/casehubio/quarkus-ledger</url>
+      <url>https://maven.pkg.github.com/casehubio/ledger</url>
     </repository>
     <snapshotRepository>
       <id>github</id>
       <name>casehubio GitHub Packages</name>
-      <url>https://maven.pkg.github.com/casehubio/quarkus-ledger</url>
+      <url>https://maven.pkg.github.com/casehubio/ledger</url>
     </snapshotRepository>
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:https://github.com/casehubio/quarkus-ledger.git</connection>
-    <developerConnection>scm:git:https://github.com/casehubio/quarkus-ledger.git</developerConnection>
-    <url>https://github.com/casehubio/quarkus-ledger</url>
+    <connection>scm:git:https://github.com/casehubio/ledger.git</connection>
+    <developerConnection>scm:git:https://github.com/casehubio/ledger.git</developerConnection>
+    <url>https://github.com/casehubio/ledger</url>
     <tag>HEAD</tag>
   </scm>
 

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model.supplement;
+package io.casehub.ledger.runtime.model.supplement;
 
 import java.util.UUID;
 
@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Abstract base for all ledger supplements.

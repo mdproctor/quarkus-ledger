@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.art12.api;
+package io.casehub.ledger.examples.art12.api;
 
 import java.time.Instant;
 import java.util.List;
@@ -15,9 +15,9 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.examples.art12.service.AuditService;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.examples.art12.service.AuditService;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
 
 /**
  * REST API for the art12-compliance example.

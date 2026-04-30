@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service.supplement;
+package io.casehub.ledger.service.supplement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,12 +10,12 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.api.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.api.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model;
+package io.casehub.ledger.api.model;
 
 /** Classifies the actor who produced a {@link LedgerEntry} or {@link LedgerAttestation}. */
 public enum ActorType {

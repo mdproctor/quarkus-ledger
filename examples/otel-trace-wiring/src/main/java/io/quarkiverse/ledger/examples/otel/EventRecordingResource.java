@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.otel;
+package io.casehub.ledger.examples.otel;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -17,18 +17,18 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 
 /**
  * REST resource for recording events into the ledger.
  *
  * <p>
  * Each inbound HTTP request carries an OTel server span created automatically by
- * Quarkus. When {@link LedgerEntryRepository#save(io.quarkiverse.ledger.runtime.model.LedgerEntry)}
- * triggers JPA persist, {@link io.quarkiverse.ledger.runtime.service.LedgerTraceListener}
- * reads the active span via {@link io.quarkiverse.ledger.runtime.service.OtelTraceIdProvider}
+ * Quarkus. When {@link LedgerEntryRepository#save(io.casehub.ledger.runtime.model.LedgerEntry)}
+ * triggers JPA persist, {@link io.casehub.ledger.runtime.service.LedgerTraceListener}
+ * reads the active span via {@link io.casehub.ledger.runtime.service.OtelTraceIdProvider}
  * and populates {@code LedgerEntry.traceId} — no code at this call site is required.
  */
 @Path("/events")

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.art22.ledger;
+package io.casehub.ledger.examples.art22.ledger;
 
 import java.util.UUID;
 
@@ -7,14 +7,14 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Domain-specific ledger entry for AI decisions.
  *
  * <p>
  * Extends the base {@link LedgerEntry} — the GDPR Art.22 compliance fields live in
- * a {@link io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement}
+ * a {@link io.casehub.ledger.runtime.model.supplement.ComplianceSupplement}
  * attached via {@link LedgerEntry#attach}.
  */
 @Entity

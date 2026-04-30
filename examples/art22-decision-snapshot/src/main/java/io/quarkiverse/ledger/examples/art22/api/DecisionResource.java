@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.art22.api;
+package io.casehub.ledger.examples.art22.api;
 
 import java.util.List;
 import java.util.Map;
@@ -12,10 +12,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
-import io.quarkiverse.ledger.examples.art22.service.DecisionService;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.examples.art22.ledger.DecisionLedgerEntry;
+import io.casehub.ledger.examples.art22.service.DecisionService;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
 
 @Path("/decisions")
 @Produces(MediaType.APPLICATION_JSON)

@@ -5,13 +5,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.quarkiverse.ledger</groupId>
-    <artifactId>quarkus-ledger-parent</artifactId>
+    <groupId>io.casehub</groupId>
+    <artifactId>casehub-ledger-parent</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>quarkus-ledger-api</artifactId>
-  <name>Quarkus Ledger - API</name>
+  <artifactId>casehub-ledger-api</artifactId>
+  <name>CaseHub Ledger - API</name>
   <description>Domain model and SPI interfaces — no JPA, safe for any module to depend on</description>
 
   <dependencies>

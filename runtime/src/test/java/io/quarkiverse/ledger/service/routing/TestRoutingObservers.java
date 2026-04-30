@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service.routing;
+package io.casehub.ledger.service.routing;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -10,9 +10,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
 
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreComputedAt;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreDeltaPayload;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreFullPayload;
+import io.casehub.ledger.runtime.service.routing.TrustScoreComputedAt;
+import io.casehub.ledger.runtime.service.routing.TrustScoreDeltaPayload;
+import io.casehub.ledger.runtime.service.routing.TrustScoreFullPayload;
 
 @ApplicationScoped
 public class TestRoutingObservers {

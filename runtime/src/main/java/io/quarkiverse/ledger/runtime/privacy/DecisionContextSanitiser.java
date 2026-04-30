@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 /**
  * SPI for sanitising {@code ComplianceSupplement.decisionContext} JSON before persist.

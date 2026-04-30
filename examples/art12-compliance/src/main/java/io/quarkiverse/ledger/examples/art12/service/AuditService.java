@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.art12.service;
+package io.casehub.ledger.examples.art12.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -9,12 +9,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.art12.ledger.DecisionEntry;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.examples.art12.ledger.DecisionEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 
 /**
  * Application service for recording AI decisions and querying the audit log.

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.eigentrust;
+package io.casehub.ledger.examples.eigentrust;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,9 +12,9 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**

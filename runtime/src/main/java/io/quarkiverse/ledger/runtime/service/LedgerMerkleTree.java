@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
-import io.quarkiverse.ledger.runtime.service.model.ProofStep;
-import io.quarkiverse.ledger.runtime.service.model.ProofStep.Side;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.service.model.ProofStep;
+import io.casehub.ledger.runtime.service.model.ProofStep.Side;
 
 /**
  * Pure static utility implementing the Merkle Mountain Range (stored frontier) algorithm.

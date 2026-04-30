@@ -1,12 +1,12 @@
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.quarkus.arc.DefaultBean;
 
 /**
@@ -18,7 +18,7 @@ import io.quarkus.arc.DefaultBean;
  *
  * <p>
  * {@link ActorIdentityProvider}: returns {@link InternalActorIdentityProvider} when
- * {@code quarkus.ledger.identity.tokenisation.enabled=true}; otherwise pass-through.
+ * {@code casehub.ledger.identity.tokenisation.enabled=true}; otherwise pass-through.
  * {@link DecisionContextSanitiser}: always returns pass-through; replace with a
  * custom bean to scrub PII from decision context blobs.
  */

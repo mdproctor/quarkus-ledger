@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service.model;
+package io.casehub.ledger.runtime.service.model;
 
 /**
  * One sibling hash in a Merkle inclusion proof.

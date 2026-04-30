@@ -1,19 +1,19 @@
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.model.ActorIdentity;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.model.ActorIdentity;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
 
 /**
  * Built-in token-based actor identity provider backed by the {@code actor_identity} table.
  *
  * <p>
  * Not a CDI bean — constructed by {@link LedgerPrivacyProducer} when
- * {@code quarkus.ledger.identity.tokenisation.enabled=true}. The EntityManager
+ * {@code casehub.ledger.identity.tokenisation.enabled=true}. The EntityManager
  * it receives is a CDI proxy that resolves to the current transaction's session
  * when its methods are called — all callers of this class operate within
  * an existing {@code @Transactional} boundary.

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.config;
+package io.casehub.ledger.runtime.config;
 
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -9,10 +9,10 @@ import io.smallrye.config.WithDefault;
  * Configuration for the Quarkus Ledger extension.
  *
  * <p>
- * All keys are under the {@code quarkus.ledger} prefix. Every feature is independently
+ * All keys are under the {@code casehub.ledger} prefix. Every feature is independently
  * gated so consuming applications can enable only what they need.
  */
-@ConfigMapping(prefix = "quarkus.ledger")
+@ConfigMapping(prefix = "casehub.ledger")
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
 public interface LedgerConfig {
 
@@ -28,7 +28,7 @@ public interface LedgerConfig {
      * Name of the datasource / persistence unit quarkus-ledger should use.
      * Defaults to empty — uses the default (unnamed) persistence unit.
      * Set to a named datasource when the application does not configure a default
-     * persistence unit, e.g. {@code quarkus.ledger.datasource=mydb}.
+     * persistence unit, e.g. {@code casehub.ledger.datasource=mydb}.
      *
      * @return the persistence unit name, or empty to use the default
      */
@@ -176,7 +176,7 @@ public interface LedgerConfig {
     interface HashChainConfig {
 
         /**
-         * When {@code true}, each {@link io.quarkiverse.ledger.runtime.model.LedgerEntry} carries
+         * When {@code true}, each {@link io.casehub.ledger.runtime.model.LedgerEntry} carries
          * a Merkle leaf hash ({@code SHA-256(0x00 | canonical fields)}) and the per-subject
          * Merkle Mountain Range frontier is updated on every save. Setting this to {@code false}
          * skips leaf hash computation and frontier updates entirely — {@code LedgerEntry.digest}
@@ -195,7 +195,7 @@ public interface LedgerConfig {
          * When {@code true}, a JSON snapshot of observable state is captured at each transition
          * and stored in {@code ComplianceSupplement.decisionContext}.
          * Addresses GDPR Article 22 and EU AI Act Article 12 explainability requirements.
-         * Attach a {@link io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement}
+         * Attach a {@link io.casehub.ledger.runtime.model.supplement.ComplianceSupplement}
          * to the entry and populate its {@code decisionContext} field.
          *
          * @return {@code true} if decision context snapshots are enabled (default)
@@ -347,7 +347,7 @@ public interface LedgerConfig {
              *
              * <p>
              * Organisations with their own identity management systems should leave this
-             * off and provide a custom {@link io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider}
+             * off and provide a custom {@link io.casehub.ledger.runtime.privacy.ActorIdentityProvider}
              * CDI bean instead.
              *
              * @return {@code true} if built-in tokenisation is active; {@code false} by default

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.order.service;
+package io.casehub.ledger.examples.order.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -11,14 +11,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.order.ledger.OrderLedgerEntry;
-import io.quarkiverse.ledger.examples.order.ledger.OrderLedgerEntryRepository;
-import io.quarkiverse.ledger.examples.order.model.Order;
-import io.quarkiverse.ledger.examples.order.model.OrderStatus;
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.examples.order.ledger.OrderLedgerEntry;
+import io.casehub.ledger.examples.order.ledger.OrderLedgerEntryRepository;
+import io.casehub.ledger.examples.order.model.Order;
+import io.casehub.ledger.examples.order.model.OrderStatus;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
 
 /**
  * Order domain service.

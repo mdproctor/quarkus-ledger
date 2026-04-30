@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -13,15 +13,15 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -29,7 +29,7 @@ import io.quarkus.scheduler.Scheduled;
  * decision-making actors in the ledger.
  *
  * <p>
- * The job is gated by {@code quarkus.ledger.trust-score.enabled}. When disabled, the
+ * The job is gated by {@code casehub.ledger.trust-score.enabled}. When disabled, the
  * scheduled trigger fires but immediately returns without doing any work.
  *
  * <p>
@@ -58,7 +58,7 @@ public class TrustScoreJob {
     @LedgerPersistenceUnit
     EntityManager em;
 
-    @Scheduled(every = "{quarkus.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")
+    @Scheduled(every = "{casehub.ledger.trust-score.schedule:24h}", identity = "ledger-trust-score-job")
     @Transactional
     public void computeTrustScores() {
         if (!config.trustScore().enabled()) {

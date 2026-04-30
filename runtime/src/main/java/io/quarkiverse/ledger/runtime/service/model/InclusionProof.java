@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service.model;
+package io.casehub.ledger.runtime.service.model;
 
 import java.util.List;
 import java.util.UUID;

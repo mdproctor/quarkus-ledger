@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
@@ -8,7 +8,7 @@ import jakarta.persistence.PrePersist;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * JPA entity listener that runs the {@link LedgerEntryEnricher} pipeline on every

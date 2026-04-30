@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.example.prov;
+package io.casehub.ledger.example.prov;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

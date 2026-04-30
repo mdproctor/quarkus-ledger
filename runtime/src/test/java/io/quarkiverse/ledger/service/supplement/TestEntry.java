@@ -1,10 +1,10 @@
-package io.quarkiverse.ledger.service.supplement;
+package io.casehub.ledger.service.supplement;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Minimal concrete subclass of {@link LedgerEntry} for integration tests only.

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.example.merkle;
+package io.casehub.ledger.example.merkle;
 
 import java.util.List;
 import java.util.UUID;
@@ -7,13 +7,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
-import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.service.LedgerVerificationService;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
 
 /**
  * Demonstrates Merkle tree inclusion proof generation and independent verification.

@@ -1,11 +1,11 @@
-package io.quarkiverse.ledger.example.merkle;
+package io.casehub.ledger.example.merkle;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 /**
- * CDI bean providing the {@link io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository}
+ * CDI bean providing the {@link io.casehub.ledger.runtime.repository.LedgerEntryRepository}
  * SPI for the merkle-verification example.
  *
  * <p>

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.order.model;
+package io.casehub.ledger.examples.order.model;
 
 public enum OrderStatus {
     PENDING,

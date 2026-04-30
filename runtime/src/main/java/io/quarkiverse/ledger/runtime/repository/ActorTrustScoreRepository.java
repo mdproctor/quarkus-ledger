@@ -1,12 +1,12 @@
-package io.quarkiverse.ledger.runtime.repository;
+package io.casehub.ledger.runtime.repository;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import io.quarkiverse.ledger.api.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.api.model.ActorTrustScore.ScoreType;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
 
 /** SPI for persisting and querying {@link ActorTrustScore} records. */
 public interface ActorTrustScoreRepository {

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.otel;
+package io.casehub.ledger.examples.otel;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;

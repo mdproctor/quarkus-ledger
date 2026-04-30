@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.art22.service;
+package io.casehub.ledger.examples.art22.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -9,11 +9,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
-import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.examples.art22.ledger.DecisionLedgerEntry;
+import io.casehub.ledger.examples.art22.ledger.DecisionLedgerEntryRepository;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
 
 /**
  * Simulates an AI decision service that records each decision with a full

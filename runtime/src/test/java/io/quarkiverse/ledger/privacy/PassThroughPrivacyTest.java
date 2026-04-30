@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -6,8 +6,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.privacy.PassThroughActorIdentityProvider;
-import io.quarkiverse.ledger.runtime.privacy.PassThroughDecisionContextSanitiser;
+import io.casehub.ledger.runtime.privacy.PassThroughActorIdentityProvider;
+import io.casehub.ledger.runtime.privacy.PassThroughDecisionContextSanitiser;
 
 class PassThroughPrivacyTest {
 

@@ -1,6 +1,6 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
-import io.quarkiverse.ledger.api.model.AttestationVerdict;
+import io.casehub.ledger.api.model.AttestationVerdict;
 
 /**
  * SPI for computing an attestation's recency decay weight.

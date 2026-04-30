@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Scope;
-import io.quarkiverse.ledger.runtime.service.OtelTraceIdProvider;
+import io.casehub.ledger.runtime.service.OtelTraceIdProvider;
 
 class OtelTraceIdProviderTest {
 

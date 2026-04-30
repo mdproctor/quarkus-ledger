@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.routing.api;
+package io.casehub.ledger.examples.routing.api;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-import io.quarkiverse.ledger.examples.routing.routing.TaskRouter;
+import io.casehub.ledger.examples.routing.routing.TaskRouter;
 
 @Path("/routing")
 @Produces(MediaType.APPLICATION_JSON)

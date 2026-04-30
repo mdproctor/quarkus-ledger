@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,11 +8,11 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.api.model.LedgerEntryType;
-import io.quarkiverse.ledger.api.spi.LedgerTraceIdProvider;
-import io.quarkiverse.ledger.runtime.service.TraceIdEnricher;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.api.model.LedgerEntryType;
+import io.casehub.ledger.api.spi.LedgerTraceIdProvider;
+import io.casehub.ledger.runtime.service.TraceIdEnricher;
+import io.casehub.ledger.service.supplement.TestEntry;
 
 class TraceIdEnricherTest {
 

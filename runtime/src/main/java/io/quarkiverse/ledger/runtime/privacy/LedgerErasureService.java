@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.List;
 
@@ -7,8 +7,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorIdentity;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.model.ActorIdentity;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
 
 /**
  * CDI bean for processing GDPR Art.17 erasure requests.

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
+import io.casehub.ledger.runtime.service.LedgerMerklePublisher;
 
 class LedgerMerklePublisherTest {
 
@@ -21,7 +21,7 @@ class LedgerMerklePublisherTest {
     @Test
     void buildCheckpoint_firstLineIsOrigin() {
         String cp = LedgerMerklePublisher.buildCheckpoint(UUID.randomUUID(), 5, FAKE_ROOT);
-        assertThat(cp.split("\n")[0]).isEqualTo("io.quarkiverse.ledger/v1");
+        assertThat(cp.split("\n")[0]).isEqualTo("io.casehub.ledger/v1");
     }
 
     @Test
@@ -60,7 +60,7 @@ class LedgerMerklePublisherTest {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("Ed25519");
         KeyPair kp = kpg.generateKeyPair();
 
-        String text = "io.quarkiverse.ledger/v1\n" + UUID.randomUUID() + "\n5\n"
+        String text = "io.casehub.ledger/v1\n" + UUID.randomUUID() + "\n5\n"
                 + Base64.getEncoder().encodeToString(new byte[32]) + "\n";
 
         byte[] sig = LedgerMerklePublisher.signCheckpoint(text, kp.getPrivate());

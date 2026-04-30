@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service.supplement;
+package io.casehub.ledger.service.supplement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplementSerializer;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
 
 /**
  * Unit tests for {@link LedgerSupplementSerializer} — no Quarkus runtime, no CDI.

@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -15,12 +15,12 @@ import jakarta.transaction.Transactional;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryArchiveRecord;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -28,7 +28,7 @@ import io.quarkus.scheduler.Scheduled;
  * and deleting ledger entries past their mandatory retention period.
  *
  * <p>
- * Gated by {@code quarkus.ledger.retention.enabled} (off by default). When disabled,
+ * Gated by {@code casehub.ledger.retention.enabled} (off by default). When disabled,
  * the scheduled trigger fires but immediately returns without touching any data.
  *
  * <p>

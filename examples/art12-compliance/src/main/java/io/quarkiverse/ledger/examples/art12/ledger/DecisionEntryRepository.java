@@ -1,11 +1,11 @@
-package io.quarkiverse.ledger.examples.art12.ledger;
+package io.casehub.ledger.examples.art12.ledger;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 /**
- * CDI bean providing the {@link io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository}
+ * CDI bean providing the {@link io.casehub.ledger.runtime.repository.LedgerEntryRepository}
  * SPI for the art12-compliance example.
  *
  * <p>

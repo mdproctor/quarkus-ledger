@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.persistence;
+package io.casehub.ledger.runtime.persistence;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

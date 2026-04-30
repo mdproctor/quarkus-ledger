@@ -5,20 +5,20 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.quarkiverse.ledger</groupId>
-    <artifactId>quarkus-ledger-parent</artifactId>
+    <groupId>io.casehub</groupId>
+    <artifactId>casehub-ledger-parent</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>quarkus-ledger</artifactId>
-  <name>Quarkus Ledger - Runtime</name>
+  <artifactId>casehub-ledger</artifactId>
+  <name>CaseHub Ledger - Runtime</name>
 
   <dependencies>
 
     <!-- Ledger API — domain POJOs, SPI interfaces, enums -->
     <dependency>
-      <groupId>io.quarkiverse.ledger</groupId>
-      <artifactId>quarkus-ledger-api</artifactId>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-ledger-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 

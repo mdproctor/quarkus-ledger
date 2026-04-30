@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,20 +13,20 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.api.model.AttestationVerdict;
-import io.quarkiverse.ledger.api.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.api.model.AttestationVerdict;
+import io.casehub.ledger.api.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
 /**
  * Integration tests verifying write-path and query-path privacy wiring
- * in {@link io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}.
+ * in {@link io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}.
  */
 @QuarkusTest
 @TestProfile(InternalActorIdentityProviderIT.PseudonymisationProfile.class)

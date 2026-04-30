@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 
@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 @Table(name = "actor_identity")
 @NamedQuery(name = "ActorIdentity.findByActorId", query = "SELECT a FROM ActorIdentity a WHERE a.actorId = :actorId")
 @NamedQuery(name = "ActorIdentity.deleteByActorId", query = "DELETE FROM ActorIdentity a WHERE a.actorId = :actorId")
-public class ActorIdentity extends io.quarkiverse.ledger.api.model.ActorIdentity {
+public class ActorIdentity extends io.casehub.ledger.api.model.ActorIdentity {
 
     @PrePersist
     void prePersist() {

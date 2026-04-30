@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service.routing;
+package io.casehub.ledger.runtime.service.routing;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,11 +13,11 @@ import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
 
 /**
- * Dispatches CDI routing signals after each {@link io.quarkiverse.ledger.runtime.service.TrustScoreJob}
+ * Dispatches CDI routing signals after each {@link io.casehub.ledger.runtime.service.TrustScoreJob}
  * computation run. Consumers observe the payload type that matches their granularity:
  * {@link TrustScoreFullPayload} (all scores), {@link TrustScoreDeltaPayload} (changed actors only),
  * or {@link TrustScoreComputedAt} (lightweight notification).

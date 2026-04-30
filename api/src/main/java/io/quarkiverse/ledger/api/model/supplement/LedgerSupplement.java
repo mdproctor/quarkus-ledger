@@ -1,8 +1,8 @@
-package io.quarkiverse.ledger.api.model.supplement;
+package io.casehub.ledger.api.model.supplement;
 
 import java.util.UUID;
 
-import io.quarkiverse.ledger.api.model.LedgerEntry;
+import io.casehub.ledger.api.model.LedgerEntry;
 
 /**
  * Abstract base for all ledger supplements.

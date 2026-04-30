@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.privacy.api;
+package io.casehub.ledger.examples.privacy.api;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,10 +14,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.examples.privacy.service.CreditApplicationService;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.examples.privacy.service.CreditApplicationService;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 
 /**
  * REST endpoints for the credit application privacy demonstration.

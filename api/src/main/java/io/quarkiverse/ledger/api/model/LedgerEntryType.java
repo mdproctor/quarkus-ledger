@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model;
+package io.casehub.ledger.api.model;
 
 /** Classifies a {@link LedgerEntry} as an intent, a fact, or a peer review record. */
 public enum LedgerEntryType {

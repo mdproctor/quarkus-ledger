@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.privacy;
+package io.casehub.ledger.examples.privacy;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,11 +13,11 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.examples.privacy.service.CreditApplicationService;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.examples.privacy.service.CreditApplicationService;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**

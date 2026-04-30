@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model.supplement;
+package io.casehub.ledger.api.model.supplement;
 
 /**
  * Supplement carrying workflow provenance — the external entity that originated

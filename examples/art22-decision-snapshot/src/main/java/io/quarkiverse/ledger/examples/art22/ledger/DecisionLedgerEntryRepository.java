@@ -1,8 +1,8 @@
-package io.quarkiverse.ledger.examples.art22.ledger;
+package io.casehub.ledger.examples.art22.ledger;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 /**
  * Typed repository for {@link DecisionLedgerEntry}.

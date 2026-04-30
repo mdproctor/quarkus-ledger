@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model.supplement;
+package io.casehub.ledger.api.model.supplement;
 
 import java.util.LinkedHashMap;
 import java.util.List;

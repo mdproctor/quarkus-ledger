@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.routing.routing;
+package io.casehub.ledger.examples.routing.routing;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -7,7 +7,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreFullPayload;
+import io.casehub.ledger.runtime.service.routing.TrustScoreFullPayload;
 
 @ApplicationScoped
 public class TaskRouter {

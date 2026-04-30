@@ -1,11 +1,11 @@
-package io.quarkiverse.ledger.model;
+package io.casehub.ledger.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.api.model.ActorTypeResolver;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.api.model.ActorTypeResolver;
 
 class ActorTypeResolverTest {
 

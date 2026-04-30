@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.eigentrust;
+package io.casehub.ledger.examples.eigentrust;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
 
 /**
  * REST facade for the EigenTrust mesh example.

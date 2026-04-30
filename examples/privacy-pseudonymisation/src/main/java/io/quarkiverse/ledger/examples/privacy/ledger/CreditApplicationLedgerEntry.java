@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.privacy.ledger;
+package io.casehub.ledger.examples.privacy.ledger;
 
 import java.util.UUID;
 
@@ -6,7 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Domain-specific ledger entry for credit application decisions.

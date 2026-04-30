@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service.routing;
+package io.casehub.ledger.runtime.service.routing;
 
 public record TrustScoreDelta(
         String actorId,

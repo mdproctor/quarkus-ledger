@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.api.model;
+package io.casehub.ledger.api.model;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -18,7 +18,7 @@ import jakarta.persistence.MappedSuperclass;
  *
  * <p>
  * Archive records are written only when
- * {@code quarkus.ledger.retention.archive-before-delete=true} (the default).
+ * {@code casehub.ledger.retention.archive-before-delete=true} (the default).
  */
 @MappedSuperclass
 public class LedgerEntryArchiveRecord {

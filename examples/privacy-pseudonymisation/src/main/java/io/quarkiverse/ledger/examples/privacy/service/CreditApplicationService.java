@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.privacy.service;
+package io.casehub.ledger.examples.privacy.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -8,14 +8,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.privacy.ledger.CreditApplicationLedgerEntry;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.privacy.LedgerErasureService;
-import io.quarkiverse.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.examples.privacy.ledger.CreditApplicationLedgerEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.privacy.LedgerErasureService;
+import io.casehub.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 
 /**
  * Records credit application decisions with full privacy and supplement usage.
@@ -25,7 +25,7 @@ import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
  * <ul>
  * <li>Actor identity pseudonymisation — raw IDs (email addresses, personnel IDs) are replaced
  *     with UUID tokens by {@code JpaLedgerEntryRepository.save()} automatically when
- *     {@code quarkus.ledger.identity.tokenisation.enabled=true}.</li>
+ *     {@code casehub.ledger.identity.tokenisation.enabled=true}.</li>
  * <li>{@link ComplianceSupplement#detail} — free-text explanation of the decision logic
  *     (the field most often missing from example code).</li>
  * <li>{@link ProvenanceSupplement#agentConfigHash} — SHA-256 of the LLM agent's configuration,

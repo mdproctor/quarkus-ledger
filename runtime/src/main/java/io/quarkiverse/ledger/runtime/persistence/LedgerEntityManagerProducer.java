@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.persistence;
+package io.casehub.ledger.runtime.persistence;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
@@ -9,14 +9,14 @@ import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.config.LedgerConfig;
 import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**
  * CDI producer for the {@link LedgerPersistenceUnit}-qualified {@link EntityManager}.
  *
  * <p>
- * Selects the default persistence unit when {@code quarkus.ledger.datasource} is
+ * Selects the default persistence unit when {@code casehub.ledger.datasource} is
  * empty (the common case), or a named persistence unit when a datasource name is
  * configured. This allows quarkus-ledger to work in deployments that do not configure
  * a default datasource — e.g. applications with only named datasources.

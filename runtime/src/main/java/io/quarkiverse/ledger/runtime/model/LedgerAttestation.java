@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 @NamedQuery(name = "LedgerAttestation.findByEntryId", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId ORDER BY a.occurredAt ASC")
 @NamedQuery(name = "LedgerAttestation.findBySubjectId", query = "SELECT a FROM LedgerAttestation a WHERE a.subjectId = :subjectId ORDER BY a.occurredAt ASC")
 @NamedQuery(name = "LedgerAttestation.findByEntryIds", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId IN :entryIds")
-public class LedgerAttestation extends io.quarkiverse.ledger.api.model.LedgerAttestation {
+public class LedgerAttestation extends io.casehub.ledger.api.model.LedgerAttestation {
 
     @PrePersist
     void prePersist() {

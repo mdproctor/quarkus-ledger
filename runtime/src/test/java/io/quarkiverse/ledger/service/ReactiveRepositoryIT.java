@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.repository.ReactiveLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.ReactiveLedgerEntryRepository;
 
 /**
  * Structural verification of the reactive SPI.

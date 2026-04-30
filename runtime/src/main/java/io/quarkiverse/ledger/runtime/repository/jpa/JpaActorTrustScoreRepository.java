@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.repository.jpa;
+package io.casehub.ledger.runtime.repository.jpa;
 
 import java.time.Instant;
 import java.util.List;
@@ -10,11 +10,11 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.api.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.api.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.api.model.ActorTrustScore.ScoreType;
+import io.casehub.ledger.api.model.ActorType;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
 
 /**
  * JPA / EntityManager implementation of {@link ActorTrustScoreRepository}.

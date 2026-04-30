@@ -1,11 +1,11 @@
-package io.quarkiverse.ledger.examples.art12.ledger;
+package io.casehub.ledger.examples.art12.ledger;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 @Entity
 @Table(name = "art12_decision_entry")

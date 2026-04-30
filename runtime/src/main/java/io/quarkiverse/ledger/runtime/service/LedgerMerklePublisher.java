@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,11 +19,11 @@ import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.config.LedgerConfig;
 
 /**
  * Publishes signed Merkle tree checkpoints to a configured external URL.
- * Inactive when {@code quarkus.ledger.merkle.publish.url} is absent.
+ * Inactive when {@code casehub.ledger.merkle.publish.url} is absent.
  * Publishing is async and best-effort — failures are logged, not thrown.
  */
 @ApplicationScoped
@@ -39,7 +39,7 @@ public class LedgerMerklePublisher {
      * Format:
      *
      * <pre>
-     * io.quarkiverse.ledger/v1
+     * io.casehub.ledger/v1
      * {subjectId}
      * {treeSize}
      * {base64(rootHashBytes)}
@@ -51,7 +51,7 @@ public class LedgerMerklePublisher {
             final String treeRoot) {
 
         final byte[] rootBytes = hexToBytes(treeRoot);
-        return "io.quarkiverse.ledger/v1\n"
+        return "io.casehub.ledger/v1\n"
                 + subjectId + "\n"
                 + treeSize + "\n"
                 + Base64.getEncoder().encodeToString(rootBytes) + "\n";
@@ -83,7 +83,7 @@ public class LedgerMerklePublisher {
             final String checkpoint = buildCheckpoint(subjectId, treeSize, treeRoot);
             final PrivateKey privateKey = loadPrivateKey(publish.privateKey()
                     .orElseThrow(() -> new IllegalStateException(
-                            "quarkus.ledger.merkle.publish.private-key required when url is set")));
+                            "casehub.ledger.merkle.publish.private-key required when url is set")));
             final byte[] signature = signCheckpoint(checkpoint, privateKey);
             final String signed = checkpoint
                     + "\n— " + keyId + " " + Base64.getEncoder().encodeToString(signature);

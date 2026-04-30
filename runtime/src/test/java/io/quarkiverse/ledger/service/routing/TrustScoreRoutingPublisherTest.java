@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.service.routing;
+package io.casehub.ledger.service.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -8,9 +8,9 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreDelta;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.service.routing.TrustScoreDelta;
+import io.casehub.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
 
 class TrustScoreRoutingPublisherTest {
 

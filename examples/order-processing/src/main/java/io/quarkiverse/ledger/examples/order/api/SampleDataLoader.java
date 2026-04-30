@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.examples.order.api;
+package io.casehub.ledger.examples.order.api;
 
 import java.math.BigDecimal;
 
@@ -7,7 +7,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.order.service.OrderService;
+import io.casehub.ledger.examples.order.service.OrderService;
 import io.quarkus.runtime.StartupEvent;
 
 /**

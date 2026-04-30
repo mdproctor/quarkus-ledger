@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.persistence;
+package io.casehub.ledger.runtime.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +14,7 @@ import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.config.LedgerConfig;
 import io.quarkus.hibernate.orm.PersistenceUnit;
 
 /**

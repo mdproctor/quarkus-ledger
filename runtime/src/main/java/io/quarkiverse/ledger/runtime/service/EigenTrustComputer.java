@@ -1,4 +1,4 @@
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.api.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.api.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
 
 /**
  * Computes EigenTrust global trust scores via power iteration.

@@ -1,10 +1,10 @@
-package io.quarkiverse.ledger.examples.otel;
+package io.casehub.ledger.examples.otel;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Domain-specific ledger entry subclass for the OTel trace wiring example.
@@ -16,7 +16,7 @@ import io.quarkiverse.ledger.runtime.model.LedgerEntry;
  *
  * <p>
  * The {@code traceId} field on the base class is populated automatically by
- * {@link io.quarkiverse.ledger.runtime.service.LedgerTraceListener} at persist time.
+ * {@link io.casehub.ledger.runtime.service.LedgerTraceListener} at persist time.
  * No code in this class or in the REST resource touches {@code traceId} directly.
  */
 @Entity
