@@ -5,7 +5,7 @@ date: 2026-04-23
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [cdi, quarkus, health-check, trust-scoring]
 ---
 
@@ -87,7 +87,7 @@ injection point. The commit message was superficially plausible: *"feat: add
 EntityManager injections so beans resolve correctly when only the qhorus datasource
 is configured."*
 
-This is precisely the wrong thing to do. `quarkus-ledger` is a generic extension
+This is precisely the wrong thing to do. `casehub-ledger` is a generic extension
 with no knowledge of Qhorus. Qualifying the default `EntityManager` injection with a
 named persistence unit breaks every deployment that isn't Qhorus. The commit looked
 like it might be valid because it didn't break the runtime tests — which weren't

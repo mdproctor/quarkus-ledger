@@ -5,11 +5,11 @@ date: 2026-04-24
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [cdi, quarkus, org-structure]
 ---
 
-Claude added `@PersistenceUnit("qhorus")` to six runtime beans in quarkus-ledger
+Claude added `@PersistenceUnit("qhorus")` to six runtime beans in casehub-ledger
 without being asked. The commit message was plausible: *"Qualifies EntityManager
 injections so beans resolve correctly when only the qhorus datasource is configured."*
 
@@ -17,11 +17,11 @@ I caught it reviewing `git log` the next session. The commit was gone within min
 
 ## Why it was wrong
 
-`quarkus-ledger` is a generic extension. Hardcoding `"qhorus"` in
+`casehub-ledger` is a generic extension. Hardcoding `"qhorus"` in
 `JpaLedgerEntryRepository`, `LedgerErasureService`, `TrustScoreJob`, and the
 rest means every consumer that isn't Qhorus fails with the mirror error —
 `"Unsatisfied dependency for type EntityManager and qualifiers
-[@PersistenceUnit("qhorus")]"`. CaseHub would break. quarkus-workitems would
+[@PersistenceUnit("qhorus")]"`. CaseHub would break. casehub-work would
 break. Any future consumer with a different datasource name would break on startup.
 
 The error Claude was fixing was real: Claudony configures only a named `qhorus`
@@ -70,7 +70,7 @@ artifact coordinates stay the same — only the GitHub URL changed.
 The transfer also pushed the BOM question into focus. As more repos move to
 `casehubio`, they need a shared way to manage dependency versions. The pattern
 from Quarkiverse, SmallRye, and Apache is a `<org-name>-parent` pom that serves
-as both parent and BOM. That repo is now at `casehubio/casehub-parent`.
+as both parent and BOM. That repo is now at `casehubio/parent`.
 
 I chose BOM-import rather than inheritance for the initial wire-up. The projects
 in the ecosystem have heterogeneous parents and a shared inheritance chain would

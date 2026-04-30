@@ -1325,11 +1325,11 @@ After both issues close, run these greps across all consumer repos:
 ```bash
 # #67: any other @EntityListeners on ledger-related entities?
 grep -r "@EntityListeners.*[Ll]edger" \
-  ~/claude/casehub/engine ~/claude/quarkus-work ~/claude/quarkus-qhorus ~/claude/claudony
+  ~/claude/casehub/engine ~/claude/casehub-work ~/claude/casehub-qhorus ~/claude/claudony
 
 # #68: any code querying ActorTrustScore directly rather than via repository?
 grep -r "ActorTrustScore" \
-  ~/claude/casehub/engine ~/claude/quarkus-work ~/claude/quarkus-qhorus ~/claude/claudony
+  ~/claude/casehub/engine ~/claude/casehub-work ~/claude/casehub-qhorus ~/claude/claudony
 ```
 
 Open tracked issues for any consolidation work found. Both issues' Step 6 checks are satisfied by this step.

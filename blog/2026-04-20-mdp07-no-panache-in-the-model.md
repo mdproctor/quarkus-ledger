@@ -5,13 +5,13 @@ date: 2026-04-20
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [quarkus, jpa, panache, architecture, entities]
 ---
 
 Earlier in this session we converted `LedgerEntry` to a plain `@Entity` to unblock Qhorus's reactive migration. That was the forcing function. But once we'd done one entity, the question became: why stop there?
 
-The answer I kept returning to: `quarkus-ledger` is an extension library. Forcing `quarkus-hibernate-orm-panache` on every consumer is a dependency they didn't ask for. An application can choose Panache, reactive, plain JPA, or Spring Data — but if the base entity extends `PanacheEntityBase`, the choice is made for them. That's wrong for a library.
+The answer I kept returning to: `casehub-ledger` is an extension library. Forcing `quarkus-hibernate-orm-panache` on every consumer is a dependency they didn't ask for. An application can choose Panache, reactive, plain JPA, or Spring Data — but if the base entity extends `PanacheEntityBase`, the choice is made for them. That's wrong for a library.
 
 ## The Panache Shorthand Question
 

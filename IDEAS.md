@@ -26,7 +26,7 @@ Alignment) to any codebase and outputs a structured `AUDITABILITY.md` gap
 analysis with a priority map. Could be parameterised by compliance lens:
 `8-axiom-auditability`, `article-12`, `gdpr-art-22`, `nist-ai-rmf`.
 
-**Context:** Emerged from the quarkus-ledger research session (2026-04-16)
+**Context:** Emerged from the casehub-ledger research session (2026-04-16)
 after producing `docs/AUDITABILITY.md`. The pattern — load a framework,
 assess a codebase, apply a design constraint, output a structured gap
 analysis — is general enough to offer as a cc-praxis skill alongside

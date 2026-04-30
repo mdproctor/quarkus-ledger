@@ -39,7 +39,7 @@
 - [ ] **Step 1: Create the epic**
 
 ```bash
-gh issue create --repo mdproctor/quarkus-ledger \
+gh issue create --repo casehubio/ledger \
   --title "Epic: W3C PROV-DM JSON-LD export" \
   --label "enhancement" \
   --body "$(cat <<'EOF'
@@ -63,7 +63,7 @@ Note the epic number (e.g. #13).
 - [ ] **Step 2: Create the implementation issue**
 
 ```bash
-gh issue create --repo mdproctor/quarkus-ledger \
+gh issue create --repo casehubio/ledger \
   --title "feat: W3C PROV-DM JSON-LD export — LedgerProvSerializer + LedgerProvExportService" \
   --label "enhancement" \
   --body "$(cat <<'EOF'
@@ -165,7 +165,7 @@ class LedgerProvSerializerTest {
         Map<?, ?> ctx = (Map<?, ?>) doc.get("@context");
         assertThat(ctx).containsOnlyKeys("prov", "ledger", "xsd");
         assertThat(ctx.get("prov")).isEqualTo("http://www.w3.org/ns/prov#");
-        assertThat(ctx.get("ledger")).isEqualTo("http://quarkiverse.io/ledger#");
+        assertThat(ctx.get("ledger")).isEqualTo("https://casehubio.github.io/ledger#");
         assertThat(ctx.get("xsd")).isEqualTo("http://www.w3.org/2001/XMLSchema#");
     }
 
@@ -418,7 +418,7 @@ public final class LedgerProvSerializer {
 
     private static final Map<String, Object> CONTEXT = Map.of(
             "prov", "http://www.w3.org/ns/prov#",
-            "ledger", "http://quarkiverse.io/ledger#",
+            "ledger", "https://casehubio.github.io/ledger#",
             "xsd", "http://www.w3.org/2001/XMLSchema#");
 
     private LedgerProvSerializer() {}
@@ -882,7 +882,7 @@ Refs #14, Refs #13"
 ```markdown
 # W3C PROV-DM Mapping Reference
 
-Documents how `quarkus-ledger` fields map to W3C PROV-DM concepts in the JSON-LD
+Documents how `casehub-ledger` fields map to W3C PROV-DM concepts in the JSON-LD
 export produced by `LedgerProvExportService.exportSubject(UUID)`.
 
 ## PROV-DM Primer
@@ -905,7 +905,7 @@ And three core relations:
 
 ## IRI Conventions
 
-All IRIs use the `ledger:` prefix (`http://quarkiverse.io/ledger#`):
+All IRIs use the `ledger:` prefix (`https://casehubio.github.io/ledger#`):
 
 | Element | IRI pattern | Example |
 |---|---|---|
@@ -982,7 +982,7 @@ The JSON-LD `@context` is always exactly:
 {
   "@context": {
     "prov": "http://www.w3.org/ns/prov#",
-    "ledger": "http://quarkiverse.io/ledger#",
+    "ledger": "https://casehubio.github.io/ledger#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   }
 }
@@ -1011,7 +1011,7 @@ cp examples/merkle-verification/pom.xml examples/prov-dm-export/pom.xml
 ```
 
 Edit `examples/prov-dm-export/pom.xml`:
-- `<artifactId>quarkus-ledger-example-prov-dm-export</artifactId>`
+- `<artifactId>casehub-ledger-example-prov-dm-export</artifactId>`
 - `<name>Quarkus Ledger :: Example :: PROV-DM Export</name>`
 
 - [ ] **Step 2: Create directory structure**
@@ -1241,7 +1241,7 @@ class ProvDmExportIT {
         Map<String, Object> doc = MAPPER.readValue(json, new TypeReference<>() {});
         Map<?, ?> ctx = (Map<?, ?>) doc.get("@context");
         assertThat(ctx.get("prov")).isEqualTo("http://www.w3.org/ns/prov#");
-        assertThat(ctx.get("ledger")).isEqualTo("http://quarkiverse.io/ledger#");
+        assertThat(ctx.get("ledger")).isEqualTo("https://casehubio.github.io/ledger#");
         assertThat(ctx.get("xsd")).isEqualTo("http://www.w3.org/2001/XMLSchema#");
     }
 }
@@ -1252,7 +1252,7 @@ class ProvDmExportIT {
 ```markdown
 # Example: PROV-DM Export
 
-Demonstrates W3C PROV-DM JSON-LD export using `quarkus-ledger`.
+Demonstrates W3C PROV-DM JSON-LD export using `casehub-ledger`.
 
 ## What This Shows
 
@@ -1297,9 +1297,9 @@ Refs #14, Refs #13"
 ```
 
 ```bash
-gh issue close 14 --repo mdproctor/quarkus-ledger \
+gh issue close 14 --repo casehubio/ledger \
   --comment "Implemented: LedgerProvSerializer, LedgerProvExportService, prov-dm-mapping.md, example."
-gh issue close 13 --repo mdproctor/quarkus-ledger \
+gh issue close 13 --repo casehubio/ledger \
   --comment "All child issues complete."
 ```
 

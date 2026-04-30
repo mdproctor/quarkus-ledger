@@ -5,7 +5,7 @@ date: 2026-04-20
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [quarkus, jpa, panache, reactive, documentation]
 ---
 
@@ -77,5 +77,5 @@ The right answer was simpler: provide only the `ReactiveLedgerEntryRepository` S
 their own module using `quarkus-hibernate-reactive-panache` — which they were adding anyway.
 The pre-built implementation has no business being in this module.
 
-`quarkus-ledger` is now installed with `LedgerEntry` as a plain entity. Qhorus can subclass
+`casehub-ledger` is now installed with `LedgerEntry` as a plain entity. Qhorus can subclass
 it reactively.

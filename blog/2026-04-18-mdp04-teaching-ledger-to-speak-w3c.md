@@ -5,7 +5,7 @@ date: 2026-04-18
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [quarkus, prov-dm, w3c, provenance, interoperability]
 ---
 

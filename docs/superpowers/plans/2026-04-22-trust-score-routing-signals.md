@@ -1193,8 +1193,8 @@ Refs #IMPL_ISSUE, #EPIC"
   <!-- Standalone POM — does NOT inherit from quarkiverse-parent. -->
 
   <groupId>io.quarkiverse.ledger.examples</groupId>
-  <artifactId>quarkus-ledger-example-trust-score-routing</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <artifactId>casehub-ledger-example-trust-score-routing</artifactId>
+  <version>0.2-SNAPSHOT</version>
 
   <name>Quarkus Ledger - Example: Trust Score Routing</name>
   <description>
@@ -1205,7 +1205,7 @@ Refs #IMPL_ISSUE, #EPIC"
 
   <properties>
     <quarkus.version>3.32.2</quarkus.version>
-    <quarkus-ledger.version>1.0.0-SNAPSHOT</quarkus-ledger.version>
+    <casehub-ledger.version>0.2-SNAPSHOT</casehub-ledger.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -1226,8 +1226,8 @@ Refs #IMPL_ISSUE, #EPIC"
   <dependencies>
     <dependency>
       <groupId>io.quarkiverse.ledger</groupId>
-      <artifactId>quarkus-ledger</artifactId>
-      <version>${quarkus-ledger.version}</version>
+      <artifactId>casehub-ledger</artifactId>
+      <version>${casehub-ledger.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

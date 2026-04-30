@@ -1,6 +1,6 @@
 # Consumer Privacy Obligations
 
-`quarkus-ledger` provides the privacy infrastructure — pseudonymisation, token severing,
+`casehub-ledger` provides the privacy infrastructure — pseudonymisation, token severing,
 sanitisation hooks. Using it correctly is the consumer's responsibility. This document
 describes what each consumer must understand and decide before going to production with
 any system that records human actor identities.

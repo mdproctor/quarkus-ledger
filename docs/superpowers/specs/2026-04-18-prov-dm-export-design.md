@@ -67,7 +67,7 @@ Null supplement fields are **omitted entirely** — no null noise in the output.
 {
   "@context": {
     "prov": "http://www.w3.org/ns/prov#",
-    "ledger": "http://quarkiverse.io/ledger#",
+    "ledger": "https://casehubio.github.io/ledger#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "entity": {

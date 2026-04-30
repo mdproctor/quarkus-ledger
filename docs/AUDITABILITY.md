@@ -1,4 +1,4 @@
-# Quarkus Ledger — Auditability Self-Assessment
+# CaseHub Ledger — Auditability Self-Assessment
 
 **Framework:** 8-axiom model from *"Creating Characteristically Auditable Agentic AI Systems"*
 (ACM Intelligent Robotics FAIR 2025). Extended here to agentic-AI collaboration systems
@@ -9,7 +9,7 @@ compliance in multi-agent orchestration (Tarkus → Qhorus → Claudony).
 Gaps are stated honestly. Where a gap is uncomfortable, that is the point — it is the
 thing to fix.
 
-**Last assessed:** 2026-04-21 against `quarkus-ledger` v1.0.0-SNAPSHOT.
+**Last assessed:** 2026-04-21 against `casehub-ledger` v0.2-SNAPSHOT.
 
 ---
 
@@ -262,7 +262,7 @@ An immutable ledger cannot delete entries without breaking tamper evidence. The 
 pseudonymisation: store tokens instead of raw identities, backed by a detachable mapping.
 
 **Current state:**
-Two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
+Two SPIs in `io.casehub.ledger.runtime.privacy`:
 
 - `ActorIdentityProvider` — tokenises `actorId` (write) and `attestorId` on every persist.
   `tokenise()` creates a UUID token if none exists. `tokeniseForQuery()` does a read-only

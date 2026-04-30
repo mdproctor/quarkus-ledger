@@ -5,11 +5,11 @@ date: 2026-04-17
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [quarkus, jpa, architecture, supplements, causality, art12]
 ---
 
-This session was the longest one yet on quarkus-ledger. We covered a lot of ground —
+This session was the longest one yet on casehub-ledger. We covered a lot of ground —
 research into ten possible directions, a compliance sprint through three of the top four,
 and then a small architectural correction that turned out to be more interesting than it
 first appeared.

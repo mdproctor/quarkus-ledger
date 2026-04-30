@@ -18,7 +18,7 @@ import io.quarkus.hibernate.orm.PersistenceUnit;
  * <p>
  * Selects the default persistence unit when {@code casehub.ledger.datasource} is
  * empty (the common case), or a named persistence unit when a datasource name is
- * configured. This allows quarkus-ledger to work in deployments that do not configure
+ * configured. This allows casehub-ledger to work in deployments that do not configure
  * a default datasource — e.g. applications with only named datasources.
  */
 @ApplicationScoped

@@ -36,7 +36,7 @@ public class ProvenanceSupplement extends LedgerSupplement {
 
     /**
      * The system that owns the external entity.
-     * Example: {@code "quarkus-flow"}, {@code "quarkus-tarkus"}.
+     * Example: {@code "quarkus-flow"}, {@code "casehub-work"}.
      */
     public String sourceEntitySystem;
 

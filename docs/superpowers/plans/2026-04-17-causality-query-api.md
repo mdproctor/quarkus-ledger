@@ -528,7 +528,7 @@ void placeOrder_correlationId_fieldExistsInResponse() {
 - [ ] **Step 2: Run order-processing tests**
 
 ```bash
-cd /Users/mdproctor/claude/quarkus-ledger/examples/order-processing
+cd /Users/mdproctor/claude/casehub/ledger/examples/order-processing
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean test -q 2>&1 | tail -5
 cd ../..
 ```

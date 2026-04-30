@@ -5,7 +5,7 @@ date: 2026-04-21
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [quarkus, documentation, capabilities, privacy, gdpr]
 ---
 

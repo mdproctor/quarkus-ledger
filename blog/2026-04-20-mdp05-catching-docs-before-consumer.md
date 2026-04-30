@@ -5,7 +5,7 @@ date: 2026-04-20
 type: correction
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [quarkus, documentation, api-drift]
 ---
 

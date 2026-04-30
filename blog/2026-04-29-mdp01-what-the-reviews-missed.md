@@ -5,7 +5,7 @@ date: 2026-04-29
 type: phase-update
 entry_type: note
 subtype: diary
-projects: [quarkus-ledger]
+projects: [casehub-ledger]
 tags: [trust, agentic, code-review, quarkus]
 ---
 
@@ -86,7 +86,7 @@ Important, or Suggestion. The controller decides what to fix and what to skip.
 During this session two findings from the code reviewer were labeled Important
 and then dismissed with reasoning like "minor, not blocking":
 
-- quarkus-qhorus had test fixtures using `"agent-a"` as actor IDs throughout.
+- casehub-qhorus had test fixtures using `"agent-a"` as actor IDs throughout.
   After introducing `ActorTypeResolver`, these now resolve to HUMAN, not AGENT.
   Only the one test that explicitly asserted `actorType == AGENT` was updated.
   The rest — representing agent actors with an ID that no longer classifies as
@@ -112,12 +112,12 @@ get fixed. The controller doesn't get to make that call unilaterally.
 
 After shipping the `ActorTypeResolver` changes across four consumer repos, we
 ran a Step 6 sweep — parallel subagents reading the recently-changed files and
-running tests. It surfaced 8 pre-existing test failures in quarkus-work
+running tests. It surfaced 8 pre-existing test failures in casehub-work
 (`TrustScoreComputerTest` expects `score == 1.0` for unattested decisions; the
 Bayesian Beta model correctly returns `0.5`), and two production code issues in
 claudony we hadn't touched.
 
-None of those were visible from quarkus-ledger's perspective. The lesson is
+None of those were visible from casehub-ledger's perspective. The lesson is
 that Step 6 means more than grepping for the class you renamed — it means
 actually running the consumer tests, reading the consumer code, and confirming
 nothing pre-existing is already on fire.

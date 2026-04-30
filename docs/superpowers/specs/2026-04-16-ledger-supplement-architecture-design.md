@@ -245,7 +245,7 @@ using **Jackson** (`quarkus-rest-jackson`, already on the classpath via the exam
 
 **The canonical hash form change:** `planRef` is removed from `ledger_entry` and from
 the canonical form. Existing chains computed with `planRef` included are invalidated.
-Since no production data exists (v1.0.0-SNAPSHOT, all consumers are also pre-release),
+Since no production data exists (0.2-SNAPSHOT, all consumers are also pre-release),
 this is acceptable. The migration drops and recreates — no data migration needed.
 `docs/DESIGN.md` § Hash chain canonical form must be updated to remove `planRef`.
 
@@ -316,8 +316,8 @@ A standalone runnable Quarkus app demonstrating:
 
 | Consumer | Impact | Action required |
 |---|---|---|
-| `quarkus-tarkus` | Uses `planRef`, `rationale`, `correlationId` — these move to supplements | Update `WorkItemLedgerEntry` capture to use `ComplianceSupplement` / `ObservabilitySupplement` |
-| `quarkus-qhorus` | Uses `decisionContext`, `sourceEntityId/Type/System`, `correlationId` | Update `AgentMessageLedgerEntry` capture to use all three supplements |
+| `casehub-work` | Uses `planRef`, `rationale`, `correlationId` — these move to supplements | Update `WorkItemLedgerEntry` capture to use `ComplianceSupplement` / `ObservabilitySupplement` |
+| `casehub-qhorus` | Uses `decisionContext`, `sourceEntityId/Type/System`, `correlationId` | Update `AgentMessageLedgerEntry` capture to use all three supplements |
 | `examples/order-processing` | Uses `planRef`, `rationale`, `decisionContext` | Update `OrderService` to use `ComplianceSupplement` |
 
 All three are pre-release. Coordination is required but not blocked.

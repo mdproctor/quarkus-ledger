@@ -869,6 +869,6 @@ Closes #21, Closes #18"
 ```
 
 ```bash
-gh issue close 18 --repo mdproctor/quarkus-ledger \
+gh issue close 18 --repo casehubio/ledger \
   --comment "All done: plain @Entity throughout, panache dep removed, 130+ tests passing."
 ```

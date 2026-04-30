@@ -87,7 +87,7 @@ public String correlationId;
  *
  * <p>
  * When set, enables cross-system causal chain traversal via
- * {@link io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
+ * {@link io.casehub.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
  * Use this when an orchestrator (e.g. Claudony) triggers work in Tarkus which triggers
  * a message in Qhorus — each downstream entry points back to its upstream cause.
  */

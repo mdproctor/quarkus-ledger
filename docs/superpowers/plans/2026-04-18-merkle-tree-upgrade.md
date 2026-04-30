@@ -50,7 +50,7 @@
 - [ ] **Step 1: Create epic issue**
 
 ```bash
-gh issue create --repo mdproctor/quarkus-ledger \
+gh issue create --repo casehubio/ledger \
   --title "Epic: Axiom 4 — Verifiability (Merkle tree upgrade + external proof publishing)" \
   --label "epic" \
   --body "$(cat <<'EOF'
@@ -72,7 +72,7 @@ Note the new epic issue number (e.g. #12). All commits in this feature use: `Ref
 - [ ] **Step 2: Confirm issue #11 is open**
 
 ```bash
-gh issue view 11 --repo mdproctor/quarkus-ledger
+gh issue view 11 --repo casehubio/ledger
 ```
 
 ---
@@ -1398,7 +1398,7 @@ class LedgerMerklePublisherTest {
     void buildCheckpoint_firstLineIsOrigin() {
         UUID sub = UUID.randomUUID();
         String cp = LedgerMerklePublisher.buildCheckpoint(sub, 5, FAKE_ROOT, "key-01");
-        assertThat(cp.split("\n")[0]).isEqualTo("io.quarkiverse.ledger/v1");
+        assertThat(cp.split("\n")[0]).isEqualTo("io.casehub.ledger/v1");
     }
 
     @Test
@@ -1444,7 +1444,7 @@ class LedgerMerklePublisherTest {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("Ed25519");
         KeyPair kp = kpg.generateKeyPair();
 
-        String text = "io.quarkiverse.ledger/v1\n" + UUID.randomUUID() + "\n5\n"
+        String text = "io.casehub.ledger/v1\n" + UUID.randomUUID() + "\n5\n"
                 + Base64.getEncoder().encodeToString(new byte[32]) + "\n";
 
         byte[] sig = LedgerMerklePublisher.signCheckpoint(text, kp.getPrivate());
@@ -1541,7 +1541,7 @@ public class LedgerMerklePublisher {
             final String treeRoot, final String keyId) {
 
         final byte[] rootBytes = hexToBytes(treeRoot);
-        return "io.quarkiverse.ledger/v1\n"
+        return "io.casehub.ledger/v1\n"
                 + subjectId + "\n"
                 + treeSize + "\n"
                 + Base64.getEncoder().encodeToString(rootBytes) + "\n";
@@ -1807,8 +1807,8 @@ Refs #11, Refs #12"
 cp examples/art12-compliance/pom.xml examples/merkle-verification/pom.xml
 ```
 
-Edit: change `<artifactId>quarkus-ledger-example-art12-compliance</artifactId>` to
-`<artifactId>quarkus-ledger-example-merkle-verification</artifactId>`.
+Edit: change `<artifactId>casehub-ledger-example-art12-compliance</artifactId>` to
+`<artifactId>casehub-ledger-example-merkle-verification</artifactId>`.
 Change `<name>` accordingly.
 
 - [ ] **Step 2: Create MerkleVerificationExample**
@@ -1942,7 +1942,7 @@ class MerkleVerificationIT {
 ```markdown
 # Example: Merkle Verification
 
-Demonstrates O(log N) Merkle inclusion proofs using `quarkus-ledger`.
+Demonstrates O(log N) Merkle inclusion proofs using `casehub-ledger`.
 
 ## What This Shows
 
@@ -1982,9 +1982,9 @@ Refs #11, Refs #12"
 ```
 
 ```bash
-gh issue close 11 --repo mdproctor/quarkus-ledger \
+gh issue close 11 --repo casehubio/ledger \
   --comment "Implemented: Merkle Mountain Range frontier, LedgerVerificationService, Ed25519 publishing, example. Closes Axiom 4."
-gh issue close 12 --repo mdproctor/quarkus-ledger \
+gh issue close 12 --repo casehubio/ledger \
   --comment "All child issues complete."
 ```
 

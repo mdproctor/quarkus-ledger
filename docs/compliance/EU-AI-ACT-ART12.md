@@ -4,7 +4,7 @@
 **Enforcement date:** 2 August 2026 (Annex III high-risk AI systems)
 **Penalties:** Up to €15M or 3% of global annual turnover
 
-This document maps each Article 12 obligation to the specific `quarkus-ledger`
+This document maps each Article 12 obligation to the specific `casehub-ledger`
 capability that satisfies it, for use in conformity assessments.
 
 ---

@@ -1,7 +1,7 @@
 # Remove Panache from Internal Entities — Design Spec
 
 **Date:** 2026-04-20
-**Goal:** Make all quarkus-ledger entities plain `@Entity` POJOs. Remove `quarkus-hibernate-orm-panache` from the runtime pom. No consumer impact — only internal entities are changing.
+**Goal:** Make all casehub-ledger entities plain `@Entity` POJOs. Remove `quarkus-hibernate-orm-panache` from the runtime pom. No consumer impact — only internal entities are changing.
 
 ---
 

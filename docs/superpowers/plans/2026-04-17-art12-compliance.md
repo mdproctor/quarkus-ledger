@@ -59,7 +59,7 @@ Base package: `io.quarkiverse.ledger.runtime`
 cd examples/order-processing/src/main/resources/db/migration
 mv V1003__order_ledger_entry.sql V1004__order_ledger_entry.sql
 
-cd /Users/mdproctor/claude/quarkus-ledger/examples/art22-decision-snapshot/src/main/resources/db/migration
+cd /Users/mdproctor/claude/casehub/ledger/examples/art22-decision-snapshot/src/main/resources/db/migration
 mv V1003__decision_schema.sql V1004__decision_schema.sql
 ```
 
@@ -73,7 +73,7 @@ Find the Flyway version numbering table and update:
 ```markdown
 | Range | Owner | Purpose |
 |---|---|---|
-| V1000–V1003 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1000–V1003 | `casehub-ledger` base | Base schema (reserved — do not use in consumers) |
 | V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
 | V1004+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 ```
@@ -86,7 +86,7 @@ Find `V1003+` and change to `V1004+`. Find example migration comment `-- V1003__
 
 Find the Flyway migration table and update:
 ```markdown
-| V1003 | from `quarkus-ledger` jar | `ledger_entry_archive` table |
+| V1003 | from `casehub-ledger` jar | `ledger_entry_archive` table |
 | V1004 | `V1004__order_ledger_entry.sql` | `order_ledger_entry` join table |
 ```
 Update footer: "V1004 must be > V1003 so the base tables exist before the FK constraint."
@@ -1603,7 +1603,7 @@ mkdir -p examples/art12-compliance/src/test/java/io/quarkiverse/ledger/examples/
 - [ ] **Step 5: Create `examples/art12-compliance/pom.xml`**
 
 Copy from `examples/order-processing/pom.xml` and change:
-- `artifactId` → `quarkus-ledger-example-art12-compliance`
+- `artifactId` → `casehub-ledger-example-art12-compliance`
 - `name` → `Quarkus Ledger - Example: EU AI Act Art.12 Compliance`
 - `description` → Demonstrates retention enforcement and auditor query API
 
@@ -1891,7 +1891,7 @@ Refs #9"
 ```markdown
 # Example: EU AI Act Article 12 Compliance
 
-This example demonstrates how to use `quarkus-ledger` to satisfy EU AI Act Article 12
+This example demonstrates how to use `casehub-ledger` to satisfy EU AI Act Article 12
 (Record-keeping) requirements for high-risk AI systems.
 
 ## What is EU AI Act Article 12?
@@ -1954,7 +1954,7 @@ mkdir -p docs/compliance
 **Enforcement date:** 2 August 2026 (Annex III high-risk AI systems)
 **Penalties:** Up to €15M or 3% of global annual turnover
 
-This document maps each Article 12 obligation to the specific `quarkus-ledger`
+This document maps each Article 12 obligation to the specific `casehub-ledger`
 capability that satisfies it, for use in conformity assessments.
 
 ---

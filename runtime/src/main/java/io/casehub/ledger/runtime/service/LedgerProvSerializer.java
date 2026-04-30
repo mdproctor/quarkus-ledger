@@ -30,7 +30,7 @@ public final class LedgerProvSerializer {
 
     private static final Map<String, Object> CONTEXT = Map.of(
             "prov", "http://www.w3.org/ns/prov#",
-            "ledger", "http://quarkiverse.io/ledger#",
+            "ledger", "https://casehubio.github.io/ledger#",
             "xsd", "http://www.w3.org/2001/XMLSchema#");
 
     private LedgerProvSerializer() {

@@ -1,18 +1,18 @@
 # Integration Guide
 
-This guide walks through everything needed to add `quarkus-ledger` to a Quarkus application or extension.
+This guide walks through everything needed to add `casehub-ledger` to a Quarkus application or extension.
 
 ---
 
 ## How it works
 
-`quarkus-ledger` uses JPA JOINED inheritance. The base `ledger_entry` table holds all domain-agnostic fields (actor, sequence, Merkle leaf hash, provenance, decision context). Your domain subclass adds a sibling table that joins on `id`.
+`casehub-ledger` uses JPA JOINED inheritance. The base `ledger_entry` table holds all domain-agnostic fields (actor, sequence, Merkle leaf hash, provenance, decision context). Your domain subclass adds a sibling table that joins on `id`.
 
 ```
-ledger_entry (base — created by quarkus-ledger V1000)
+ledger_entry (base — created by casehub-ledger V1000)
   ├── order_ledger_entry         ← your subclass table
-  ├── work_item_ledger_entry     ← quarkus-tarkus subclass
-  └── agent_message_ledger_entry ← quarkus-qhorus subclass
+  ├── work_item_ledger_entry     ← casehub-work subclass
+  └── agent_message_ledger_entry ← casehub-qhorus subclass
 ```
 
 `LedgerAttestation` rows reference `ledger_entry.id` directly — attestations work across all subclasses without any changes.
@@ -25,8 +25,8 @@ ledger_entry (base — created by quarkus-ledger V1000)
 
 ```xml
 <dependency>
-  <groupId>io.quarkiverse.ledger</groupId>
-  <artifactId>quarkus-ledger</artifactId>
+  <groupId>io.casehub</groupId>
+  <artifactId>casehub-ledger</artifactId>
   <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
@@ -35,24 +35,24 @@ ledger_entry (base — created by quarkus-ledger V1000)
 
 ```xml
 <dependency>
-  <groupId>io.quarkiverse.ledger</groupId>
-  <artifactId>quarkus-ledger-deployment</artifactId>
+  <groupId>io.casehub</groupId>
+  <artifactId>casehub-ledger-deployment</artifactId>
   <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
 
-Flyway picks up `quarkus-ledger`'s migrations (V1000, V1001, V1002, V1003) automatically from the classpath. Your own migrations start from a lower number (e.g. V1–V9) or a distinct high range (e.g. V2000+). Do not use V1000–V1003.
+Flyway picks up `casehub-ledger`'s migrations (V1000, V1001, V1002, V1003) automatically from the classpath. Your own migrations start from a lower number (e.g. V1–V9) or a distinct high range (e.g. V2000+). Do not use V1000–V1003.
 
-> **Critical:** your subclass migration must run **after** quarkus-ledger's V1000 (which creates `ledger_entry`), because the subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)`. If you number your subclass migration V5 and the base schema is V1000, Flyway will try to create the FK before the parent table exists and fail with `Table "LEDGER_ENTRY" not found`.
+> **Critical:** your subclass migration must run **after** casehub-ledger's V1000 (which creates `ledger_entry`), because the subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)`. If you number your subclass migration V5 and the base schema is V1000, Flyway will try to create the FK before the parent table exists and fail with `Table "LEDGER_ENTRY" not found`.
 >
-> Safe numbering: use V1–V999 for your domain tables and **V1004+ for any subclass join tables** (V1000–V1003 are reserved by `quarkus-ledger`). See the [example](../examples/order-processing/) where `V1004__order_ledger_entry.sql` follows this rule.
+> Safe numbering: use V1–V999 for your domain tables and **V1004+ for any subclass join tables** (V1000–V1003 are reserved by `casehub-ledger`). See the [example](../examples/order-processing/) where `V1004__order_ledger_entry.sql` follows this rule.
 
 ---
 
 ## Step 2 — Create your LedgerEntry subclass
 
 ```java
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -167,7 +167,7 @@ entry.attach(ps);
 
 ## Step 3 — Write the Flyway migration
 
-Number your subclass migration **after V1003** (the last quarkus-ledger migration). The subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)` — if it runs before V1000 creates `ledger_entry`, the migration fails. V1004 is the safe starting point for the first subclass table.
+Number your subclass migration **after V1003** (the last casehub-ledger migration). The subclass table has a `FOREIGN KEY ... REFERENCES ledger_entry (id)` — if it runs before V1000 creates `ledger_entry`, the migration fails. V1004 is the safe starting point for the first subclass table.
 
 ```sql
 -- V1004__order_ledger_entry.sql
@@ -193,7 +193,7 @@ The `FOREIGN KEY ... REFERENCES ledger_entry (id)` is what makes JOINED inherita
 **Recommended:** extend `JpaLedgerEntryRepository` rather than implementing `LedgerEntryRepository` from scratch. This inherits all SPI methods (including `listAll()`, `findAllEvents()`, audit queries, etc.) and handles the Merkle frontier and pseudonymisation inside `save()`. Add only your domain-specific query methods on top.
 
 ```java
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -227,7 +227,7 @@ public class OrderLedgerEntryRepository extends JpaLedgerEntryRepository {
 
 No activation needed — this subclass is `@ApplicationScoped` (not `@Alternative`), so CDI picks it up directly.
 
-> **CDI note:** `JpaLedgerEntryRepository` (from quarkus-ledger) is annotated `@Alternative` so it stays dormant when your own `LedgerEntryRepository` is on the classpath — CDI sees only your implementation. See [§ Activating the built-in JPA repository](#activating-the-built-in-jpa-repository) for when and how to activate it explicitly.
+> **CDI note:** `JpaLedgerEntryRepository` (from casehub-ledger) is annotated `@Alternative` so it stays dormant when your own `LedgerEntryRepository` is on the classpath — CDI sees only your implementation. See [§ Activating the built-in JPA repository](#activating-the-built-in-jpa-repository) for when and how to activate it explicitly.
 
 ---
 
@@ -376,7 +376,7 @@ quarkus.ledger.trust-score.routing-enabled=false
 
 ```properties
 # application.properties
-quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
+quarkus.arc.selected-alternatives=io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
 ```
 
 This is the Quarkus-native way. It activates the alternative without requiring a `beans.xml`.
@@ -391,7 +391,7 @@ This is the Quarkus-native way. It activates the alternative without requiring a
        xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd"
        version="4.0">
     <alternatives>
-        <class>io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository</class>
+        <class>io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository</class>
     </alternatives>
 </beans>
 ```

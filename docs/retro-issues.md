@@ -1,4 +1,4 @@
-# Retro Issues — quarkus-ledger
+# Retro Issues — casehub-ledger
 
 Generated: 2026-04-22. Covers all 181 commits from 2026-04-15 to 2026-04-22.
 

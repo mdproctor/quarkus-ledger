@@ -1,6 +1,6 @@
 # Example: GDPR Art.22 Decision Snapshot
 
-This example demonstrates how to use `quarkus-ledger` with `ComplianceSupplement`
+This example demonstrates how to use `casehub-ledger` with `ComplianceSupplement`
 to build an AI decision service that is compliant with GDPR Article 22.
 
 ## What is GDPR Article 22?

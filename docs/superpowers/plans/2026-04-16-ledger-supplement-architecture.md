@@ -339,7 +339,7 @@ public class ProvenanceSupplement extends LedgerSupplement {
 
     /**
      * The system that owns the external entity.
-     * Example: {@code "quarkus-flow"}, {@code "quarkus-tarkus"}.
+     * Example: {@code "quarkus-flow"}, {@code "casehub-work"}.
      */
     @Column(name = "source_entity_system", length = 100)
     public String sourceEntitySystem;
@@ -1053,7 +1053,7 @@ Refs #7"
 -- 3. Create ledger_supplement base table and three joined subclass tables.
 --
 -- Compatible with H2 (dev/test) and PostgreSQL (production).
--- No data migration required — all consumers are pre-release (v1.0.0-SNAPSHOT).
+-- No data migration required — all consumers are pre-release (0.2-SNAPSHOT).
 --
 -- Flyway convention update: base extension reserves V1000–V1002.
 -- Consumer subclass join tables must use V1003+ (updated from the previous V1002+).
@@ -1571,7 +1571,7 @@ mkdir -p examples/art22-decision-snapshot/src/main/resources/db/migration
 mkdir -p examples/art22-decision-snapshot/src/test/java/io/quarkiverse/ledger/examples/art22
 ```
 
-- [ ] **Step 2: Create `pom.xml`** — copy and adapt from `examples/order-processing/pom.xml`, changing artifactId to `quarkus-ledger-example-art22-decision-snapshot` and description.
+- [ ] **Step 2: Create `pom.xml`** — copy and adapt from `examples/order-processing/pom.xml`, changing artifactId to `casehub-ledger-example-art22-decision-snapshot` and description.
 
 - [ ] **Step 3: Create `DecisionLedgerEntry.java`**
 
@@ -1965,7 +1965,7 @@ supplement table only when accessed.
 
 If a consumer never calls `attach()`, no supplement table rows are written and the
 lazy `supplements` list is never initialised. Consumers already integrated with
-`quarkus-ledger` require zero changes.
+`casehub-ledger` require zero changes.
 ```
 
 - [ ] **Step 2: Update hash chain canonical form in `docs/DESIGN.md`**
@@ -1990,7 +1990,7 @@ Find the Flyway version numbering table and update:
 ```markdown
 | Range | Owner | Purpose |
 |---|---|---|
-| V1000–V1002 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1000–V1002 | `casehub-ledger` base | Base schema (reserved — do not use in consumers) |
 | V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
 | V1003+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 ```
@@ -2041,7 +2041,7 @@ Art.22 compliant AI decision service. See its `README.md` for regulatory context
 ```markdown
 # Example: GDPR Art.22 Decision Snapshot
 
-This example demonstrates how to use `quarkus-ledger` with `ComplianceSupplement`
+This example demonstrates how to use `casehub-ledger` with `ComplianceSupplement`
 to build an AI decision service that is compliant with GDPR Article 22.
 
 ## What is GDPR Article 22?
