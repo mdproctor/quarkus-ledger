@@ -6,7 +6,7 @@ import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
 /**
- * Configuration for the Quarkus Ledger extension.
+ * Configuration for the CaseHub Ledger extension.
  *
  * <p>
  * All keys are under the {@code casehub.ledger} prefix. Every feature is independently
@@ -25,7 +25,7 @@ public interface LedgerConfig {
     boolean enabled();
 
     /**
-     * Name of the datasource / persistence unit quarkus-ledger should use.
+     * Name of the datasource / persistence unit casehub-ledger should use.
      * Defaults to empty — uses the default (unnamed) persistence unit.
      * Set to a named datasource when the application does not configure a default
      * persistence unit, e.g. {@code casehub.ledger.datasource=mydb}.

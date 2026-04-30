@@ -1,6 +1,6 @@
 # Example: Merkle Verification
 
-Demonstrates O(log N) Merkle inclusion proofs using `quarkus-ledger`.
+Demonstrates O(log N) Merkle inclusion proofs using `casehub-ledger`.
 
 ## What This Shows
 

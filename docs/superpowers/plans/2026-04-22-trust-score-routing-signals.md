@@ -14,14 +14,14 @@
 
 **New — runtime module:**
 ```
-runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/
+runtime/src/main/java/io/casehub/ledger/runtime/service/routing/
 ├── TrustScoreDelta.java              — record: actorId + previous/new score pair
 ├── TrustScoreComputedAt.java         — record: Instant computedAt + int actorCount
 ├── TrustScoreFullPayload.java        — record: immutable List<ActorTrustScore>
 ├── TrustScoreDeltaPayload.java       — record: List<TrustScoreDelta>
 └── TrustScoreRoutingPublisher.java   — @ApplicationScoped, holds Event<T> per type, dispatches
 
-runtime/src/test/java/io/quarkiverse/ledger/service/routing/
+runtime/src/test/java/io/casehub/ledger/service/routing/
 ├── TrustScoreRoutingPublisherTest.java  — pure JUnit 5, tests computeDeltas static method
 ├── TestRoutingObservers.java            — @ApplicationScoped test CDI bean, captures received events
 ├── TrustScoreRoutingIT.java             — @QuarkusTest, routing-enabled=true
@@ -30,10 +30,10 @@ runtime/src/test/java/io/quarkiverse/ledger/service/routing/
 
 **Modified — runtime module:**
 ```
-runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java
+runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java
   — add routingDeltaThreshold() to TrustScoreConfig
 
-runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java
+runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java
   — inject TrustScoreRoutingPublisher, pre-read snapshot, call publish() at end of runComputation()
 
 runtime/src/test/resources/application.properties
@@ -46,7 +46,7 @@ examples/trust-score-routing/
 ├── pom.xml
 └── src/
     ├── main/
-    │   ├── java/io/quarkiverse/ledger/examples/routing/
+    │   ├── java/io/casehub/ledger/examples/routing/
     │   │   ├── ledger/TaskLedgerEntry.java
     │   │   ├── routing/TaskRouter.java           — @Observes TrustScoreFullPayload → ranked list
     │   │   ├── routing/RoutingSignalLogger.java  — @ObservesAsync TrustScoreComputedAt → log
@@ -54,7 +54,7 @@ examples/trust-score-routing/
     │   └── resources/
     │       ├── application.properties
     │       └── db/migration/V2000__task_ledger_entry.sql
-    └── test/java/io/quarkiverse/ledger/examples/routing/
+    └── test/java/io/casehub/ledger/examples/routing/
         └── TrustScoreRoutingE2EIT.java
 ```
 
@@ -106,16 +106,16 @@ Record all three issue numbers. Use them in every commit below.
 ## Task 1: Payload value type records
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreDelta.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreComputedAt.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreFullPayload.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreDeltaPayload.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreDelta.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreComputedAt.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreFullPayload.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreDeltaPayload.java`
 
 - [ ] **Write TrustScoreDelta**
 
 ```java
-// runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreDelta.java
-package io.quarkiverse.ledger.runtime.service.routing;
+// runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreDelta.java
+package io.casehub.ledger.runtime.service.routing;
 
 public record TrustScoreDelta(
         String actorId,
@@ -129,8 +129,8 @@ public record TrustScoreDelta(
 - [ ] **Write TrustScoreComputedAt**
 
 ```java
-// runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreComputedAt.java
-package io.quarkiverse.ledger.runtime.service.routing;
+// runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreComputedAt.java
+package io.casehub.ledger.runtime.service.routing;
 
 import java.time.Instant;
 
@@ -141,12 +141,12 @@ public record TrustScoreComputedAt(Instant computedAt, int actorCount) {
 - [ ] **Write TrustScoreFullPayload**
 
 ```java
-// runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreFullPayload.java
-package io.quarkiverse.ledger.runtime.service.routing;
+// runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreFullPayload.java
+package io.casehub.ledger.runtime.service.routing;
 
 import java.util.List;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
 
 public record TrustScoreFullPayload(List<ActorTrustScore> scores) {
 }
@@ -155,8 +155,8 @@ public record TrustScoreFullPayload(List<ActorTrustScore> scores) {
 - [ ] **Write TrustScoreDeltaPayload**
 
 ```java
-// runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreDeltaPayload.java
-package io.quarkiverse.ledger.runtime.service.routing;
+// runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreDeltaPayload.java
+package io.casehub.ledger.runtime.service.routing;
 
 import java.util.List;
 
@@ -175,7 +175,7 @@ Expected: `BUILD SUCCESS`
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/routing/
 git commit -m "feat: add routing signal payload types (TrustScoreDelta, TrustScoreComputedAt, TrustScoreFullPayload, TrustScoreDeltaPayload)
 
 Refs #IMPL_ISSUE, #EPIC"
@@ -186,15 +186,15 @@ Refs #IMPL_ISSUE, #EPIC"
 ## Task 2: Unit tests for computeDeltas (write failing first)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingPublisherTest.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingPublisherTest.java`
 
 The `computeDeltas` method does not exist yet — these tests will fail to compile until Task 3.
 
 - [ ] **Write the unit tests**
 
 ```java
-// runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingPublisherTest.java
-package io.quarkiverse.ledger.service.routing;
+// runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingPublisherTest.java
+package io.casehub.ledger.service.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -204,9 +204,9 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreDelta;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.service.routing.TrustScoreDelta;
+import io.casehub.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
 
 class TrustScoreRoutingPublisherTest {
 
@@ -349,13 +349,13 @@ Expected: compilation error mentioning `TrustScoreRoutingPublisher`
 ## Task 3: Implement TrustScoreRoutingPublisher (make unit tests pass)
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreRoutingPublisher.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreRoutingPublisher.java`
 
 - [ ] **Write TrustScoreRoutingPublisher**
 
 ```java
-// runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreRoutingPublisher.java
-package io.quarkiverse.ledger.runtime.service.routing;
+// runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreRoutingPublisher.java
+package io.casehub.ledger.runtime.service.routing;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -370,8 +370,8 @@ import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
 
 @ApplicationScoped
 public class TrustScoreRoutingPublisher {
@@ -492,8 +492,8 @@ Expected: `Tests run: 9, Failures: 0, Errors: 0`
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/TrustScoreRoutingPublisher.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingPublisherTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/routing/TrustScoreRoutingPublisher.java \
+        runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingPublisherTest.java
 git commit -m "feat: implement TrustScoreRoutingPublisher with computeDeltas logic
 
 Unit tests: 9 cases covering threshold boundary, first run, global score capture,
@@ -507,7 +507,7 @@ Refs #IMPL_ISSUE, #EPIC"
 ## Task 4: Add routingDeltaThreshold to LedgerConfig
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
 
 - [ ] **Add routingDeltaThreshold() to TrustScoreConfig**
 
@@ -535,7 +535,7 @@ Expected: `BUILD SUCCESS`
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java
 git commit -m "feat: add quarkus.ledger.trust-score.routing-delta-threshold config key (default 0.01)
 
 Refs #IMPL_ISSUE, #EPIC"
@@ -546,14 +546,14 @@ Refs #IMPL_ISSUE, #EPIC"
 ## Task 5: Wire TrustScoreJob to TrustScoreRoutingPublisher
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java`
 
 - [ ] **Add publisher injection and wiring to runComputation()**
 
 Replace the full `TrustScoreJob.java` with:
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -567,14 +567,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.routing.TrustScoreRoutingPublisher;
 import io.quarkus.scheduler.Scheduled;
 
 @ApplicationScoped
@@ -692,7 +692,7 @@ Expected: `Tests run: 5, Failures: 0, Errors: 0`
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java
 git commit -m "feat: wire TrustScoreJob to TrustScoreRoutingPublisher
 
 Pre-reads previous snapshot only when delta observers registered.
@@ -736,15 +736,15 @@ Refs #IMPL_ISSUE, #EPIC"
 ## Task 7: Write TestRoutingObservers helper bean
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/routing/TestRoutingObservers.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/routing/TestRoutingObservers.java`
 
 This `@ApplicationScoped` bean lives in the test classpath. Quarkus auto-discovers it during `@QuarkusTest` runs. It captures received events and provides a `reset()` method for use between tests.
 
 - [ ] **Write TestRoutingObservers**
 
 ```java
-// runtime/src/test/java/io/quarkiverse/ledger/service/routing/TestRoutingObservers.java
-package io.quarkiverse.ledger.service.routing;
+// runtime/src/test/java/io/casehub/ledger/service/routing/TestRoutingObservers.java
+package io.casehub.ledger.service.routing;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -756,9 +756,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
 
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreComputedAt;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreDeltaPayload;
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreFullPayload;
+import io.casehub.ledger.runtime.service.routing.TrustScoreComputedAt;
+import io.casehub.ledger.runtime.service.routing.TrustScoreDeltaPayload;
+import io.casehub.ledger.runtime.service.routing.TrustScoreFullPayload;
 
 @ApplicationScoped
 public class TestRoutingObservers {
@@ -799,7 +799,7 @@ public class TestRoutingObservers {
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/routing/TestRoutingObservers.java
+git add runtime/src/test/java/io/casehub/ledger/service/routing/TestRoutingObservers.java
 git commit -m "test: add TestRoutingObservers CDI bean for routing IT assertions
 
 Refs #IMPL_ISSUE, #EPIC"
@@ -810,13 +810,13 @@ Refs #IMPL_ISSUE, #EPIC"
 ## Task 8: Integration tests — routing enabled (TrustScoreRoutingIT)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingIT.java`
 
 - [ ] **Write the failing integration tests**
 
 ```java
-// runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingIT.java
-package io.quarkiverse.ledger.service.routing;
+// runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingIT.java
+package io.casehub.ledger.service.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -833,13 +833,13 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -954,7 +954,7 @@ class TrustScoreRoutingIT {
         assertThat(observers.fullReceived).hasSize(1);
         final var scores = observers.fullReceived.get(0).scores();
         org.assertj.core.api.Assertions.assertThatThrownBy(
-                () -> scores.add(new io.quarkiverse.ledger.runtime.model.ActorTrustScore()))
+                () -> scores.add(new io.casehub.ledger.runtime.model.ActorTrustScore()))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -1013,7 +1013,7 @@ Expected: All tests pass. If any fail, check that `TestRoutingObservers` is on t
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingIT.java
+git add runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingIT.java
 git commit -m "test: integration tests for routing signals — enabled path
 
 5 cases: full observer, notify actorCount, delta second run, async latch,
@@ -1027,13 +1027,13 @@ Refs #IMPL_ISSUE, #EPIC"
 ## Task 9: Integration test — routing disabled (TrustScoreRoutingDisabledIT)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingDisabledIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingDisabledIT.java`
 
 - [ ] **Write the test**
 
 ```java
-// runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingDisabledIT.java
-package io.quarkiverse.ledger.service.routing;
+// runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingDisabledIT.java
+package io.casehub.ledger.service.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1048,13 +1048,13 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -1112,7 +1112,7 @@ class TrustScoreRoutingDisabledIT {
         trustScoreJob.runComputation();
 
         final var score = em.find(
-                io.quarkiverse.ledger.runtime.model.ActorTrustScore.class, actorId);
+                io.casehub.ledger.runtime.model.ActorTrustScore.class, actorId);
         assertThat(score).isNotNull();
         assertThat(score.trustScore).isGreaterThan(0.5);
     }
@@ -1165,7 +1165,7 @@ Expected: All tests pass (was 175 before this feature).
 - [ ] **Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/routing/TrustScoreRoutingDisabledIT.java
+git add runtime/src/test/java/io/casehub/ledger/service/routing/TrustScoreRoutingDisabledIT.java
 git commit -m "test: routing disabled IT — observers registered but never called, scores still computed
 
 Refs #IMPL_ISSUE, #EPIC"
@@ -1190,13 +1190,13 @@ Refs #IMPL_ISSUE, #EPIC"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- Standalone POM — does NOT inherit from quarkiverse-parent. -->
+  <!-- Standalone POM — does NOT inherit from casehub-parent. -->
 
-  <groupId>io.quarkiverse.ledger.examples</groupId>
-  <artifactId>quarkus-ledger-example-trust-score-routing</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <groupId>io.casehub.ledger.examples</groupId>
+  <artifactId>casehub-ledger-example-trust-score-routing</artifactId>
+  <version>0.2-SNAPSHOT</version>
 
-  <name>Quarkus Ledger - Example: Trust Score Routing</name>
+  <name>CaseHub Ledger - Example: Trust Score Routing</name>
   <description>
     Runnable Quarkus application demonstrating trust score routing signals.
     Observes TrustScoreFullPayload (sync) and TrustScoreComputedAt (async)
@@ -1205,7 +1205,7 @@ Refs #IMPL_ISSUE, #EPIC"
 
   <properties>
     <quarkus.version>3.32.2</quarkus.version>
-    <quarkus-ledger.version>1.0.0-SNAPSHOT</quarkus-ledger.version>
+    <casehub-ledger.version>0.2-SNAPSHOT</casehub-ledger.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -1225,9 +1225,9 @@ Refs #IMPL_ISSUE, #EPIC"
 
   <dependencies>
     <dependency>
-      <groupId>io.quarkiverse.ledger</groupId>
-      <artifactId>quarkus-ledger</artifactId>
-      <version>${quarkus-ledger.version}</version>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-ledger</artifactId>
+      <version>${casehub-ledger.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -1331,9 +1331,9 @@ quarkus.ledger.enabled=true
 quarkus.ledger.trust-score.enabled=true
 quarkus.ledger.trust-score.routing-enabled=true
 
-quarkus.arc.selected-alternatives=io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
+quarkus.arc.selected-alternatives=io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository
 
-quarkus.log.category."io.quarkiverse.ledger".level=DEBUG
+quarkus.log.category."io.casehub.ledger".level=DEBUG
 ```
 
 - [ ] **Commit**
@@ -1350,22 +1350,22 @@ Refs #E2E_ISSUE, #EPIC"
 ## Task 11: E2E example module — domain and observer beans
 
 **Files:**
-- Create: `examples/trust-score-routing/src/main/java/io/quarkiverse/ledger/examples/routing/ledger/TaskLedgerEntry.java`
-- Create: `examples/trust-score-routing/src/main/java/io/quarkiverse/ledger/examples/routing/routing/TaskRouter.java`
-- Create: `examples/trust-score-routing/src/main/java/io/quarkiverse/ledger/examples/routing/routing/RoutingSignalLogger.java`
-- Create: `examples/trust-score-routing/src/main/java/io/quarkiverse/ledger/examples/routing/api/TaskRoutingResource.java`
+- Create: `examples/trust-score-routing/src/main/java/io/casehub/ledger/examples/routing/ledger/TaskLedgerEntry.java`
+- Create: `examples/trust-score-routing/src/main/java/io/casehub/ledger/examples/routing/routing/TaskRouter.java`
+- Create: `examples/trust-score-routing/src/main/java/io/casehub/ledger/examples/routing/routing/RoutingSignalLogger.java`
+- Create: `examples/trust-score-routing/src/main/java/io/casehub/ledger/examples/routing/api/TaskRoutingResource.java`
 
 - [ ] **Write TaskLedgerEntry**
 
 ```java
 // .../ledger/TaskLedgerEntry.java
-package io.quarkiverse.ledger.examples.routing.ledger;
+package io.casehub.ledger.examples.routing.ledger;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 @Entity
 @Table(name = "task_ledger_entry")
@@ -1380,7 +1380,7 @@ public class TaskLedgerEntry extends LedgerEntry {
 
 ```java
 // .../routing/TaskRouter.java
-package io.quarkiverse.ledger.examples.routing.routing;
+package io.casehub.ledger.examples.routing.routing;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -1389,7 +1389,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreFullPayload;
+import io.casehub.ledger.runtime.service.routing.TrustScoreFullPayload;
 
 @ApplicationScoped
 public class TaskRouter {
@@ -1413,7 +1413,7 @@ public class TaskRouter {
 
 ```java
 // .../routing/RoutingSignalLogger.java
-package io.quarkiverse.ledger.examples.routing.routing;
+package io.casehub.ledger.examples.routing.routing;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -1424,7 +1424,7 @@ import jakarta.enterprise.event.ObservesAsync;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.service.routing.TrustScoreComputedAt;
+import io.casehub.ledger.runtime.service.routing.TrustScoreComputedAt;
 
 @ApplicationScoped
 public class RoutingSignalLogger {
@@ -1452,7 +1452,7 @@ public class RoutingSignalLogger {
 
 ```java
 // .../api/TaskRoutingResource.java
-package io.quarkiverse.ledger.examples.routing.api;
+package io.casehub.ledger.examples.routing.api;
 
 import java.util.List;
 
@@ -1462,7 +1462,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-import io.quarkiverse.ledger.examples.routing.routing.TaskRouter;
+import io.casehub.ledger.examples.routing.routing.TaskRouter;
 
 @Path("/routing")
 @Produces(MediaType.APPLICATION_JSON)
@@ -1503,13 +1503,13 @@ Refs #E2E_ISSUE, #EPIC"
 ## Task 12: E2E integration test
 
 **Files:**
-- Create: `examples/trust-score-routing/src/test/java/io/quarkiverse/ledger/examples/routing/TrustScoreRoutingE2EIT.java`
+- Create: `examples/trust-score-routing/src/test/java/io/casehub/ledger/examples/routing/TrustScoreRoutingE2EIT.java`
 
 - [ ] **Write the E2E integration test**
 
 ```java
 // .../routing/TrustScoreRoutingE2EIT.java
-package io.quarkiverse.ledger.examples.routing;
+package io.casehub.ledger.examples.routing;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1527,14 +1527,14 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.examples.routing.ledger.TaskLedgerEntry;
-import io.quarkiverse.ledger.examples.routing.routing.RoutingSignalLogger;
-import io.quarkiverse.ledger.examples.routing.routing.TaskRouter;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.examples.routing.ledger.TaskLedgerEntry;
+import io.casehub.ledger.examples.routing.routing.RoutingSignalLogger;
+import io.casehub.ledger.examples.routing.routing.TaskRouter;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest

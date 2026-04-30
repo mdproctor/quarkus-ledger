@@ -67,7 +67,7 @@ Null supplement fields are **omitted entirely** — no null noise in the output.
 {
   "@context": {
     "prov": "http://www.w3.org/ns/prov#",
-    "ledger": "http://quarkiverse.io/ledger#",
+    "ledger": "https://casehubio.github.io/ledger#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "entity": {
@@ -138,7 +138,7 @@ Null supplement fields are **omitted entirely** — no null noise in the output.
 ### `LedgerProvSerializer` (pure static)
 
 ```
-runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvSerializer.java
+runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvSerializer.java
 ```
 
 ```java
@@ -154,7 +154,7 @@ Supplements are read from the lazy-loaded `entry.supplements` list.
 ### `LedgerProvExportService` (CDI)
 
 ```
-runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvExportService.java
+runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvExportService.java
 ```
 
 ```java

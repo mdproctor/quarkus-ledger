@@ -15,19 +15,19 @@
 ## File Map
 
 **Created:**
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvSerializer.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvExportService.java`
-- `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerProvSerializerTest.java`
-- `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerProvExportServiceIT.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvSerializer.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvExportService.java`
+- `runtime/src/test/java/io/casehub/ledger/service/LedgerProvSerializerTest.java`
+- `runtime/src/test/java/io/casehub/ledger/service/LedgerProvExportServiceIT.java`
 - `docs/prov-dm-mapping.md`
 - `examples/prov-dm-export/pom.xml`
-- `examples/prov-dm-export/src/main/java/io/quarkiverse/ledger/example/prov/ProvAuditEntry.java`
-- `examples/prov-dm-export/src/main/java/io/quarkiverse/ledger/example/prov/ProvAuditEntryRepository.java`
-- `examples/prov-dm-export/src/main/java/io/quarkiverse/ledger/example/prov/ProvDmExportExample.java`
+- `examples/prov-dm-export/src/main/java/io/casehub/ledger/example/prov/ProvAuditEntry.java`
+- `examples/prov-dm-export/src/main/java/io/casehub/ledger/example/prov/ProvAuditEntryRepository.java`
+- `examples/prov-dm-export/src/main/java/io/casehub/ledger/example/prov/ProvDmExportExample.java`
 - `examples/prov-dm-export/src/main/resources/application.properties`
 - `examples/prov-dm-export/src/main/resources/META-INF/beans.xml`
 - `examples/prov-dm-export/src/main/resources/db/migration/V2001__prov_example_entry.sql`
-- `examples/prov-dm-export/src/test/java/io/quarkiverse/ledger/example/prov/ProvDmExportIT.java`
+- `examples/prov-dm-export/src/test/java/io/casehub/ledger/example/prov/ProvDmExportIT.java`
 - `examples/prov-dm-export/README.md`
 
 ---
@@ -39,7 +39,7 @@
 - [ ] **Step 1: Create the epic**
 
 ```bash
-gh issue create --repo mdproctor/quarkus-ledger \
+gh issue create --repo casehubio/ledger \
   --title "Epic: W3C PROV-DM JSON-LD export" \
   --label "enhancement" \
   --body "$(cat <<'EOF'
@@ -63,7 +63,7 @@ Note the epic number (e.g. #13).
 - [ ] **Step 2: Create the implementation issue**
 
 ```bash
-gh issue create --repo mdproctor/quarkus-ledger \
+gh issue create --repo casehubio/ledger \
   --title "feat: W3C PROV-DM JSON-LD export — LedgerProvSerializer + LedgerProvExportService" \
   --label "enhancement" \
   --body "$(cat <<'EOF'
@@ -87,18 +87,18 @@ Note the implementation issue number (e.g. #14). All commits: `Refs #14, Refs #1
 ## Task 2: TDD — Write Failing LedgerProvSerializer Tests + Stub
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvSerializer.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerProvSerializerTest.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvSerializer.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerProvSerializerTest.java`
 
 - [ ] **Step 1: Create stub LedgerProvSerializer**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.List;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 public final class LedgerProvSerializer {
     private LedgerProvSerializer() {}
@@ -112,7 +112,7 @@ public final class LedgerProvSerializer {
 - [ ] **Step 2: Create LedgerProvSerializerTest**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -126,12 +126,12 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerProvSerializer;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.service.LedgerProvSerializer;
+import io.casehub.ledger.service.supplement.TestEntry;
 
 class LedgerProvSerializerTest {
 
@@ -165,7 +165,7 @@ class LedgerProvSerializerTest {
         Map<?, ?> ctx = (Map<?, ?>) doc.get("@context");
         assertThat(ctx).containsOnlyKeys("prov", "ledger", "xsd");
         assertThat(ctx.get("prov")).isEqualTo("http://www.w3.org/ns/prov#");
-        assertThat(ctx.get("ledger")).isEqualTo("http://quarkiverse.io/ledger#");
+        assertThat(ctx.get("ledger")).isEqualTo("https://casehubio.github.io/ledger#");
         assertThat(ctx.get("xsd")).isEqualTo("http://www.w3.org/2001/XMLSchema#");
     }
 
@@ -369,8 +369,8 @@ Expected: BUILD FAILURE — `UnsupportedOperationException`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvSerializer.java
-git add runtime/src/test/java/io/quarkiverse/ledger/service/LedgerProvSerializerTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvSerializer.java
+git add runtime/src/test/java/io/casehub/ledger/service/LedgerProvSerializerTest.java
 git commit -m "test(prov): add LedgerProvSerializerTest (TDD — all failing) + stub
 
 Refs #14, Refs #13"
@@ -381,12 +381,12 @@ Refs #14, Refs #13"
 ## Task 3: Implement LedgerProvSerializer
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvSerializer.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvSerializer.java`
 
 - [ ] **Step 1: Write the full implementation**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
@@ -398,9 +398,9 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
 
 /**
  * Serialises a subject's ledger history as a W3C PROV-DM JSON-LD document.
@@ -418,7 +418,7 @@ public final class LedgerProvSerializer {
 
     private static final Map<String, Object> CONTEXT = Map.of(
             "prov", "http://www.w3.org/ns/prov#",
-            "ledger", "http://quarkiverse.io/ledger#",
+            "ledger", "https://casehubio.github.io/ledger#",
             "xsd", "http://www.w3.org/2001/XMLSchema#");
 
     private LedgerProvSerializer() {}
@@ -602,7 +602,7 @@ Expected: BUILD SUCCESS, 110 existing tests still pass + new serialiser tests.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvSerializer.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvSerializer.java
 git commit -m "feat(prov): implement LedgerProvSerializer — PROV-JSON-LD serialiser
 
 Maps LedgerEntry → prov:Entity, actorId → prov:Agent (deduplicated),
@@ -617,13 +617,13 @@ Refs #14, Refs #13"
 ## Task 4: TDD — Write Failing LedgerProvExportService IT + Stub
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvExportService.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerProvExportServiceIT.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvExportService.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerProvExportServiceIT.java`
 
 - [ ] **Step 1: Create stub LedgerProvExportService**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.UUID;
 
@@ -642,7 +642,7 @@ public class LedgerProvExportService {
 - [ ] **Step 2: Create LedgerProvExportServiceIT**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -657,13 +657,13 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerProvExportService;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerProvExportService;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -779,8 +779,8 @@ Expected: BUILD SUCCESS.
 - [ ] **Step 4: Commit stub + tests**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvExportService.java
-git add runtime/src/test/java/io/quarkiverse/ledger/service/LedgerProvExportServiceIT.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvExportService.java
+git add runtime/src/test/java/io/casehub/ledger/service/LedgerProvExportServiceIT.java
 git commit -m "test(prov): add LedgerProvExportServiceIT (TDD — all failing) + stub bean
 
 Refs #14, Refs #13"
@@ -791,12 +791,12 @@ Refs #14, Refs #13"
 ## Task 5: Implement LedgerProvExportService
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvExportService.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvExportService.java`
 
 - [ ] **Step 1: Write the implementation**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.List;
 import java.util.UUID;
@@ -804,7 +804,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * CDI bean exporting a subject's audit history as W3C PROV-DM JSON-LD.
@@ -861,7 +861,7 @@ Expected: BUILD SUCCESS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerProvExportService.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerProvExportService.java
 git commit -m "feat(prov): implement LedgerProvExportService — CDI export bean
 
 Fetches entries by subject, initialises lazy supplements within @Transactional,
@@ -882,7 +882,7 @@ Refs #14, Refs #13"
 ```markdown
 # W3C PROV-DM Mapping Reference
 
-Documents how `quarkus-ledger` fields map to W3C PROV-DM concepts in the JSON-LD
+Documents how `casehub-ledger` fields map to W3C PROV-DM concepts in the JSON-LD
 export produced by `LedgerProvExportService.exportSubject(UUID)`.
 
 ## PROV-DM Primer
@@ -905,7 +905,7 @@ And three core relations:
 
 ## IRI Conventions
 
-All IRIs use the `ledger:` prefix (`http://quarkiverse.io/ledger#`):
+All IRIs use the `ledger:` prefix (`https://casehubio.github.io/ledger#`):
 
 | Element | IRI pattern | Example |
 |---|---|---|
@@ -982,7 +982,7 @@ The JSON-LD `@context` is always exactly:
 {
   "@context": {
     "prov": "http://www.w3.org/ns/prov#",
-    "ledger": "http://quarkiverse.io/ledger#",
+    "ledger": "https://casehubio.github.io/ledger#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   }
 }
@@ -1011,28 +1011,28 @@ cp examples/merkle-verification/pom.xml examples/prov-dm-export/pom.xml
 ```
 
 Edit `examples/prov-dm-export/pom.xml`:
-- `<artifactId>quarkus-ledger-example-prov-dm-export</artifactId>`
-- `<name>Quarkus Ledger :: Example :: PROV-DM Export</name>`
+- `<artifactId>casehub-ledger-example-prov-dm-export</artifactId>`
+- `<name>CaseHub Ledger :: Example :: PROV-DM Export</name>`
 
 - [ ] **Step 2: Create directory structure**
 
 ```bash
-mkdir -p examples/prov-dm-export/src/main/java/io/quarkiverse/ledger/example/prov
+mkdir -p examples/prov-dm-export/src/main/java/io/casehub/ledger/example/prov
 mkdir -p examples/prov-dm-export/src/main/resources/db/migration
 mkdir -p examples/prov-dm-export/src/main/resources/META-INF
-mkdir -p examples/prov-dm-export/src/test/java/io/quarkiverse/ledger/example/prov
+mkdir -p examples/prov-dm-export/src/test/java/io/casehub/ledger/example/prov
 ```
 
 - [ ] **Step 3: Create ProvAuditEntry.java**
 
 ```java
-package io.quarkiverse.ledger.example.prov;
+package io.casehub.ledger.example.prov;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 @Entity
 @Table(name = "prov_example_entry")
@@ -1043,11 +1043,11 @@ public class ProvAuditEntry extends LedgerEntry {}
 - [ ] **Step 4: Create ProvAuditEntryRepository.java**
 
 ```java
-package io.quarkiverse.ledger.example.prov;
+package io.casehub.ledger.example.prov;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 @ApplicationScoped
 public class ProvAuditEntryRepository extends JpaLedgerEntryRepository {}
@@ -1082,7 +1082,7 @@ cp examples/merkle-verification/src/main/resources/META-INF/beans.xml \
 - [ ] **Step 8: Create ProvDmExportExample.java**
 
 ```java
-package io.quarkiverse.ledger.example.prov;
+package io.casehub.ledger.example.prov;
 
 import java.util.UUID;
 
@@ -1090,12 +1090,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerProvExportService;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerProvExportService;
 
 /**
  * Demonstrates PROV-DM JSON-LD export covering all supplement types.
@@ -1166,7 +1166,7 @@ public class ProvDmExportExample {
 - [ ] **Step 9: Create ProvDmExportIT.java**
 
 ```java
-package io.quarkiverse.ledger.example.prov;
+package io.casehub.ledger.example.prov;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1241,7 +1241,7 @@ class ProvDmExportIT {
         Map<String, Object> doc = MAPPER.readValue(json, new TypeReference<>() {});
         Map<?, ?> ctx = (Map<?, ?>) doc.get("@context");
         assertThat(ctx.get("prov")).isEqualTo("http://www.w3.org/ns/prov#");
-        assertThat(ctx.get("ledger")).isEqualTo("http://quarkiverse.io/ledger#");
+        assertThat(ctx.get("ledger")).isEqualTo("https://casehubio.github.io/ledger#");
         assertThat(ctx.get("xsd")).isEqualTo("http://www.w3.org/2001/XMLSchema#");
     }
 }
@@ -1252,7 +1252,7 @@ class ProvDmExportIT {
 ```markdown
 # Example: PROV-DM Export
 
-Demonstrates W3C PROV-DM JSON-LD export using `quarkus-ledger`.
+Demonstrates W3C PROV-DM JSON-LD export using `casehub-ledger`.
 
 ## What This Shows
 
@@ -1284,7 +1284,7 @@ Expected: BUILD SUCCESS, 2 tests pass.
 
 If `@Alternative` activation fails, check `application.properties`:
 ```
-quarkus.arc.selected-alternatives=io.quarkiverse.ledger.example.prov.ProvAuditEntryRepository
+quarkus.arc.selected-alternatives=io.casehub.ledger.example.prov.ProvAuditEntryRepository
 ```
 
 - [ ] **Step 12: Close issues and commit**
@@ -1297,9 +1297,9 @@ Refs #14, Refs #13"
 ```
 
 ```bash
-gh issue close 14 --repo mdproctor/quarkus-ledger \
+gh issue close 14 --repo casehubio/ledger \
   --comment "Implemented: LedgerProvSerializer, LedgerProvExportService, prov-dm-mapping.md, example."
-gh issue close 13 --repo mdproctor/quarkus-ledger \
+gh issue close 13 --repo casehubio/ledger \
   --comment "All child issues complete."
 ```
 

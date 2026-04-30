@@ -1,9 +1,4 @@
-package io.casehub.ledger.runtime.model.supplement;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+package io.casehub.ledger.api.model.supplement;
 
 /**
  * Supplement carrying workflow provenance — the external entity that originated
@@ -28,27 +23,21 @@ import jakarta.persistence.Table;
  * configuration drift detection within a persona version. This field does not
  * affect trust scoring — it is a forensic audit field only. See ADR 0004.
  */
-@Entity
-@Table(name = "ledger_supplement_provenance")
-@DiscriminatorValue("PROVENANCE")
 public class ProvenanceSupplement extends LedgerSupplement {
 
     /** Identifier of the external entity that originated this subject. */
-    @Column(name = "source_entity_id", length = 255)
     public String sourceEntityId;
 
     /**
      * Type of the external entity.
      * Convention: {@code "System:TypeName"}, e.g. {@code "Flow:WorkflowInstance"}.
      */
-    @Column(name = "source_entity_type", length = 255)
     public String sourceEntityType;
 
     /**
      * The system that owns the external entity.
-     * Example: {@code "quarkus-flow"}, {@code "quarkus-tarkus"}.
+     * Example: {@code "quarkus-flow"}, {@code "casehub-work"}.
      */
-    @Column(name = "source_entity_system", length = 100)
     public String sourceEntitySystem;
 
     /**
@@ -57,6 +46,5 @@ public class ProvenanceSupplement extends LedgerSupplement {
      * for entries produced by LLM agents. Used for configuration drift detection;
      * not the trust key (trust accumulates on {@code actorId}). See ADR 0004.
      */
-    @Column(name = "agent_config_hash", length = 64)
     public String agentConfigHash;
 }

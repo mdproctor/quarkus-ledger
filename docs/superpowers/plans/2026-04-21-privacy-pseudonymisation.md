@@ -35,23 +35,23 @@
 | `docs/AUDITABILITY.md` | Modify — mark Axiom 7 addressed |
 | `docs/DESIGN.md` | Modify — add privacy section |
 
-All paths under `runtime/src/main/java/io/quarkiverse/ledger/runtime/` and tests under `runtime/src/test/java/io/quarkiverse/ledger/`.
+All paths under `runtime/src/main/java/io/casehub/ledger/runtime/` and tests under `runtime/src/test/java/io/casehub/ledger/`.
 
 ---
 
 ## Task 1: SPI interfaces and pass-through defaults
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/ActorIdentityProvider.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/DecisionContextSanitiser.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/PassThroughActorIdentityProvider.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/PassThroughDecisionContextSanitiser.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/privacy/PassThroughPrivacyTest.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/ActorIdentityProvider.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/DecisionContextSanitiser.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/PassThroughActorIdentityProvider.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/PassThroughDecisionContextSanitiser.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/privacy/PassThroughPrivacyTest.java`
 
 - [ ] **Step 1: Write failing unit tests**
 
 ```java
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,8 +59,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.privacy.PassThroughActorIdentityProvider;
-import io.quarkiverse.ledger.runtime.privacy.PassThroughDecisionContextSanitiser;
+import io.casehub.ledger.runtime.privacy.PassThroughActorIdentityProvider;
+import io.casehub.ledger.runtime.privacy.PassThroughDecisionContextSanitiser;
 
 class PassThroughPrivacyTest {
 
@@ -125,7 +125,7 @@ Expected: compilation error (classes don't exist yet).
 - [ ] **Step 3: Create `ActorIdentityProvider.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.Optional;
 
@@ -184,7 +184,7 @@ public interface ActorIdentityProvider {
 - [ ] **Step 4: Create `DecisionContextSanitiser.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 /**
  * SPI for sanitising {@code ComplianceSupplement.decisionContext} JSON before persist.
@@ -208,7 +208,7 @@ public interface DecisionContextSanitiser {
 - [ ] **Step 5: Create `PassThroughActorIdentityProvider.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.Optional;
 
@@ -240,7 +240,7 @@ public class PassThroughActorIdentityProvider implements ActorIdentityProvider {
 - [ ] **Step 6: Create `PassThroughDecisionContextSanitiser.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 /** Pass-through implementation — stores decision context JSON unchanged. */
 public class PassThroughDecisionContextSanitiser implements DecisionContextSanitiser {
@@ -263,8 +263,8 @@ Expected: `Tests run: 8, Failures: 0` and `BUILD SUCCESS`.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/ \
-        runtime/src/test/java/io/quarkiverse/ledger/privacy/PassThroughPrivacyTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/privacy/ \
+        runtime/src/test/java/io/casehub/ledger/privacy/PassThroughPrivacyTest.java
 git commit -m "$(cat <<'EOF'
 feat(privacy): add ActorIdentityProvider + DecisionContextSanitiser SPIs with pass-through defaults
 
@@ -279,13 +279,13 @@ EOF
 ## Task 2: `ActorIdentity` entity and V1004 migration
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorIdentity.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/ActorIdentity.java`
 - Create: `runtime/src/main/resources/db/migration/V1004__actor_identity.sql`
 
 - [ ] **Step 1: Create `V1004__actor_identity.sql`**
 
 ```sql
--- Quarkus Ledger — actor identity pseudonymisation table (V1004)
+-- CaseHub Ledger — actor identity pseudonymisation table (V1004)
 -- Compatible with H2 (dev/test) and PostgreSQL (production)
 --
 -- actor_identity: optional token-to-identity mapping for pseudonymisation.
@@ -305,7 +305,7 @@ CREATE TABLE actor_identity (
 - [ ] **Step 2: Create `ActorIdentity.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 
@@ -367,7 +367,7 @@ Expected: `BUILD SUCCESS`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorIdentity.java \
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/ActorIdentity.java \
         runtime/src/main/resources/db/migration/V1004__actor_identity.sql
 git commit -m "$(cat <<'EOF'
 feat(schema): add actor_identity table (V1004) and ActorIdentity entity
@@ -384,9 +384,9 @@ EOF
 ## Task 3: `LedgerConfig.IdentityConfig` and `LedgerPrivacyProducer`
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/InternalActorIdentityProvider.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/LedgerPrivacyProducer.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/InternalActorIdentityProvider.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/LedgerPrivacyProducer.java`
 
 - [ ] **Step 1: Add `IdentityConfig` to `LedgerConfig.java`**
 
@@ -421,7 +421,7 @@ Add after the existing `merkle()` accessor (before the final closing brace of `L
              *
              * <p>
              * Organisations with their own identity management systems should leave this
-             * off and provide a custom {@link io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider}
+             * off and provide a custom {@link io.casehub.ledger.runtime.privacy.ActorIdentityProvider}
              * CDI bean instead.
              *
              * @return {@code true} if built-in tokenisation is active; {@code false} by default
@@ -435,14 +435,14 @@ Add after the existing `merkle()` accessor (before the final closing brace of `L
 - [ ] **Step 2: Create `InternalActorIdentityProvider.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.model.ActorIdentity;
+import io.casehub.ledger.runtime.model.ActorIdentity;
 
 /**
  * Built-in token-based actor identity provider backed by the {@code actor_identity} table.
@@ -526,14 +526,14 @@ public class InternalActorIdentityProvider implements ActorIdentityProvider {
 - [ ] **Step 3: Create `LedgerPrivacyProducer.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.config.LedgerConfig;
 import io.quarkus.arc.DefaultBean;
 
 /**
@@ -588,9 +588,9 @@ Expected: `Tests run: 129, Failures: 0` and `BUILD SUCCESS`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/InternalActorIdentityProvider.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/LedgerPrivacyProducer.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/privacy/InternalActorIdentityProvider.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/privacy/LedgerPrivacyProducer.java
 git commit -m "$(cat <<'EOF'
 feat(privacy): add InternalActorIdentityProvider and LedgerPrivacyProducer
 
@@ -606,12 +606,12 @@ EOF
 ## Task 4: `LedgerErasureService`
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/LedgerErasureService.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/privacy/LedgerErasureService.java`
 
 - [ ] **Step 1: Create `LedgerErasureService.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 import java.util.List;
 
@@ -620,7 +620,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorIdentity;
+import io.casehub.ledger.runtime.model.ActorIdentity;
 
 /**
  * CDI bean for processing GDPR Art.17 erasure requests.
@@ -696,7 +696,7 @@ Expected: `BUILD SUCCESS`.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/privacy/LedgerErasureService.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/privacy/LedgerErasureService.java
 git commit -m "$(cat <<'EOF'
 feat(privacy): add LedgerErasureService — GDPR Art.17 erasure with ErasureResult
 
@@ -712,7 +712,7 @@ EOF
 ## Task 5: Wire SPIs into `JpaLedgerEntryRepository`
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
 
 - [ ] **Step 1: Add SPI injections and wire into `save()`, `saveAttestation()`, `findByActorId()`**
 
@@ -728,9 +728,9 @@ Add two `@Inject` fields after the existing `@Inject LedgerMerklePublisher merkl
 
 Add the import at the top:
 ```java
-import io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider;
-import io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.privacy.ActorIdentityProvider;
+import io.casehub.ledger.runtime.privacy.DecisionContextSanitiser;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
 ```
 
 Replace the `save()` method body — insert tokenisation and sanitisation **before** computing the digest and before `em.persist(entry)`:
@@ -841,7 +841,7 @@ Expected: `Tests run: 129, Failures: 0` and `BUILD SUCCESS`.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
 git commit -m "$(cat <<'EOF'
 feat(privacy): wire ActorIdentityProvider and DecisionContextSanitiser into JpaLedgerEntryRepository
 
@@ -858,7 +858,7 @@ EOF
 
 **Files:**
 - Modify: `runtime/src/test/resources/application.properties`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/privacy/InternalActorIdentityProviderIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/privacy/InternalActorIdentityProviderIT.java`
 
 - [ ] **Step 1: Add pseudonymisation-test profile to `application.properties`**
 
@@ -874,7 +874,7 @@ Append at the end of the file:
 - [ ] **Step 2: Create `InternalActorIdentityProviderIT.java`**
 
 ```java
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -885,13 +885,13 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider;
+import io.casehub.ledger.runtime.privacy.ActorIdentityProvider;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
 /**
- * Integration tests for {@link io.quarkiverse.ledger.runtime.privacy.InternalActorIdentityProvider}.
+ * Integration tests for {@link io.casehub.ledger.runtime.privacy.InternalActorIdentityProvider}.
  *
  * <p>
  * Runs with tokenisation enabled against an isolated H2 database.
@@ -1040,7 +1040,7 @@ Expected: `Tests run: 11, Failures: 0` and `BUILD SUCCESS`.
 
 ```bash
 git add runtime/src/test/resources/application.properties \
-        runtime/src/test/java/io/quarkiverse/ledger/privacy/InternalActorIdentityProviderIT.java
+        runtime/src/test/java/io/casehub/ledger/privacy/InternalActorIdentityProviderIT.java
 git commit -m "$(cat <<'EOF'
 test(privacy): InternalActorIdentityProviderIT — 11 tests covering tokenise, resolve, erase
 
@@ -1056,13 +1056,13 @@ EOF
 ## Task 7: Integration tests — `LedgerErasureServiceIT` and `LedgerPrivacyWiringIT`
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/privacy/LedgerErasureServiceIT.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/privacy/LedgerPrivacyWiringIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/privacy/LedgerErasureServiceIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/privacy/LedgerPrivacyWiringIT.java`
 
 - [ ] **Step 1: Create `LedgerErasureServiceIT.java`**
 
 ```java
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1075,12 +1075,12 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.privacy.LedgerErasureService;
-import io.quarkiverse.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.privacy.LedgerErasureService;
+import io.casehub.ledger.runtime.privacy.LedgerErasureService.ErasureResult;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
@@ -1186,7 +1186,7 @@ class LedgerErasureServiceIT {
 - [ ] **Step 2: Create `LedgerPrivacyWiringIT.java`**
 
 ```java
-package io.quarkiverse.ledger.privacy;
+package io.casehub.ledger.privacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1201,22 +1201,22 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
 /**
  * Integration tests verifying the write-path and query-path wiring of
- * {@link io.quarkiverse.ledger.runtime.privacy.ActorIdentityProvider} and
- * {@link io.quarkiverse.ledger.runtime.privacy.DecisionContextSanitiser}
- * inside {@link io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}.
+ * {@link io.casehub.ledger.runtime.privacy.ActorIdentityProvider} and
+ * {@link io.casehub.ledger.runtime.privacy.DecisionContextSanitiser}
+ * inside {@link io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository}.
  */
 @QuarkusTest
 @TestProfile(InternalActorIdentityProviderIT.PseudonymisationProfile.class)
@@ -1372,8 +1372,8 @@ Expected: `BUILD SUCCESS`. Total count will be 129 + new tests.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/privacy/LedgerErasureServiceIT.java \
-        runtime/src/test/java/io/quarkiverse/ledger/privacy/LedgerPrivacyWiringIT.java
+git add runtime/src/test/java/io/casehub/ledger/privacy/LedgerErasureServiceIT.java \
+        runtime/src/test/java/io/casehub/ledger/privacy/LedgerPrivacyWiringIT.java
 git commit -m "$(cat <<'EOF'
 test(privacy): LedgerErasureServiceIT (4 tests) + LedgerPrivacyWiringIT (6 tests)
 
@@ -1416,7 +1416,7 @@ An immutable ledger cannot delete entries without breaking tamper evidence. The 
 pseudonymisation: store tokens instead of raw identities, backed by a detachable mapping.
 
 **Current state:**
-Two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
+Two SPIs in `io.casehub.ledger.runtime.privacy`:
 
 - `ActorIdentityProvider` — tokenises `actorId` (write) and `attestorId` on every persist.
   `tokenise()` creates a UUID token if none exists. `tokeniseForQuery()` does a read-only
@@ -1448,7 +1448,7 @@ Find the section in DESIGN.md that describes the supplement stack or the configu
 ### Privacy and Pseudonymisation
 
 Actor identities (`actorId`, `attestorId`) and decision context blobs are intercepted on
-every write by two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
+every write by two SPIs in `io.casehub.ledger.runtime.privacy`:
 
 | SPI | Default | Purpose |
 |---|---|---|

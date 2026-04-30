@@ -18,12 +18,12 @@
 
 | Action | File | Purpose |
 |---|---|---|
-| Create | `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerEntryEnricher.java` | New SPI interface |
-| Create | `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TraceIdEnricher.java` | Extracts trace-ID logic from LedgerTraceListener |
-| Modify | `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerTraceListener.java` | Becomes non-fatal pipeline runner |
-| Modify | `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerTraceListenerIT.java` | Rename comment block; tests must still pass unchanged |
-| Create | `runtime/src/test/java/io/quarkiverse/ledger/service/TraceIdEnricherTest.java` | Unit tests for TraceIdEnricher in isolation |
-| Create | `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerEnricherPipelineIT.java` | Pipeline non-fatal + multi-enricher integration tests |
+| Create | `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerEntryEnricher.java` | New SPI interface |
+| Create | `runtime/src/main/java/io/casehub/ledger/runtime/service/TraceIdEnricher.java` | Extracts trace-ID logic from LedgerTraceListener |
+| Modify | `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerTraceListener.java` | Becomes non-fatal pipeline runner |
+| Modify | `runtime/src/test/java/io/casehub/ledger/service/LedgerTraceListenerIT.java` | Rename comment block; tests must still pass unchanged |
+| Create | `runtime/src/test/java/io/casehub/ledger/service/TraceIdEnricherTest.java` | Unit tests for TraceIdEnricher in isolation |
+| Create | `runtime/src/test/java/io/casehub/ledger/service/LedgerEnricherPipelineIT.java` | Pipeline non-fatal + multi-enricher integration tests |
 | Create | `adr/0005-ledger-entry-enricher-spi.md` | ADR documenting the enricher SPI decision |
 | Modify | `docs/DESIGN.md` | Update enricher pipeline description (lines 433, 462) |
 | Modify | `CLAUDE.md` | Update project structure table entry for LedgerTraceListener |
@@ -33,14 +33,14 @@
 ### Task 1: Create the LedgerEntryEnricher SPI
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerEntryEnricher.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerEntryEnricher.java`
 
 - [ ] **Step 1: Create the interface**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * SPI for auto-populating fields on {@link LedgerEntry} at persist time.
@@ -65,7 +65,7 @@ public interface LedgerEntryEnricher {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerEntryEnricher.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerEntryEnricher.java
 git commit -m "feat(enricher): add LedgerEntryEnricher SPI — pluggable @PrePersist pipeline
 
 Refs #67"
@@ -76,14 +76,14 @@ Refs #67"
 ### Task 2: Write failing unit tests for TraceIdEnricher
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/TraceIdEnricherTest.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/TraceIdEnricherTest.java`
 
 `TraceIdEnricher` will receive an injected `LedgerTraceIdProvider`. Tests run without a Quarkus container using a hand-constructed stub.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -93,11 +93,11 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.LedgerTraceIdProvider;
-import io.quarkiverse.ledger.runtime.service.TraceIdEnricher;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.LedgerTraceIdProvider;
+import io.casehub.ledger.runtime.service.TraceIdEnricher;
+import io.casehub.ledger.service.supplement.TestEntry;
 
 class TraceIdEnricherTest {
 
@@ -165,19 +165,19 @@ Expected: `COMPILATION ERROR — TraceIdEnricher does not exist`
 ### Task 3: Implement TraceIdEnricher
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TraceIdEnricher.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/TraceIdEnricher.java`
 
 The constructor injection form (used in unit tests) must coexist with CDI field injection (used at runtime).
 
 - [ ] **Step 1: Create the enricher**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Enricher that auto-populates {@link LedgerEntry#traceId} from the active OTel span.
@@ -214,8 +214,8 @@ Expected: `Tests run: 3, Failures: 0`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TraceIdEnricher.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/TraceIdEnricherTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/TraceIdEnricher.java \
+        runtime/src/test/java/io/casehub/ledger/service/TraceIdEnricherTest.java
 git commit -m "feat(enricher): TraceIdEnricher — trace-ID logic extracted from LedgerTraceListener
 
 Refs #67"
@@ -226,14 +226,14 @@ Refs #67"
 ### Task 4: Refactor LedgerTraceListener to pipeline runner
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerTraceListener.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerTraceListener.java`
 
 The class name and `@EntityListeners` registration on `LedgerEntry` stay unchanged. The `@PrePersist` becomes a non-fatal loop over `Instance<LedgerEntryEnricher>`.
 
 - [ ] **Step 1: Rewrite LedgerTraceListener**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
@@ -243,7 +243,7 @@ import jakarta.persistence.PrePersist;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * JPA entity listener that runs the {@link LedgerEntryEnricher} pipeline on every
@@ -290,7 +290,7 @@ Expected: `Tests run: 212, Failures: 0` (same count as before — pure behaviour
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerTraceListener.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerTraceListener.java
 git commit -m "refactor(enricher): LedgerTraceListener becomes non-fatal enricher pipeline runner
 
 Behaviour-preserving — TraceIdEnricher implements the same logic as before.
@@ -304,7 +304,7 @@ Refs #67"
 ### Task 5: Write and run pipeline integration tests
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerEnricherPipelineIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerEnricherPipelineIT.java`
 
 Two behaviours need integration-level verification that unit tests cannot provide:
 1. A throwing enricher must not prevent the entry from being saved
@@ -315,7 +315,7 @@ The `ThrowingEnricher` and `CountingEnricher` are declared as package-private st
 - [ ] **Step 1: Write the failing integration tests**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -330,12 +330,12 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerEntryEnricher;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerEntryEnricher;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -458,7 +458,7 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/LedgerEnricherPipelineIT.java \
+git add runtime/src/test/java/io/casehub/ledger/service/LedgerEnricherPipelineIT.java \
         runtime/src/test/resources/application.properties
 git commit -m "test(enricher): pipeline non-fatal and multi-enricher integration tests
 
@@ -549,7 +549,7 @@ with:
 
 - [ ] **Step 4: Verify native image compatibility**
 
-Quarkus's ArC CDI container processes `@ApplicationScoped` beans and `Instance<T>` injection at build time, so no explicit reflection config is normally needed. Verify by checking `deployment/src/main/java/io/quarkiverse/ledger/deployment/LedgerProcessor.java` — if it already registers ledger service classes for reflection, add `LedgerEntryEnricher` and `TraceIdEnricher` to the same registration. If no special registration exists (ArC handles it), no action is needed. Document the outcome in ADR 0005 under a "Native image" note.
+Quarkus's ArC CDI container processes `@ApplicationScoped` beans and `Instance<T>` injection at build time, so no explicit reflection config is normally needed. Verify by checking `deployment/src/main/java/io/casehub/ledger/deployment/LedgerProcessor.java` — if it already registers ledger service classes for reflection, add `LedgerEntryEnricher` and `TraceIdEnricher` to the same registration. If no special registration exists (ArC handles it), no action is needed. Document the outcome in ADR 0005 under a "Native image" note.
 
 - [ ] **Step 5: Commit**
 
@@ -569,11 +569,11 @@ Closes #67"
 | Action | File | Purpose |
 |---|---|---|
 | Modify | `runtime/src/main/resources/db/migration/V1001__actor_trust_score.sql` | Rewrite in place — add UUID PK, score_type, scope_key, NULLS NOT DISTINCT |
-| Modify | `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java` | Add ScoreType enum, UUID id, scoreType, scopeKey fields + named queries |
-| Modify | `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/ActorTrustScoreRepository.java` | Update upsert signature; add findByActorIdAndTypeAndKey, findByActorIdAndScoreType |
-| Modify | `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java` | Implement updated and new query methods |
-| Modify | `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java` | Pass GLOBAL/null to upsert |
-| Create | `runtime/src/test/java/io/quarkiverse/ledger/service/ActorTrustScoreRepositoryIT.java` | Integration tests for all repository methods |
+| Modify | `runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java` | Add ScoreType enum, UUID id, scoreType, scopeKey fields + named queries |
+| Modify | `runtime/src/main/java/io/casehub/ledger/runtime/repository/ActorTrustScoreRepository.java` | Update upsert signature; add findByActorIdAndTypeAndKey, findByActorIdAndScoreType |
+| Modify | `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java` | Implement updated and new query methods |
+| Modify | `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java` | Pass GLOBAL/null to upsert |
+| Create | `runtime/src/test/java/io/casehub/ledger/service/ActorTrustScoreRepositoryIT.java` | Integration tests for all repository methods |
 | Create | `adr/0006-actor-trust-score-discriminator-model.md` | ADR for the discriminator design |
 | Modify | `docs/DESIGN.md` | Update trust score model description |
 | Modify | `CLAUDE.md` | Update project structure table for ActorTrustScore |
@@ -596,7 +596,7 @@ Key decisions:
 - [ ] **Step 1: Rewrite V1001**
 
 ```sql
--- Quarkus Ledger — actor trust score table (V1001)
+-- CaseHub Ledger — actor trust score table (V1001)
 -- Compatible with H2 2.4.240+ (dev/test) and PostgreSQL 15+ (production)
 --
 -- actor_trust_score: nightly-computed trust scores per actor and score type.
@@ -649,14 +649,14 @@ Refs #68"
 ### Task 8: Write failing tests for backward-compat repository behaviour
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/ActorTrustScoreRepositoryIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/ActorTrustScoreRepositoryIT.java`
 
 Write the tests first. They will fail because `ActorTrustScore` still has `actorId` as `@Id` and no `ScoreType`.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -667,10 +667,10 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorTrustScore.ScoreType;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -832,12 +832,12 @@ Expected: compilation or runtime failure — `ScoreType` does not exist; `upsert
 ### Task 9: Update ActorTrustScore entity
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java`
 
 - [ ] **Step 1: Rewrite the entity**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -945,20 +945,20 @@ public class ActorTrustScore {
 ### Task 10: Update ActorTrustScoreRepository SPI
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/ActorTrustScoreRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/ActorTrustScoreRepository.java`
 
 - [ ] **Step 1: Rewrite the interface**
 
 ```java
-package io.quarkiverse.ledger.runtime.repository;
+package io.casehub.ledger.runtime.repository;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorTrustScore.ScoreType;
+import io.casehub.ledger.runtime.model.ActorType;
 
 /** SPI for persisting and querying {@link ActorTrustScore} records. */
 public interface ActorTrustScoreRepository {
@@ -1012,12 +1012,12 @@ public interface ActorTrustScoreRepository {
 ### Task 11: Implement the updated JPA repository
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
 
 - [ ] **Step 1: Rewrite the implementation**
 
 ```java
-package io.quarkiverse.ledger.runtime.repository.jpa;
+package io.casehub.ledger.runtime.repository.jpa;
 
 import java.time.Instant;
 import java.util.List;
@@ -1029,11 +1029,11 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore.ScoreType;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.persistence.LedgerPersistenceUnit;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorTrustScore.ScoreType;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
 
 /**
  * JPA / EntityManager implementation of {@link ActorTrustScoreRepository}.
@@ -1136,7 +1136,7 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
 ### Task 12: Update TrustScoreJob to pass GLOBAL/null
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java`
 
 - [ ] **Step 1: Update the upsert call**
 
@@ -1160,7 +1160,7 @@ trustRepo.upsert(actorId, ActorTrustScore.ScoreType.GLOBAL, null,
 
 Also add the import at the top of the file:
 ```java
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
 ```
 
 - [ ] **Step 2: Verify previousSnapshot keying is still safe**
@@ -1193,11 +1193,11 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn install -DskipTests -q
 
 ```bash
 git add \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/ActorTrustScoreRepository.java \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java \
-  runtime/src/test/java/io/quarkiverse/ledger/service/ActorTrustScoreRepositoryIT.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/repository/ActorTrustScoreRepository.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java \
+  runtime/src/test/java/io/casehub/ledger/service/ActorTrustScoreRepositoryIT.java \
   runtime/src/test/resources/application.properties
 git commit -m "refactor(trust): ActorTrustScore discriminator model — ScoreType, scope_key, UUID PK
 
@@ -1325,11 +1325,11 @@ After both issues close, run these greps across all consumer repos:
 ```bash
 # #67: any other @EntityListeners on ledger-related entities?
 grep -r "@EntityListeners.*[Ll]edger" \
-  ~/claude/casehub/engine ~/claude/quarkus-work ~/claude/quarkus-qhorus ~/claude/claudony
+  ~/claude/casehub/engine ~/claude/casehub-work ~/claude/casehub-qhorus ~/claude/claudony
 
 # #68: any code querying ActorTrustScore directly rather than via repository?
 grep -r "ActorTrustScore" \
-  ~/claude/casehub/engine ~/claude/quarkus-work ~/claude/quarkus-qhorus ~/claude/claudony
+  ~/claude/casehub/engine ~/claude/casehub-work ~/claude/casehub-qhorus ~/claude/claudony
 ```
 
 Open tracked issues for any consolidation work found. Both issues' Step 6 checks are satisfied by this step.

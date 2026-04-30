@@ -1,4 +1,4 @@
--- Quarkus Ledger — actor trust score table (V1001)
+-- CaseHub Ledger — actor trust score table (V1001)
 -- Compatible with H2 2.4.240+ (dev/test) and PostgreSQL 15+ (production)
 --
 -- actor_trust_score: nightly-computed trust scores per actor and score type.

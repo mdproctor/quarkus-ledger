@@ -39,7 +39,7 @@
 | `CLAUDE.md` | Modify — Flyway convention V1004+ |
 | `docs/DESIGN.md` | Modify — tracker + convention |
 
-Base package: `io.quarkiverse.ledger.runtime`
+Base package: `io.casehub.ledger.runtime`
 
 ---
 
@@ -59,7 +59,7 @@ Base package: `io.quarkiverse.ledger.runtime`
 cd examples/order-processing/src/main/resources/db/migration
 mv V1003__order_ledger_entry.sql V1004__order_ledger_entry.sql
 
-cd /Users/mdproctor/claude/quarkus-ledger/examples/art22-decision-snapshot/src/main/resources/db/migration
+cd /Users/mdproctor/claude/casehub/ledger/examples/art22-decision-snapshot/src/main/resources/db/migration
 mv V1003__decision_schema.sql V1004__decision_schema.sql
 ```
 
@@ -73,7 +73,7 @@ Find the Flyway version numbering table and update:
 ```markdown
 | Range | Owner | Purpose |
 |---|---|---|
-| V1000–V1003 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1000–V1003 | `casehub-ledger` base | Base schema (reserved — do not use in consumers) |
 | V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
 | V1004+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 ```
@@ -86,7 +86,7 @@ Find `V1003+` and change to `V1004+`. Find example migration comment `-- V1003__
 
 Find the Flyway migration table and update:
 ```markdown
-| V1003 | from `quarkus-ledger` jar | `ledger_entry_archive` table |
+| V1003 | from `casehub-ledger` jar | `ledger_entry_archive` table |
 | V1004 | `V1004__order_ledger_entry.sql` | `order_ledger_entry` join table |
 ```
 Update footer: "V1004 must be > V1003 so the base tables exist before the FK constraint."
@@ -122,7 +122,7 @@ Refs #9"
 
 **Files:**
 - Create: `runtime/src/main/resources/db/migration/V1003__ledger_entry_archive.sql`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntryArchiveRecord.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntryArchiveRecord.java`
 
 - [ ] **Step 1: Create V1003__ledger_entry_archive.sql**
 
@@ -157,7 +157,7 @@ CREATE INDEX idx_archive_occurred ON ledger_entry_archive (entry_occurred_at);
 - [ ] **Step 2: Create `LedgerEntryArchiveRecord.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -171,7 +171,7 @@ import jakarta.persistence.Table;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /**
- * Persisted archive record written by {@link io.quarkiverse.ledger.runtime.service.LedgerRetentionJob}
+ * Persisted archive record written by {@link io.casehub.ledger.runtime.service.LedgerRetentionJob}
  * before a {@link LedgerEntry} is removed from the main table.
  *
  * <p>
@@ -242,7 +242,7 @@ Expected: BUILD SUCCESS — Flyway applies V1003 without errors, all existing te
 
 ```bash
 git add runtime/src/main/resources/db/migration/V1003__ledger_entry_archive.sql \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntryArchiveRecord.java
+        runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntryArchiveRecord.java
 git commit -m "feat(art12): V1003 migration + LedgerEntryArchiveRecord entity
 
 ledger_entry_archive table with entry_json (full snapshot), entry_occurred_at
@@ -256,15 +256,15 @@ Refs #9"
 ## Task 3 — `LedgerEntryArchiver` (TDD — unit tests first)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerEntryArchiverTest.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerEntryArchiver.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerEntryArchiverTest.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerEntryArchiver.java`
 
 - [ ] **Step 1: Write failing tests**
 
-Create `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerEntryArchiverTest.java`:
+Create `runtime/src/test/java/io/casehub/ledger/service/LedgerEntryArchiverTest.java`:
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -274,12 +274,12 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.LedgerEntryArchiver;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.LedgerEntryArchiver;
 
 /**
  * Unit tests for {@link LedgerEntryArchiver} — no Quarkus runtime, no CDI.
@@ -394,7 +394,7 @@ Expected: compilation error — `LedgerEntryArchiver` not found.
 - [ ] **Step 3: Create `LedgerEntryArchiver.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -403,8 +403,8 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Serialises a {@link LedgerEntry} and its attestations to a stable JSON string
@@ -488,8 +488,8 @@ Expected: `Tests run: 5, Failures: 0, Errors: 0`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerEntryArchiver.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/LedgerEntryArchiverTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerEntryArchiver.java \
+        runtime/src/test/java/io/casehub/ledger/service/LedgerEntryArchiverTest.java
 git commit -m "feat(art12): LedgerEntryArchiver — JSON serialiser for archive storage
 
 Null fields omitted. Attestations included when present. Pure static utility.
@@ -503,15 +503,15 @@ Refs #9"
 ## Task 4 — `RetentionEligibilityChecker` (TDD — unit tests first)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/RetentionEligibilityCheckerTest.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/RetentionEligibilityChecker.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/RetentionEligibilityCheckerTest.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/RetentionEligibilityChecker.java`
 
 - [ ] **Step 1: Write failing tests**
 
-Create `runtime/src/test/java/io/quarkiverse/ledger/service/RetentionEligibilityCheckerTest.java`:
+Create `runtime/src/test/java/io/casehub/ledger/service/RetentionEligibilityCheckerTest.java`:
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -523,10 +523,10 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.RetentionEligibilityChecker;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.RetentionEligibilityChecker;
 
 /**
  * Unit tests for {@link RetentionEligibilityChecker} — no Quarkus runtime, no CDI.
@@ -671,7 +671,7 @@ Expected: compilation error — `RetentionEligibilityChecker` not found.
 - [ ] **Step 3: Create `RetentionEligibilityChecker.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -680,7 +680,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Pure Java utility that identifies ledger subjects eligible for retention archival.
@@ -746,8 +746,8 @@ Expected: `Tests run: 7, Failures: 0, Errors: 0`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/RetentionEligibilityChecker.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/RetentionEligibilityCheckerTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/RetentionEligibilityChecker.java \
+        runtime/src/test/java/io/casehub/ledger/service/RetentionEligibilityCheckerTest.java
 git commit -m "feat(art12): RetentionEligibilityChecker — pure Java eligibility logic
 
 All-or-nothing per subject chain. 7 unit tests covering boundary cases,
@@ -761,10 +761,10 @@ Refs #9"
 ## Task 5 — `LedgerConfig.RetentionConfig` + `LedgerRetentionJob`
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java`
 - Modify: `runtime/src/test/resources/application.properties`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerRetentionJobIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerRetentionJobIT.java`
 
 - [ ] **Step 1: Add `RetentionConfig` to `LedgerConfig.java`**
 
@@ -824,10 +824,10 @@ First, append to `runtime/src/test/resources/application.properties`:
 %retention-test.quarkus.ledger.retention.archive-before-delete=true
 ```
 
-Then create `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerRetentionJobIT.java`:
+Then create `runtime/src/test/java/io/casehub/ledger/service/LedgerRetentionJobIT.java`:
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -840,16 +840,16 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
-import io.quarkiverse.ledger.runtime.service.LedgerRetentionJob;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryArchiveRecord;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.LedgerHashChain;
+import io.casehub.ledger.runtime.service.LedgerRetentionJob;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -1045,7 +1045,7 @@ Expected: compilation error.
 - [ ] **Step 4: Create `LedgerRetentionJob.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.List;
@@ -1060,11 +1060,11 @@ import jakarta.transaction.Transactional;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryArchiveRecord;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -1205,9 +1205,9 @@ Expected: BUILD SUCCESS, zero failures.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/LedgerRetentionJobIT.java \
+git add runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java \
+        runtime/src/test/java/io/casehub/ledger/service/LedgerRetentionJobIT.java \
         runtime/src/test/resources/application.properties
 git commit -m "feat(art12): RetentionConfig + LedgerRetentionJob — archive-then-delete retention enforcement
 
@@ -1225,16 +1225,16 @@ Refs #9"
 ## Task 6 — Audit query SPI + JPA implementation + integration tests (TDD)
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/LedgerEntryRepository.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/AuditQueryIT.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/LedgerEntryRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/AuditQueryIT.java`
 
 - [ ] **Step 1: Write failing integration tests**
 
-Create `runtime/src/test/java/io/quarkiverse/ledger/service/AuditQueryIT.java`:
+Create `runtime/src/test/java/io/casehub/ledger/service/AuditQueryIT.java`:
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1248,11 +1248,11 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**
@@ -1505,9 +1505,9 @@ Expected: BUILD SUCCESS, zero failures.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/LedgerEntryRepository.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/AuditQueryIT.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/LedgerEntryRepository.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java \
+        runtime/src/test/java/io/casehub/ledger/service/AuditQueryIT.java
 git commit -m "feat(art12): audit query API — findByActorId, findByActorRole, findByTimeRange
 
 Three new SPI methods with Instant params for timezone-safe auditor queries.
@@ -1526,7 +1526,7 @@ Refs #9"
 
 - [ ] **Step 1: Add audit query test to `OrderLedgerIT.java`**
 
-Read `examples/order-processing/src/test/java/io/quarkiverse/ledger/examples/order/OrderLedgerIT.java` first.
+Read `examples/order-processing/src/test/java/io/casehub/ledger/examples/order/OrderLedgerIT.java` first.
 
 Add this test at the end of the class:
 
@@ -1556,7 +1556,7 @@ Also add `import static org.hamcrest.Matchers.everyItem;` and `import static org
 
 - [ ] **Step 2: Add audit query endpoint to `OrderResource.java`**
 
-Read `examples/order-processing/src/main/java/io/quarkiverse/ledger/examples/order/api/OrderResource.java` first.
+Read `examples/order-processing/src/main/java/io/casehub/ledger/examples/order/api/OrderResource.java` first.
 
 Add this import and endpoint:
 
@@ -1595,28 +1595,28 @@ Expected: `Tests run: 11, Failures: 0` (10 original + 1 new).
 - [ ] **Step 4: Create `examples/art12-compliance/` structure**
 
 ```bash
-mkdir -p examples/art12-compliance/src/main/java/io/quarkiverse/ledger/examples/art12/{ledger,service,api}
+mkdir -p examples/art12-compliance/src/main/java/io/casehub/ledger/examples/art12/{ledger,service,api}
 mkdir -p examples/art12-compliance/src/main/resources/db/migration
-mkdir -p examples/art12-compliance/src/test/java/io/quarkiverse/ledger/examples/art12
+mkdir -p examples/art12-compliance/src/test/java/io/casehub/ledger/examples/art12
 ```
 
 - [ ] **Step 5: Create `examples/art12-compliance/pom.xml`**
 
 Copy from `examples/order-processing/pom.xml` and change:
-- `artifactId` → `quarkus-ledger-example-art12-compliance`
-- `name` → `Quarkus Ledger - Example: EU AI Act Art.12 Compliance`
+- `artifactId` → `casehub-ledger-example-art12-compliance`
+- `name` → `CaseHub Ledger - Example: EU AI Act Art.12 Compliance`
 - `description` → Demonstrates retention enforcement and auditor query API
 
 - [ ] **Step 6: Create `DecisionEntry.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art12.ledger;
+package io.casehub.ledger.examples.art12.ledger;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 @Entity
 @Table(name = "art12_decision_entry")
@@ -1641,7 +1641,7 @@ CREATE TABLE art12_decision_entry (
 - [ ] **Step 8: Create `AuditService.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art12.service;
+package io.casehub.ledger.examples.art12.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -1652,13 +1652,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.art12.ledger.DecisionEntry;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.casehub.ledger.examples.art12.ledger.DecisionEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerHashChain;
 
 @ApplicationScoped
 public class AuditService {
@@ -1706,7 +1706,7 @@ public class AuditService {
 - [ ] **Step 9: Create `AuditResource.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art12.api;
+package io.casehub.ledger.examples.art12.api;
 
 import java.time.Instant;
 import java.util.List;
@@ -1718,9 +1718,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.examples.art12.service.AuditService;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.examples.art12.service.AuditService;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
 
 @Path("/decisions")
 @Produces(MediaType.APPLICATION_JSON)
@@ -1784,10 +1784,10 @@ quarkus.ledger.retention.enabled=false
 - [ ] **Step 11: Create `DecisionEntryRepository.java`** (required for CDI — same pattern as other examples)
 
 ```java
-package io.quarkiverse.ledger.examples.art12.ledger;
+package io.casehub.ledger.examples.art12.ledger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import io.quarkiverse.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
+import io.casehub.ledger.runtime.repository.jpa.JpaLedgerEntryRepository;
 
 @ApplicationScoped
 public class DecisionEntryRepository extends JpaLedgerEntryRepository {}
@@ -1796,7 +1796,7 @@ public class DecisionEntryRepository extends JpaLedgerEntryRepository {}
 - [ ] **Step 12: Create `Art12ComplianceIT.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art12;
+package io.casehub.ledger.examples.art12;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -1891,7 +1891,7 @@ Refs #9"
 ```markdown
 # Example: EU AI Act Article 12 Compliance
 
-This example demonstrates how to use `quarkus-ledger` to satisfy EU AI Act Article 12
+This example demonstrates how to use `casehub-ledger` to satisfy EU AI Act Article 12
 (Record-keeping) requirements for high-risk AI systems.
 
 ## What is EU AI Act Article 12?
@@ -1954,7 +1954,7 @@ mkdir -p docs/compliance
 **Enforcement date:** 2 August 2026 (Annex III high-risk AI systems)
 **Penalties:** Up to €15M or 3% of global annual turnover
 
-This document maps each Article 12 obligation to the specific `quarkus-ledger`
+This document maps each Article 12 obligation to the specific `casehub-ledger`
 capability that satisfies it, for use in conformity assessments.
 
 ---

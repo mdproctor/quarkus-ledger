@@ -1,4 +1,4 @@
--- Quarkus Ledger base schema (V1000)
+-- CaseHub Ledger base schema (V1000)
 -- Compatible with H2 (dev/test) and PostgreSQL (production)
 --
 -- ledger_entry: domain-agnostic immutable audit log.

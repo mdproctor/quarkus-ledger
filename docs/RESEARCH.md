@@ -1,4 +1,4 @@
-# Quarkus Ledger — Research & Strategic Directions
+# CaseHub Ledger — Research & Strategic Directions
 
 Research conducted 2026-04-16. Last updated 2026-04-22. Sources: web search + Google Scholar sweep across audit
 ledger cryptography, trust algorithms, EU/GDPR compliance, AI accountability, and

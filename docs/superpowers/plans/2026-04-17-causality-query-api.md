@@ -93,7 +93,7 @@ Read `LedgerEntry.java` first. After the `digest` field and before `// ── Su
      *
      * <p>
      * Enables cross-system causal chain traversal via
-     * {@link io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
+     * {@link io.casehub.ledger.runtime.repository.LedgerEntryRepository#findCausedBy(UUID)}.
      * When Claudony orchestrates Tarkus → Qhorus, each downstream entry's
      * {@code causedByEntryId} points to its upstream cause.
      */
@@ -107,7 +107,7 @@ Update the class Javadoc supplements `<ul>` to remove the ObservabilitySupplemen
 - [ ] **Step 4: Delete `ObservabilitySupplement.java`**
 
 ```bash
-rm runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ObservabilitySupplement.java
+rm runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ObservabilitySupplement.java
 ```
 
 - [ ] **Step 5: Remove OBSERVABILITY from `LedgerSupplementSerializer.java`**
@@ -256,17 +256,17 @@ Refs #10"
 ## Task 2 — `findCausedBy` SPI + JPA + IT tests (TDD — tests first)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/CausalityQueryIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/CausalityQueryIT.java`
 - Modify: `runtime/src/main/java/.../repository/LedgerEntryRepository.java`
 - Modify: `runtime/src/main/java/.../repository/jpa/JpaLedgerEntryRepository.java`
 - Modify: `examples/order-processing/src/main/java/.../ledger/OrderLedgerEntryRepository.java`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `runtime/src/test/java/io/quarkiverse/ledger/service/CausalityQueryIT.java`:
+Create `runtime/src/test/java/io/casehub/ledger/service/CausalityQueryIT.java`:
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -280,11 +280,11 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**
@@ -452,13 +452,13 @@ Read the file. After `findByTimeRange` implementation, add:
 
 - [ ] **Step 5: Add `findCausedBy` to `OrderLedgerEntryRepository.java`**
 
-Read `examples/order-processing/src/main/java/io/quarkiverse/ledger/examples/order/ledger/OrderLedgerEntryRepository.java`. Add after the last override:
+Read `examples/order-processing/src/main/java/io/casehub/ledger/examples/order/ledger/OrderLedgerEntryRepository.java`. Add after the last override:
 
 ```java
     @Override
-    public java.util.List<io.quarkiverse.ledger.runtime.model.LedgerEntry> findCausedBy(
+    public java.util.List<io.casehub.ledger.runtime.model.LedgerEntry> findCausedBy(
             final java.util.UUID entryId) {
-        return io.quarkiverse.ledger.runtime.model.LedgerEntry.list(
+        return io.casehub.ledger.runtime.model.LedgerEntry.list(
                 "causedByEntryId = ?1 ORDER BY occurredAt ASC", entryId);
     }
 ```
@@ -483,8 +483,8 @@ Expected: BUILD SUCCESS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/ \
-        runtime/src/test/java/io/quarkiverse/ledger/service/CausalityQueryIT.java \
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/ \
+        runtime/src/test/java/io/casehub/ledger/service/CausalityQueryIT.java \
         examples/order-processing/
 git commit -m "feat(causality): findCausedBy — SPI + JPA + 6 @QuarkusTest IT tests
 
@@ -505,9 +505,9 @@ Refs #10"
 
 - [ ] **Step 1: Add `correlationId` end-to-end test to `OrderLedgerIT.java`**
 
-Read `examples/order-processing/src/main/java/io/quarkiverse/ledger/examples/order/api/OrderResource.java`. Find the `LedgerEntryView` record. Add `String correlationId` to it and map `e.correlationId` in the constructor. If there is no view record and entries are returned directly, `correlationId` will already appear in the JSON — skip this sub-step.
+Read `examples/order-processing/src/main/java/io/casehub/ledger/examples/order/api/OrderResource.java`. Find the `LedgerEntryView` record. Add `String correlationId` to it and map `e.correlationId` in the constructor. If there is no view record and entries are returned directly, `correlationId` will already appear in the JSON — skip this sub-step.
 
-Read `examples/order-processing/src/test/java/io/quarkiverse/ledger/examples/order/OrderLedgerIT.java`. Add:
+Read `examples/order-processing/src/test/java/io/casehub/ledger/examples/order/OrderLedgerIT.java`. Add:
 
 ```java
 @Test
@@ -528,7 +528,7 @@ void placeOrder_correlationId_fieldExistsInResponse() {
 - [ ] **Step 2: Run order-processing tests**
 
 ```bash
-cd /Users/mdproctor/claude/quarkus-ledger/examples/order-processing
+cd /Users/mdproctor/claude/casehub/ledger/examples/order-processing
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean test -q 2>&1 | tail -5
 cd ../..
 ```

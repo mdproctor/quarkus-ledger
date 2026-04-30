@@ -1,6 +1,6 @@
 # Order Processing Example
 
-A runnable Quarkus application demonstrating `quarkus-ledger` integration. Tracks an order lifecycle with:
+A runnable Quarkus application demonstrating `casehub-ledger` integration. Tracks an order lifecycle with:
 
 - Immutable ledger entries on every state transition (place → ship → deliver / cancel)
 - SHA-256 hash chain tamper evidence per order
@@ -11,10 +11,10 @@ A runnable Quarkus application demonstrating `quarkus-ledger` integration. Track
 
 ## Prerequisites
 
-`quarkus-ledger` must be installed to the local Maven repository first:
+`casehub-ledger` must be installed to the local Maven repository first:
 
 ```bash
-cd ../../   # quarkus-ledger root
+cd ../../   # casehub-ledger root
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean install -DskipTests
 ```
 
@@ -77,10 +77,10 @@ peer attestations, and supplement-specific assertions.
 | Version | File | What |
 |---|---|---|
 | V1 | `V1__order_schema.sql` | `orders` table |
-| V1000 | from `quarkus-ledger` jar | `ledger_entry` + `ledger_attestation` base tables |
-| V1001 | from `quarkus-ledger` jar | `actor_trust_score` table |
-| V1002 | from `quarkus-ledger` jar | supplement tables (`ledger_supplement` + subclass tables) |
-| V1003 | from `quarkus-ledger` jar | `ledger_entry_archive` table |
+| V1000 | from `casehub-ledger` jar | `ledger_entry` + `ledger_attestation` base tables |
+| V1001 | from `casehub-ledger` jar | `actor_trust_score` table |
+| V1002 | from `casehub-ledger` jar | supplement tables (`ledger_supplement` + subclass tables) |
+| V1003 | from `casehub-ledger` jar | `ledger_entry_archive` table |
 | V1004 | `V1004__order_ledger_entry.sql` | `order_ledger_entry` join table |
 
 V1004 must be > V1003 so the base tables exist before the FK constraint.

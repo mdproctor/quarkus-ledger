@@ -17,36 +17,36 @@
 ## File Map
 
 **Modified — entities (remove PanacheEntityBase, add @NamedQuery):**
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerMerkleFrontier.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerAttestation.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntryArchiveRecord.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplement.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ComplianceSupplement.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ProvenanceSupplement.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerMerkleFrontier.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerAttestation.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntryArchiveRecord.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplement.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ComplianceSupplement.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ProvenanceSupplement.java`
 
 **Modified — repositories/services (EntityManager queries):**
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java`
 
 **Modified — build:**
 - `runtime/pom.xml`
 
 **Created — tests:**
-- `runtime/src/test/java/io/quarkiverse/ledger/service/PlainEntityTest.java`
+- `runtime/src/test/java/io/casehub/ledger/service/PlainEntityTest.java`
 
 ---
 
 ## Task 1: TDD — Write PlainEntityTest (Structural + Correctness)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/PlainEntityTest.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/PlainEntityTest.java`
 
 - [ ] **Step 1: Write the failing structural test**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,14 +54,14 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryArchiveRecord;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryArchiveRecord;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
 
 /**
  * Structural tests ensuring all entities are plain @Entity POJOs.
@@ -123,7 +123,7 @@ Expected: FAIL — `LedgerMerkleFrontier must not extend PanacheEntityBase` (and
 - [ ] **Step 3: Commit the failing test**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/PlainEntityTest.java
+git add runtime/src/test/java/io/casehub/ledger/service/PlainEntityTest.java
 git commit -m "test(entities): add PlainEntityTest — structural guard against PanacheEntityBase regression
 
 TDD: all assertions fail until entities are converted.
@@ -136,12 +136,12 @@ Refs #19, Refs #18"
 ## Task 2: Convert LedgerMerkleFrontier
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerMerkleFrontier.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerMerkleFrontier.java`
 
 - [ ] **Step 1: Rewrite the file**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.util.UUID;
 
@@ -214,7 +214,7 @@ The assertion for `LedgerMerkleFrontier` now passes; others still fail.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerMerkleFrontier.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerMerkleFrontier.java
 git commit -m "feat(entities): convert LedgerMerkleFrontier to plain @Entity + @NamedQuery
 
 Refs #19, Refs #18"
@@ -225,12 +225,12 @@ Refs #19, Refs #18"
 ## Task 3: Convert LedgerAttestation
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerAttestation.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerAttestation.java`
 
 - [ ] **Step 1: Rewrite the file**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -322,7 +322,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean compile -pl runtime -q
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerAttestation.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerAttestation.java
 git commit -m "feat(entities): convert LedgerAttestation to plain @Entity + @NamedQuery
 
 Refs #19, Refs #18"
@@ -333,12 +333,12 @@ Refs #19, Refs #18"
 ## Task 4: Convert ActorTrustScore
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java`
 
 - [ ] **Step 1: Rewrite the file**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 
@@ -412,7 +412,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean compile -pl runtime -q
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java
 git commit -m "feat(entities): convert ActorTrustScore to plain @Entity + @NamedQuery
 
 Refs #19, Refs #18"
@@ -423,10 +423,10 @@ Refs #19, Refs #18"
 ## Task 5: Convert LedgerEntryArchiveRecord + Supplement Stack
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntryArchiveRecord.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplement.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ComplianceSupplement.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ProvenanceSupplement.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntryArchiveRecord.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplement.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ComplianceSupplement.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ProvenanceSupplement.java`
 
 These entities have no explicit query methods — only `@PrePersist` and cascade persistence. Change is minimal: remove `extends PanacheEntityBase` and the import.
 
@@ -478,10 +478,10 @@ Expected: Both PlainEntityTest tests PASS — all 8 entity classes are now plain
 
 ```bash
 git add \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntryArchiveRecord.java \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplement.java \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ComplianceSupplement.java \
-  runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ProvenanceSupplement.java
+  runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntryArchiveRecord.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplement.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ComplianceSupplement.java \
+  runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ProvenanceSupplement.java
 git commit -m "feat(entities): convert LedgerEntryArchiveRecord and supplement stack to plain @Entity
 
 No query changes needed — cascade handles persistence.
@@ -495,7 +495,7 @@ Closes #19, Refs #18"
 ## Task 6: Update JpaLedgerEntryRepository — Attestation + Frontier via EntityManager
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
 
 - [ ] **Step 1: Read the current file**
 
@@ -612,7 +612,7 @@ Expected: all pass (attestation queries + frontier operations correct via named 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
 git commit -m "feat(repo): migrate JpaLedgerEntryRepository attestation+frontier to EntityManager @NamedQuery
 
 Refs #20, Refs #18"
@@ -623,12 +623,12 @@ Refs #20, Refs #18"
 ## Task 7: Update JpaActorTrustScoreRepository
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
 
 - [ ] **Step 1: Write the updated class**
 
 ```java
-package io.quarkiverse.ledger.runtime.repository.jpa;
+package io.casehub.ledger.runtime.repository.jpa;
 
 import java.time.Instant;
 import java.util.List;
@@ -639,9 +639,9 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
 
 /**
  * JPA/EntityManager implementation of {@link ActorTrustScoreRepository}.
@@ -717,7 +717,7 @@ Expected: all pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java
 git commit -m "feat(repo): migrate JpaActorTrustScoreRepository to EntityManager + @NamedQuery
 
 Refs #20, Refs #18"
@@ -728,7 +728,7 @@ Refs #20, Refs #18"
 ## Task 8: Update LedgerRetentionJob — record.persist() → em.persist()
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java`
 
 - [ ] **Step 1: Find and replace record.persist()**
 
@@ -761,7 +761,7 @@ Expected: 6/6 pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java
 git commit -m "feat(service): migrate LedgerRetentionJob archive record to em.persist()
 
 Closes #20, Refs #18"
@@ -846,7 +846,7 @@ Expected: BUILD SUCCESS.
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean install -q 2>&1 | tail -5
 ```
 
-Expected: BUILD SUCCESS. JAR installed to `~/.m2/repository/io/quarkiverse/ledger/`.
+Expected: BUILD SUCCESS. JAR installed to `~/.m2/repository/io/casehub/ledger/`.
 
 - [ ] **Step 6: Verify dep is gone from effective pom**
 
@@ -869,6 +869,6 @@ Closes #21, Closes #18"
 ```
 
 ```bash
-gh issue close 18 --repo mdproctor/quarkus-ledger \
+gh issue close 18 --repo casehubio/ledger \
   --comment "All done: plain @Entity throughout, panache dep removed, 130+ tests passing."
 ```

@@ -1,4 +1,4 @@
--- Quarkus Ledger — actor identity pseudonymisation table (V1004)
+-- CaseHub Ledger — actor identity pseudonymisation table (V1004)
 -- Compatible with H2 (dev/test) and PostgreSQL (production)
 --
 -- actor_identity: optional token-to-identity mapping for pseudonymisation.

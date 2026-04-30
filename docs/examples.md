@@ -1,6 +1,6 @@
 # Examples
 
-Each example is a standalone Maven project that demonstrates one capability of `quarkus-ledger`.
+Each example is a standalone Maven project that demonstrates one capability of `casehub-ledger`.
 They are runnable with `mvn quarkus:dev` and include integration tests. Use them as
 production-grade starting points for your own integration — copy the pattern, adapt the domain.
 
@@ -264,8 +264,8 @@ return Response.status(201)
 
 | Project | Subclass | Domain |
 |---|---|---|
-| [quarkus-tarkus](https://github.com/mdproctor/quarkus-tarkus) | `WorkItemLedgerEntry` | Task lifecycle — create, claim, start, complete, reject, delegate |
-| [quarkus-qhorus](https://github.com/mdproctor/quarkus-qhorus) | `AgentMessageLedgerEntry` | AI agent telemetry — tool calls with duration, token count, context refs |
+| [casehub-work](https://github.com/casehubio/casehub-work) | `WorkItemLedgerEntry` | Task lifecycle — create, claim, start, complete, reject, delegate |
+| [casehub-qhorus](https://github.com/casehubio/casehub-qhorus) | `AgentMessageLedgerEntry` | AI agent telemetry — tool calls with duration, token count, context refs |
 
 Both include full integration test suites that exercise Merkle tree verification, sequence
 numbering, decision context, attestations, and trust score computation.

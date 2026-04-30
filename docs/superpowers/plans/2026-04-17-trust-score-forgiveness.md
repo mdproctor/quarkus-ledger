@@ -18,19 +18,19 @@
 
 | File | Change |
 |---|---|
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java` | Add `ForgivenessParams` record, new field, delegating constructor, forgiveness branch in `compute()` |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java` | Add `ForgivenessConfig` nested interface + `forgiveness()` method on `TrustScoreConfig` |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java` | Pass forgiveness params to `TrustScoreComputer` constructor |
-| `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java` | Add 6 new unit tests |
-| `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java` | New — `@QuarkusTest` integration test (happy path + end-to-end) |
+| `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java` | Add `ForgivenessParams` record, new field, delegating constructor, forgiveness branch in `compute()` |
+| `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java` | Add `ForgivenessConfig` nested interface + `forgiveness()` method on `TrustScoreConfig` |
+| `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java` | Pass forgiveness params to `TrustScoreComputer` constructor |
+| `runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java` | Add 6 new unit tests |
+| `runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java` | New — `@QuarkusTest` integration test (happy path + end-to-end) |
 
 ---
 
 ## Task 1 — `ForgivenessParams` record + regression unit test (TDD)
 
 **Files:**
-- Modify: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java`
+- Modify: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java`
 
 - [ ] **Step 1: Add the regression test — it must fail to compile (no ForgivenessParams yet)**
 
@@ -148,8 +148,8 @@ Expected: `Tests run: 17, Failures: 0, Errors: 0` (16 original + 1 new).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java \
+        runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java
 git commit -m "feat(forgiveness): ForgivenessParams record + delegating constructor
 
 Existing single-param constructor delegates to new two-param version via
@@ -164,8 +164,8 @@ Refs #8"
 ## Task 2 — Forgiveness formula: 5 unit tests + implementation (TDD)
 
 **Files:**
-- Modify: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java`
+- Modify: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java`
 
 - [ ] **Step 1: Add 5 failing forgiveness formula tests**
 
@@ -394,8 +394,8 @@ Expected: `Tests run: 22, Failures: 0, Errors: 0`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java \
+        runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java
 git commit -m "feat(forgiveness): implement recency×frequency forgiveness formula in TrustScoreComputer
 
 Formula: F = 2^(-ageInDays/halfLifeDays) × (negCount ≤ threshold ? 1.0 : 0.5)
@@ -412,8 +412,8 @@ Refs #8"
 ## Task 3 — `LedgerConfig.ForgivenessConfig` + `TrustScoreJob` wiring
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java`
 
 No new failing test needed here — the behaviour change (disabled by default) means the
 existing 22 unit tests are the correctness gate. The integration test in Task 4 will
@@ -500,8 +500,8 @@ Expected: `Tests run: 49, Failures: 0, Errors: 0` (22 TrustScoreComputer + 18 Le
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java
 git commit -m "feat(forgiveness): wire ForgivenessConfig into LedgerConfig and TrustScoreJob
 
 quarkus.ledger.trust-score.forgiveness.enabled=false (default — zero behaviour change)
@@ -519,7 +519,7 @@ Refs #8"
 ## Task 4 — Integration test: happy path end-to-end with `@QuarkusTest`
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java`
 - Modify: `runtime/src/test/resources/application.properties` (add trust score + forgiveness profile)
 
 This test runs the full `TrustScoreJob` against an H2 in-memory database with real
@@ -540,10 +540,10 @@ Append to the existing `application.properties`:
 
 - [ ] **Step 2: Write the failing integration test**
 
-Create `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java`:
+Create `runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java`:
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -556,13 +556,13 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
@@ -727,7 +727,7 @@ Expected: BUILD SUCCESS, zero failures.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java \
+git add runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java \
         runtime/src/test/resources/application.properties
 git commit -m "test(forgiveness): end-to-end integration test via TrustScoreJob + H2
 

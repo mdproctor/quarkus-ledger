@@ -1,6 +1,6 @@
 # Example: EU AI Act Article 12 Compliance
 
-This example demonstrates how to use `quarkus-ledger` to satisfy EU AI Act Article 12
+This example demonstrates how to use `casehub-ledger` to satisfy EU AI Act Article 12
 (Record-keeping) requirements for high-risk AI systems.
 
 ## What is EU AI Act Article 12?

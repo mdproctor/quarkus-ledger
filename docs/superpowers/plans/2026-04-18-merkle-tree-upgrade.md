@@ -17,29 +17,29 @@
 ## File Map
 
 **Created:**
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerMerkleFrontier.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerkleTree.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerVerificationService.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerklePublisher.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/model/InclusionProof.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/model/ProofStep.java`
-- `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerMerkleTreeTest.java`
-- `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerVerificationServiceIT.java`
-- `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerMerklePublisherTest.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerMerkleFrontier.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerkleTree.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerVerificationService.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerklePublisher.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/model/InclusionProof.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/model/ProofStep.java`
+- `runtime/src/test/java/io/casehub/ledger/service/LedgerMerkleTreeTest.java`
+- `runtime/src/test/java/io/casehub/ledger/service/LedgerVerificationServiceIT.java`
+- `runtime/src/test/java/io/casehub/ledger/service/LedgerMerklePublisherTest.java`
 - `examples/merkle-verification/src/...`
 
 **Modified:**
 - `runtime/src/main/resources/db/migration/V1000__ledger_base_schema.sql`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntry.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntry.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java`
 - `docs/AUDITABILITY.md`
 - `docs/DESIGN.md`
 
 **Deleted:**
-- `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerHashChain.java`
-- `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java`
+- `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerHashChain.java`
+- `runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java`
 
 ---
 
@@ -50,7 +50,7 @@
 - [ ] **Step 1: Create epic issue**
 
 ```bash
-gh issue create --repo mdproctor/quarkus-ledger \
+gh issue create --repo casehubio/ledger \
   --title "Epic: Axiom 4 — Verifiability (Merkle tree upgrade + external proof publishing)" \
   --label "epic" \
   --body "$(cat <<'EOF'
@@ -72,7 +72,7 @@ Note the new epic issue number (e.g. #12). All commits in this feature use: `Ref
 - [ ] **Step 2: Confirm issue #11 is open**
 
 ```bash
-gh issue view 11 --repo mdproctor/quarkus-ledger
+gh issue view 11 --repo casehubio/ledger
 ```
 
 ---
@@ -123,7 +123,7 @@ Refs #11, Refs #12"
 ## Task 3: Config
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
 
 - [ ] **Step 1: Add `merkle()` method and `MerkleConfig` interface**
 
@@ -189,7 +189,7 @@ Expected: BUILD SUCCESS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java
 git commit -m "feat(merkle): add MerkleConfig with optional publish settings
 
 Refs #11, Refs #12"
@@ -200,13 +200,13 @@ Refs #11, Refs #12"
 ## Task 4: Data Types
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/model/ProofStep.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/model/InclusionProof.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/model/ProofStep.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/service/model/InclusionProof.java`
 
 - [ ] **Step 1: Create `ProofStep`**
 
 ```java
-package io.quarkiverse.ledger.runtime.service.model;
+package io.casehub.ledger.runtime.service.model;
 
 /**
  * One sibling hash in a Merkle inclusion proof.
@@ -224,7 +224,7 @@ public record ProofStep(String hash, Side side) {
 - [ ] **Step 2: Create `InclusionProof`**
 
 ```java
-package io.quarkiverse.ledger.runtime.service.model;
+package io.casehub.ledger.runtime.service.model;
 
 import java.util.List;
 import java.util.UUID;
@@ -262,7 +262,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean compile -pl runtime -q
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/model/
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/model/
 git commit -m "feat(merkle): add ProofStep and InclusionProof records
 
 Refs #11, Refs #12"
@@ -273,12 +273,12 @@ Refs #11, Refs #12"
 ## Task 5: LedgerMerkleFrontier Entity
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerMerkleFrontier.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerMerkleFrontier.java`
 
 - [ ] **Step 1: Create entity**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.util.List;
 import java.util.UUID;
@@ -342,7 +342,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean compile -pl runtime -q
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerMerkleFrontier.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerMerkleFrontier.java
 git commit -m "feat(merkle): add LedgerMerkleFrontier Panache entity
 
 Refs #11, Refs #12"
@@ -353,20 +353,20 @@ Refs #11, Refs #12"
 ## Task 6: TDD — Write Failing LedgerMerkleTree Tests
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerMerkleTreeTest.java`
-- Create stub: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerkleTree.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerMerkleTreeTest.java`
+- Create stub: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerkleTree.java`
 
 - [ ] **Step 1: Create stub LedgerMerkleTree so tests compile**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.List;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
 
 public final class LedgerMerkleTree {
     private LedgerMerkleTree() {}
@@ -382,10 +382,10 @@ public final class LedgerMerkleTree {
 - [ ] **Step 2: Create LedgerMerkleTreeTest**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
-import static io.quarkiverse.ledger.runtime.service.model.ProofStep.Side.LEFT;
-import static io.quarkiverse.ledger.runtime.service.model.ProofStep.Side.RIGHT;
+import static io.casehub.ledger.runtime.service.model.ProofStep.Side.LEFT;
+import static io.casehub.ledger.runtime.service.model.ProofStep.Side.RIGHT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
@@ -395,11 +395,11 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.service.supplement.TestEntry;
 
 class LedgerMerkleTreeTest {
 
@@ -658,8 +658,8 @@ Expected: FAIL — `UnsupportedOperationException` from stub methods.
 - [ ] **Step 4: Commit stub + tests**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerkleTree.java
-git add runtime/src/test/java/io/quarkiverse/ledger/service/LedgerMerkleTreeTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerkleTree.java
+git add runtime/src/test/java/io/casehub/ledger/service/LedgerMerkleTreeTest.java
 git commit -m "test(merkle): add LedgerMerkleTreeTest (TDD — all failing)
 
 Refs #11, Refs #12"
@@ -670,14 +670,14 @@ Refs #11, Refs #12"
 ## Task 7: Implement LedgerMerkleTree
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerkleTree.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerkleTree.java`
 
 - [ ] **Step 1: Implement the full class**
 
 Replace the stub with:
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -688,11 +688,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
-import io.quarkiverse.ledger.runtime.service.model.ProofStep;
-import io.quarkiverse.ledger.runtime.service.model.ProofStep.Side;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.service.model.ProofStep;
+import io.casehub.ledger.runtime.service.model.ProofStep.Side;
 
 /**
  * Pure static utility implementing the Merkle Mountain Range (stored frontier) algorithm.
@@ -888,7 +888,7 @@ Expected: BUILD SUCCESS, all tests PASS.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerkleTree.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerkleTree.java
 git commit -m "feat(merkle): implement LedgerMerkleTree — Merkle Mountain Range algorithm
 
 Leaf hash: SHA-256(0x00|canonical). Internal: SHA-256(0x01|left|right).
@@ -902,7 +902,7 @@ Refs #11, Refs #12"
 ## Task 8: Update LedgerEntry — Drop previousHash
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntry.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntry.java`
 
 - [ ] **Step 1: Remove `previousHash` field and update comments**
 
@@ -942,7 +942,7 @@ Expected: BUILD SUCCESS (LedgerHashChainTest will break — that's expected; it'
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntry.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntry.java
 git commit -m "feat(merkle): drop previousHash from LedgerEntry — frontier handles chaining
 
 Refs #11, Refs #12"
@@ -953,7 +953,7 @@ Refs #11, Refs #12"
 ## Task 9: Write Path Integration
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java`
 
 - [ ] **Step 1: Inject frontier access and update `save()`**
 
@@ -1007,8 +1007,8 @@ public LedgerEntry save(final LedgerEntry entry) {
 
 Also add required imports at the top of the file:
 ```java
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
 ```
 
 - [ ] **Step 2: Run all tests**
@@ -1022,7 +1022,7 @@ Expected: existing tests pass. `LedgerHashChainTest` will fail — that's expect
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
 git commit -m "feat(merkle): compute leaf hash and update frontier in JpaLedgerEntryRepository.save()
 
 Refs #11, Refs #12"
@@ -1033,19 +1033,19 @@ Refs #11, Refs #12"
 ## Task 10: TDD — Write Failing LedgerVerificationService Tests
 
 **Files:**
-- Create stub: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerVerificationService.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerVerificationServiceIT.java`
+- Create stub: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerVerificationService.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerVerificationServiceIT.java`
 
 - [ ] **Step 1: Create stub LedgerVerificationService**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
 
 @ApplicationScoped
 public class LedgerVerificationService {
@@ -1058,7 +1058,7 @@ public class LedgerVerificationService {
 - [ ] **Step 2: Create LedgerVerificationServiceIT**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1069,14 +1069,14 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
-import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.service.LedgerVerificationService;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -1185,7 +1185,7 @@ class LedgerVerificationServiceIT {
         TestEntry e = seedEntry(sub, 1, "actor-a");
 
         // Directly corrupt the stored digest
-        io.quarkiverse.ledger.runtime.model.LedgerEntry stored =
+        io.casehub.ledger.runtime.model.LedgerEntry stored =
                 repo.findById(e.id).orElseThrow();
         stored.digest = "0000000000000000000000000000000000000000000000000000000000000000";
         stored.persist();
@@ -1209,8 +1209,8 @@ Expected: FAIL — `UnsupportedOperationException`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerVerificationService.java
-git add runtime/src/test/java/io/quarkiverse/ledger/service/LedgerVerificationServiceIT.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerVerificationService.java
+git add runtime/src/test/java/io/casehub/ledger/service/LedgerVerificationServiceIT.java
 git commit -m "test(merkle): add LedgerVerificationServiceIT (TDD — all failing)
 
 Refs #11, Refs #12"
@@ -1221,12 +1221,12 @@ Refs #11, Refs #12"
 ## Task 11: Implement LedgerVerificationService
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerVerificationService.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerVerificationService.java`
 
 - [ ] **Step 1: Implement**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.List;
 import java.util.UUID;
@@ -1234,9 +1234,9 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerMerkleFrontier;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerMerkleFrontier;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
 
 /**
  * CDI bean exposing Merkle tree verification operations.
@@ -1330,7 +1330,7 @@ Expected: all tests pass except `LedgerHashChainTest` (deleted in Task 15).
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerVerificationService.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerVerificationService.java
 git commit -m "feat(merkle): implement LedgerVerificationService — treeRoot, inclusionProof, verify
 
 Refs #11, Refs #12"
@@ -1341,13 +1341,13 @@ Refs #11, Refs #12"
 ## Task 12: TDD — Write Failing LedgerMerklePublisher Tests
 
 **Files:**
-- Create stub: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerklePublisher.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerMerklePublisherTest.java`
+- Create stub: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerklePublisher.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/LedgerMerklePublisherTest.java`
 
 - [ ] **Step 1: Create stub**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.util.UUID;
 
@@ -1373,7 +1373,7 @@ public class LedgerMerklePublisher {
 - [ ] **Step 2: Create LedgerMerklePublisherTest**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1385,7 +1385,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.service.LedgerMerklePublisher;
+import io.casehub.ledger.runtime.service.LedgerMerklePublisher;
 
 class LedgerMerklePublisherTest {
 
@@ -1398,7 +1398,7 @@ class LedgerMerklePublisherTest {
     void buildCheckpoint_firstLineIsOrigin() {
         UUID sub = UUID.randomUUID();
         String cp = LedgerMerklePublisher.buildCheckpoint(sub, 5, FAKE_ROOT, "key-01");
-        assertThat(cp.split("\n")[0]).isEqualTo("io.quarkiverse.ledger/v1");
+        assertThat(cp.split("\n")[0]).isEqualTo("io.casehub.ledger/v1");
     }
 
     @Test
@@ -1444,7 +1444,7 @@ class LedgerMerklePublisherTest {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("Ed25519");
         KeyPair kp = kpg.generateKeyPair();
 
-        String text = "io.quarkiverse.ledger/v1\n" + UUID.randomUUID() + "\n5\n"
+        String text = "io.casehub.ledger/v1\n" + UUID.randomUUID() + "\n5\n"
                 + Base64.getEncoder().encodeToString(new byte[32]) + "\n";
 
         byte[] sig = LedgerMerklePublisher.signCheckpoint(text, kp.getPrivate());
@@ -1478,8 +1478,8 @@ Expected: FAIL.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerklePublisher.java
-git add runtime/src/test/java/io/quarkiverse/ledger/service/LedgerMerklePublisherTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerklePublisher.java
+git add runtime/src/test/java/io/casehub/ledger/service/LedgerMerklePublisherTest.java
 git commit -m "test(merkle): add LedgerMerklePublisherTest (TDD — all failing)
 
 Refs #11, Refs #12"
@@ -1490,12 +1490,12 @@ Refs #11, Refs #12"
 ## Task 13: Implement LedgerMerklePublisher
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerklePublisher.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerklePublisher.java`
 
 - [ ] **Step 1: Implement**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -1516,8 +1516,8 @@ import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.config.LedgerConfig.MerkleConfig.MerklePublishConfig;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.config.LedgerConfig.MerkleConfig.MerklePublishConfig;
 
 /**
  * Publishes signed Merkle tree checkpoints to a configured external URL.
@@ -1541,7 +1541,7 @@ public class LedgerMerklePublisher {
             final String treeRoot, final String keyId) {
 
         final byte[] rootBytes = hexToBytes(treeRoot);
-        return "io.quarkiverse.ledger/v1\n"
+        return "io.casehub.ledger/v1\n"
                 + subjectId + "\n"
                 + treeSize + "\n"
                 + Base64.getEncoder().encodeToString(rootBytes) + "\n";
@@ -1651,8 +1651,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test -pl runtime 2>&1 | tail -10
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerMerklePublisher.java
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerMerklePublisher.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaLedgerEntryRepository.java
 git commit -m "feat(merkle): implement LedgerMerklePublisher — Ed25519 signed tlog-checkpoint
 
 Disabled by default. Activated by quarkus.ledger.merkle.publish.url.
@@ -1666,7 +1666,7 @@ Refs #11, Refs #12"
 ## Task 14: Update LedgerRetentionJob
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java`
 
 - [ ] **Step 1: Replace LedgerHashChain.verify with LedgerVerificationService**
 
@@ -1699,7 +1699,7 @@ Expected: all tests pass (except `LedgerHashChainTest` — deleted next).
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerRetentionJob.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerRetentionJob.java
 git commit -m "feat(merkle): update LedgerRetentionJob to use LedgerVerificationService.verify()
 
 Refs #11, Refs #12"
@@ -1710,14 +1710,14 @@ Refs #11, Refs #12"
 ## Task 15: Delete LedgerHashChain
 
 **Files:**
-- Delete: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerHashChain.java`
-- Delete: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java`
+- Delete: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerHashChain.java`
+- Delete: `runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java`
 
 - [ ] **Step 1: Delete both files**
 
 ```bash
-rm runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerHashChain.java
-rm runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java
+rm runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerHashChain.java
+rm runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java
 ```
 
 - [ ] **Step 2: Run full suite — verify all tests pass**
@@ -1797,8 +1797,8 @@ Refs #11, Refs #12"
 
 **Files:**
 - Create: `examples/merkle-verification/README.md`
-- Create: `examples/merkle-verification/src/main/java/io/quarkiverse/ledger/example/merkle/MerkleVerificationExample.java`
-- Create: `examples/merkle-verification/src/test/java/io/quarkiverse/ledger/example/merkle/MerkleVerificationIT.java`
+- Create: `examples/merkle-verification/src/main/java/io/casehub/ledger/example/merkle/MerkleVerificationExample.java`
+- Create: `examples/merkle-verification/src/test/java/io/casehub/ledger/example/merkle/MerkleVerificationIT.java`
 - Create: `examples/merkle-verification/pom.xml` (copy structure from `examples/art12-compliance/pom.xml`)
 
 - [ ] **Step 1: Copy pom.xml from art12-compliance, update artifactId**
@@ -1807,14 +1807,14 @@ Refs #11, Refs #12"
 cp examples/art12-compliance/pom.xml examples/merkle-verification/pom.xml
 ```
 
-Edit: change `<artifactId>quarkus-ledger-example-art12-compliance</artifactId>` to
-`<artifactId>quarkus-ledger-example-merkle-verification</artifactId>`.
+Edit: change `<artifactId>casehub-ledger-example-art12-compliance</artifactId>` to
+`<artifactId>casehub-ledger-example-merkle-verification</artifactId>`.
 Change `<name>` accordingly.
 
 - [ ] **Step 2: Create MerkleVerificationExample**
 
 ```java
-package io.quarkiverse.ledger.example.merkle;
+package io.casehub.ledger.example.merkle;
 
 import java.util.UUID;
 
@@ -1822,10 +1822,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
-import io.quarkiverse.ledger.runtime.service.LedgerVerificationService;
-import io.quarkiverse.ledger.runtime.service.model.InclusionProof;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.service.LedgerVerificationService;
+import io.casehub.ledger.runtime.service.model.InclusionProof;
 
 /**
  * Demonstrates Merkle tree inclusion proof generation and independent verification.
@@ -1845,7 +1845,7 @@ public class MerkleVerificationExample {
             final AuditEntry e = new AuditEntry();
             e.subjectId = subjectId;
             e.sequenceNumber = i;
-            e.entryType = io.quarkiverse.ledger.runtime.model.LedgerEntryType.EVENT;
+            e.entryType = io.casehub.ledger.runtime.model.LedgerEntryType.EVENT;
             e.actorId = "example-actor";
             e.actorRole = "Demonstrator";
             repo.save(e);
@@ -1855,7 +1855,7 @@ public class MerkleVerificationExample {
         final String root = verification.treeRoot(subjectId);
 
         // 3. Generate inclusion proof for entry 3 (sequenceNumber=3, index=2)
-        final java.util.List<io.quarkiverse.ledger.runtime.model.LedgerEntry> entries =
+        final java.util.List<io.casehub.ledger.runtime.model.LedgerEntry> entries =
                 repo.findBySubjectId(subjectId);
         final InclusionProof proof = verification.inclusionProof(entries.get(2).id);
 
@@ -1872,13 +1872,13 @@ public class MerkleVerificationExample {
 - [ ] **Step 3: Create AuditEntry (concrete LedgerEntry subclass for the example)**
 
 ```java
-package io.quarkiverse.ledger.example.merkle;
+package io.casehub.ledger.example.merkle;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 @Entity
 @Table(name = "merkle_example_entry")
@@ -1889,7 +1889,7 @@ public class AuditEntry extends LedgerEntry {}
 - [ ] **Step 4: Create MerkleVerificationIT**
 
 ```java
-package io.quarkiverse.ledger.example.merkle;
+package io.casehub.ledger.example.merkle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1899,7 +1899,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.service.LedgerMerkleTree;
+import io.casehub.ledger.runtime.service.LedgerMerkleTree;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -1942,7 +1942,7 @@ class MerkleVerificationIT {
 ```markdown
 # Example: Merkle Verification
 
-Demonstrates O(log N) Merkle inclusion proofs using `quarkus-ledger`.
+Demonstrates O(log N) Merkle inclusion proofs using `casehub-ledger`.
 
 ## What This Shows
 
@@ -1982,9 +1982,9 @@ Refs #11, Refs #12"
 ```
 
 ```bash
-gh issue close 11 --repo mdproctor/quarkus-ledger \
+gh issue close 11 --repo casehubio/ledger \
   --comment "Implemented: Merkle Mountain Range frontier, LedgerVerificationService, Ed25519 publishing, example. Closes Axiom 4."
-gh issue close 12 --repo mdproctor/quarkus-ledger \
+gh issue close 12 --repo casehubio/ledger \
   --comment "All child issues complete."
 ```
 

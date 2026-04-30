@@ -1,6 +1,6 @@
 # W3C PROV-DM Mapping Reference
 
-Documents how `quarkus-ledger` fields map to W3C PROV-DM concepts in the JSON-LD
+Documents how `casehub-ledger` fields map to W3C PROV-DM concepts in the JSON-LD
 export produced by `LedgerProvExportService.exportSubject(UUID)`.
 
 ## PROV-DM Primer
@@ -23,7 +23,7 @@ And three core relations:
 
 ## IRI Conventions
 
-All IRIs use the `ledger:` prefix (`http://quarkiverse.io/ledger#`):
+All IRIs use the `ledger:` prefix (`https://casehubio.github.io/ledger#`):
 
 | Element | IRI pattern | Example |
 |---|---|---|
@@ -107,7 +107,7 @@ The JSON-LD `@context` is always exactly:
 {
   "@context": {
     "prov": "http://www.w3.org/ns/prov#",
-    "ledger": "http://quarkiverse.io/ledger#",
+    "ledger": "https://casehubio.github.io/ledger#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   }
 }

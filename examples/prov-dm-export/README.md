@@ -1,6 +1,6 @@
 # Example: W3C PROV-DM JSON-LD Export
 
-This example demonstrates how to use `quarkus-ledger` with `LedgerProvExportService` to export
+This example demonstrates how to use `casehub-ledger` with `LedgerProvExportService` to export
 a subject's full audit trail as W3C PROV-DM JSON-LD — the standard interchange format for data
 lineage and provenance.
 

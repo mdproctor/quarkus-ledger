@@ -39,7 +39,7 @@
 These 4 tests will **fail** with the current weighted-average algorithm and **pass** after the Beta rewrite in Task 2.
 
 **Files:**
-- Modify: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java`
+- Modify: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java`
 
 - [ ] **Step 1: Add 4 failing tests at the end of `TrustScoreComputerTest`**
 
@@ -125,22 +125,22 @@ Expected: `Tests run: 26, Failures: 4` (the 4 new tests fail, 22 existing pass).
 ## Task 2: Rewrite `TrustScoreComputer` — Beta algorithm, remove `ForgivenessParams`
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java`
-- Modify: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java`
+- Modify: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java`
 
 - [ ] **Step 1: Replace `TrustScoreComputer.java` in full**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Computes Bayesian Beta trust scores from ledger attestation history.
@@ -258,7 +258,7 @@ public final class TrustScoreComputer {
 - [ ] **Step 2: Replace `TrustScoreComputerTest.java` in full**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -272,12 +272,12 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.service.TrustScoreComputer;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.service.TrustScoreComputer;
 
 /**
  * Pure JUnit 5 unit tests for {@link TrustScoreComputer} — no Quarkus runtime, no CDI.
@@ -630,8 +630,8 @@ Expected: `Tests run: 22, Failures: 0` and `BUILD SUCCESS`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreComputer.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreComputerTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreComputer.java \
+        runtime/src/test/java/io/casehub/ledger/service/TrustScoreComputerTest.java
 git commit -m "$(cat <<'EOF'
 feat(trust): replace ForgivenessParams with Bayesian Beta accumulation
 
@@ -650,13 +650,13 @@ EOF
 ## Task 3: Update `ActorTrustScore` entity and V1001 schema
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java`
 - Modify: `runtime/src/main/resources/db/migration/V1001__actor_trust_score.sql`
 
 - [ ] **Step 1: Replace `ActorTrustScore.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 
@@ -714,7 +714,7 @@ public class ActorTrustScore {
 - [ ] **Step 2: Replace `V1001__actor_trust_score.sql`**
 
 ```sql
--- Quarkus Ledger — Bayesian Beta actor trust score table (V1001)
+-- CaseHub Ledger — Bayesian Beta actor trust score table (V1001)
 -- Compatible with H2 (dev/test) and PostgreSQL (production)
 --
 -- actor_trust_score: nightly-computed Bayesian Beta trust scores per actor.
@@ -748,7 +748,7 @@ Expected: `BUILD SUCCESS` (compile only — test compilation may fail until Task
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/ActorTrustScore.java \
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/ActorTrustScore.java \
         runtime/src/main/resources/db/migration/V1001__actor_trust_score.sql
 git commit -m "$(cat <<'EOF'
 feat(schema): replace appeal_count with alpha_value/beta_value in actor_trust_score
@@ -767,20 +767,20 @@ EOF
 ## Task 4: Update `ActorTrustScoreRepository` SPI and JPA implementation
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/ActorTrustScoreRepository.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/ActorTrustScoreRepository.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java`
 
 - [ ] **Step 1: Replace `ActorTrustScoreRepository.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.repository;
+package io.casehub.ledger.runtime.repository;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
 
 /** SPI for persisting and querying {@link ActorTrustScore} records. */
 public interface ActorTrustScoreRepository {
@@ -824,7 +824,7 @@ public interface ActorTrustScoreRepository {
 - [ ] **Step 2: Replace `JpaActorTrustScoreRepository.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.repository.jpa;
+package io.casehub.ledger.runtime.repository.jpa;
 
 import java.time.Instant;
 import java.util.List;
@@ -835,9 +835,9 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
 
 /**
  * JPA / EntityManager implementation of {@link ActorTrustScoreRepository}.
@@ -896,8 +896,8 @@ public class JpaActorTrustScoreRepository implements ActorTrustScoreRepository {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/ActorTrustScoreRepository.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/repository/ActorTrustScoreRepository.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/repository/jpa/JpaActorTrustScoreRepository.java
 git commit -m "$(cat <<'EOF'
 feat(repository): update ActorTrustScoreRepository upsert — alpha/beta replace appealCount
 
@@ -911,13 +911,13 @@ EOF
 ## Task 5: Update `TrustScoreJob` and `LedgerConfig`
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java`
 
 - [ ] **Step 1: Replace `TrustScoreJob.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.service;
+package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.List;
@@ -930,12 +930,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.runtime.config.LedgerConfig;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
-import io.quarkiverse.ledger.runtime.repository.ActorTrustScoreRepository;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.config.LedgerConfig;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.quarkus.scheduler.Scheduled;
 
 /**
@@ -1060,8 +1060,8 @@ Expected: `BUILD SUCCESS`. If `TrustScoreForgivenessIT` fails, that's expected �
 - [ ] **Step 4: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/service/TrustScoreJob.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/config/LedgerConfig.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/service/TrustScoreJob.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/config/LedgerConfig.java
 git commit -m "$(cat <<'EOF'
 feat(job,config): remove ForgivenessParams wiring from TrustScoreJob and LedgerConfig
 
@@ -1078,14 +1078,14 @@ EOF
 ## Task 6: Replace `TrustScoreForgivenessIT` with `TrustScoreIT`
 
 **Files:**
-- Delete: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreIT.java`
+- Delete: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/TrustScoreIT.java`
 - Modify: `runtime/src/test/resources/application.properties`
 
 - [ ] **Step 1: Delete `TrustScoreForgivenessIT.java`**
 
 ```bash
-rm runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java
+rm runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java
 ```
 
 - [ ] **Step 2: Remove forgiveness profile, add trust-score-test profile in `application.properties`**
@@ -1108,7 +1108,7 @@ Replace with:
 - [ ] **Step 3: Create `TrustScoreIT.java`**
 
 ```java
-package io.quarkiverse.ledger.service;
+package io.casehub.ledger.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -1123,14 +1123,14 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorTrustScore;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.AttestationVerdict;
-import io.quarkiverse.ledger.runtime.model.LedgerAttestation;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.repository.LedgerEntryRepository;
-import io.quarkiverse.ledger.runtime.service.TrustScoreJob;
-import io.quarkiverse.ledger.service.supplement.TestEntry;
+import io.casehub.ledger.runtime.model.ActorTrustScore;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.AttestationVerdict;
+import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
+import io.casehub.ledger.runtime.service.TrustScoreJob;
+import io.casehub.ledger.service.supplement.TestEntry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -1319,9 +1319,9 @@ Expected: all tests pass, `BUILD SUCCESS`. Total count will be slightly differen
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreIT.java \
+git add runtime/src/test/java/io/casehub/ledger/service/TrustScoreIT.java \
         runtime/src/test/resources/application.properties
-git rm runtime/src/test/java/io/quarkiverse/ledger/service/TrustScoreForgivenessIT.java
+git rm runtime/src/test/java/io/casehub/ledger/service/TrustScoreForgivenessIT.java
 git commit -m "$(cat <<'EOF'
 test(trust): replace TrustScoreForgivenessIT with TrustScoreIT — Beta integration tests
 

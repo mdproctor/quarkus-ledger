@@ -180,7 +180,7 @@ not block the write transaction. Failure is logged; the entry persist is unaffec
 ### Checkpoint format (tlog-checkpoint / c2sp.org)
 
 ```
-io.quarkiverse.ledger/v1
+io.casehub.ledger/v1
 <subjectId>
 <treeSize>
 <base64(rootHash)>
@@ -246,7 +246,7 @@ Real DB (H2 in-memory via Quarkus test profile):
 ## File Map
 
 ```
-runtime/src/main/java/io/quarkiverse/ledger/runtime/
+runtime/src/main/java/io/casehub/ledger/runtime/
 ├── model/
 │   └── LedgerMerkleFrontier.java          — new entity
 ├── repository/

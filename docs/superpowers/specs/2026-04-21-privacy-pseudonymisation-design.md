@@ -51,7 +51,7 @@ LedgerErasureService (CDI bean)
 ## Component 1 — `ActorIdentityProvider` SPI
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 public interface ActorIdentityProvider {
     /** Called on write. Returns a token to store in place of rawActorId. Default: identity. */
@@ -83,7 +83,7 @@ so custom beans replace it without configuration changes.
 ## Component 2 — `DecisionContextSanitiser` SPI
 
 ```java
-package io.quarkiverse.ledger.runtime.privacy;
+package io.casehub.ledger.runtime.privacy;
 
 public interface DecisionContextSanitiser {
     /** Called before ComplianceSupplement.decisionContext is persisted. Default: identity. */

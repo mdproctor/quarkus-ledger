@@ -1,6 +1,6 @@
 # Example: Trust Score Routing Signals
 
-This example demonstrates how to consume CDI routing signals fired by `quarkus-ledger` after
+This example demonstrates how to consume CDI routing signals fired by `casehub-ledger` after
 each nightly trust score computation — without polling the database.
 
 ## Why routing signals?

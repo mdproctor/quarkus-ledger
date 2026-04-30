@@ -57,7 +57,7 @@ class LedgerProvSerializerTest {
         Map<String, Object> ctx = asMap(doc.get("@context"));
         assertThat(ctx).containsOnlyKeys("prov", "ledger", "xsd");
         assertThat(ctx.get("prov")).isEqualTo("http://www.w3.org/ns/prov#");
-        assertThat(ctx.get("ledger")).isEqualTo("http://quarkiverse.io/ledger#");
+        assertThat(ctx.get("ledger")).isEqualTo("https://casehubio.github.io/ledger#");
         assertThat(ctx.get("xsd")).isEqualTo("http://www.w3.org/2001/XMLSchema#");
     }
 

@@ -1,8 +1,8 @@
-# Quarkus Ledger — Capabilities Guide
+# CaseHub Ledger — Capabilities Guide
 
 This document explains what each capability does, why it exists, and when an enterprise
 would enable it. The audience is the architect or technical decision-maker evaluating
-`quarkus-ledger` — not as a how-to guide (see [integration-guide.md](integration-guide.md)),
+`casehub-ledger` — not as a how-to guide (see [integration-guide.md](integration-guide.md)),
 but as a map of the design space and its real-world relevance.
 
 The capabilities are grouped by concern. Each has an applicability rating:
@@ -54,7 +54,7 @@ records: financial services (SOX, MiFID II, FCA), healthcare (HIPAA, MDR), gover
 else builds on.
 
 **Who benefits most:**
-Every consumer. There is no scenario where you add `quarkus-ledger` and don't use this.
+Every consumer. There is no scenario where you add `casehub-ledger` and don't use this.
 
 **Enable when:** Always — this is the core.
 
@@ -393,7 +393,7 @@ Consumers declare which granularity they want by the payload type they `@Observe
 
 ### ComplianceSupplement and ProvenanceSupplement ★★★★★
 
-Supplements are the mechanism by which `quarkus-ledger` avoids the failure mode of "one
+Supplements are the mechanism by which `casehub-ledger` avoids the failure mode of "one
 table with 40 nullable columns." Every ledger entry needs a core set of fields (actor,
 sequence, timestamp, hash). No entry needs all the optional fields. Putting all optional
 fields on the base entity creates schema bloat, query noise, and tight coupling between the
@@ -427,7 +427,7 @@ Optional<ComplianceSupplement> cs = entry.compliance();
 
 **Why this matters:**
 The supplement pattern solves a real schema evolution problem. Enterprises add
-`quarkus-ledger` and then, six months later, face an EU AI Act audit. They need compliance
+`casehub-ledger` and then, six months later, face an EU AI Act audit. They need compliance
 snapshots. Without supplements, adding those fields requires a migration touching the core
 `ledger_entry` table — potentially a multi-hour operation on a large ledger. With
 supplements, the new `ledger_supplement_compliance` table is simply added; existing entries

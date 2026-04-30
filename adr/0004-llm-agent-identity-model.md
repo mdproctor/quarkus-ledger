@@ -68,7 +68,7 @@ Versioning is intentional and human-controlled. The decision criterion is:
 
 **Score inheritance — no API:**
 
-There is no score inheritance API in `quarkus-ledger`. When a consumer bumps from `@v1`
+There is no score inheritance API in `casehub-ledger`. When a consumer bumps from `@v1`
 to `@v2`, v2 starts at Beta(1,1) = 0.5 (prior). This is intentional:
 
 - An inheritance API would require specifying an inheritance weight — a second judgement

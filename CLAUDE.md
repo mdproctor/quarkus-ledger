@@ -8,20 +8,20 @@ The protocol asks: Does this already exist elsewhere? Is this the right repo for
 
 **Platform architecture (fetch before any implementation decision):**
 ```
-https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/PLATFORM.md
+https://raw.githubusercontent.com/casehubio/parent/main/docs/PLATFORM.md
 ```
 
 **This repo's deep-dive:**
 ```
-https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-ledger.md
+https://raw.githubusercontent.com/casehubio/parent/main/docs/repos/casehub-ledger.md
 ```
 
 **Other repo deep-dives** (fetch the relevant ones when your implementation touches their domain):
-- casehub-work: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-work.md`
-- casehub-qhorus: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-qhorus.md`
-- casehub-engine: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-engine.md`
-- claudony: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/claudony.md`
-- casehub-connectors: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-connectors.md`
+- casehub-work: `https://raw.githubusercontent.com/casehubio/parent/main/docs/repos/casehub-work.md`
+- casehub-qhorus: `https://raw.githubusercontent.com/casehubio/parent/main/docs/repos/casehub-qhorus.md`
+- casehub-engine: `https://raw.githubusercontent.com/casehubio/parent/main/docs/repos/casehub-engine.md`
+- claudony: `https://raw.githubusercontent.com/casehubio/parent/main/docs/repos/claudony.md`
+- casehub-connectors: `https://raw.githubusercontent.com/casehubio/parent/main/docs/repos/casehub-connectors.md`
 
 ---
 
@@ -156,6 +156,8 @@ casehub-ledger/  (local folder: ~/claude/casehub/ledger)
 │           │   ├── InclusionProof.java       — Merkle inclusion proof value type
 │           │   └── ProofStep.java            — single sibling node in a proof path
 │           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
+│           ├── RetentionEligibilityChecker.java — pure utility: checks retention window eligibility per entry
+│           ├── LedgerRetentionJob.java      — @Scheduled daily retention sweep (EU AI Act Art.12)
 │           ├── DecayFunction.java           — SPI: attestation decay weight (ageInDays, verdict) → weight
 │           ├── ExponentialDecayFunction.java — @DefaultBean: 2^(-age/halfLife) × valence multiplier (FLAGGED slower decay)
 │           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring; delegates decay to DecayFunction (pure Java)

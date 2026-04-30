@@ -45,7 +45,7 @@ CompletionStage<Void> onScores(@ObservesAsync TrustScoreFullPayload payload) { .
 
 ## Components
 
-### New classes — `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/`
+### New classes — `runtime/src/main/java/io/casehub/ledger/runtime/service/routing/`
 
 | Class | Kind | Purpose |
 |---|---|---|
@@ -170,7 +170,7 @@ Simulated task assignment scenario demonstrating all three payload types:
 ## New Classes Summary
 
 ```
-runtime/src/main/java/io/quarkiverse/ledger/runtime/service/routing/
+runtime/src/main/java/io/casehub/ledger/runtime/service/routing/
 ├── TrustScoreFullPayload.java
 ├── TrustScoreDeltaPayload.java
 ├── TrustScoreComputedAt.java

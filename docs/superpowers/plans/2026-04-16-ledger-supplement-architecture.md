@@ -28,23 +28,23 @@ PostgreSQL (prod), JUnit 5, AssertJ, RestAssured, Jackson (for JSON serialisatio
 
 | File | Responsibility |
 |---|---|
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplement.java` | Abstract base entity — id, ledgerEntry FK, JPA JOINED inheritance |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ComplianceSupplement.java` | planRef, rationale, evidence, detail, decisionContext + 4 Art.22 fields |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ProvenanceSupplement.java` | sourceEntityId, sourceEntityType, sourceEntitySystem |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ObservabilitySupplement.java` | correlationId, causedByEntryId |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplementSerializer.java` | toJson(List) — explicit per-type serialisation, null fields omitted |
-| `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementSerializerTest.java` | Unit tests — serialisation, null-omission, multi-supplement |
-| `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementIT.java` | @QuarkusTest — persist/load, lazy loading, zero-touch for bare entries |
-| `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/TestEntry.java` | @Entity test-only subclass with its own table for IT |
+| `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplement.java` | Abstract base entity — id, ledgerEntry FK, JPA JOINED inheritance |
+| `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ComplianceSupplement.java` | planRef, rationale, evidence, detail, decisionContext + 4 Art.22 fields |
+| `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ProvenanceSupplement.java` | sourceEntityId, sourceEntityType, sourceEntitySystem |
+| `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ObservabilitySupplement.java` | correlationId, causedByEntryId |
+| `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplementSerializer.java` | toJson(List) — explicit per-type serialisation, null fields omitted |
+| `runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementSerializerTest.java` | Unit tests — serialisation, null-omission, multi-supplement |
+| `runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementIT.java` | @QuarkusTest — persist/load, lazy loading, zero-touch for bare entries |
+| `runtime/src/test/java/io/casehub/ledger/service/supplement/TestEntry.java` | @Entity test-only subclass with its own table for IT |
 | `runtime/src/test/resources/db/migration/V1999__test_entry.sql` | Table for TestEntry (test scope only) |
 
 ### Modified files — runtime module
 
 | File | Change |
 |---|---|
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntry.java` | Slim to 10 core fields + `supplements` List + `supplement_json` + `attach()` + typed accessors |
-| `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerHashChain.java` | Remove `planRef` from canonical form; update Javadoc |
-| `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java` | Remove `planRef` from fixture; add test proving supplement fields don't affect hash |
+| `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntry.java` | Slim to 10 core fields + `supplements` List + `supplement_json` + `attach()` + typed accessors |
+| `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerHashChain.java` | Remove `planRef` from canonical form; update Javadoc |
+| `runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java` | Remove `planRef` from fixture; add test proving supplement fields don't affect hash |
 | `runtime/src/main/resources/db/migration/V1002__ledger_supplement.sql` | New — drop removed columns, add supplement_json, create supplement tables |
 | `docs/DESIGN.md` | Add Supplement chapter; update canonical form; update Flyway convention |
 | `docs/AUDITABILITY.md` | Mark Axiom 8 gap as addressed |
@@ -75,10 +75,10 @@ PostgreSQL (prod), JUnit 5, AssertJ, RestAssured, Jackson (for JSON serialisatio
 ## Task 1 — LedgerSupplement base entity + three concrete supplements
 
 **Files:**
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplement.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ComplianceSupplement.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ProvenanceSupplement.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/ObservabilitySupplement.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplement.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ComplianceSupplement.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ProvenanceSupplement.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/ObservabilitySupplement.java`
 
 These are pure new code — no existing tests break. No test to write first (entity structure
 is validated by the IT in Task 6). Compile-check is the gate.
@@ -86,13 +86,13 @@ is validated by the IT in Task 6). Compile-check is the gate.
 - [ ] **Step 1: Create the supplement package directory**
 
 ```bash
-mkdir -p runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement
+mkdir -p runtime/src/main/java/io/casehub/ledger/runtime/model/supplement
 ```
 
 - [ ] **Step 2: Create `LedgerSupplement.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model.supplement;
+package io.casehub.ledger.runtime.model.supplement;
 
 import java.util.UUID;
 
@@ -109,7 +109,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /**
@@ -179,7 +179,7 @@ public abstract class LedgerSupplement extends PanacheEntityBase {
 - [ ] **Step 3: Create `ComplianceSupplement.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model.supplement;
+package io.casehub.ledger.runtime.model.supplement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
@@ -297,7 +297,7 @@ public class ComplianceSupplement extends LedgerSupplement {
 - [ ] **Step 4: Create `ProvenanceSupplement.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model.supplement;
+package io.casehub.ledger.runtime.model.supplement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
@@ -339,7 +339,7 @@ public class ProvenanceSupplement extends LedgerSupplement {
 
     /**
      * The system that owns the external entity.
-     * Example: {@code "quarkus-flow"}, {@code "quarkus-tarkus"}.
+     * Example: {@code "quarkus-flow"}, {@code "casehub-work"}.
      */
     @Column(name = "source_entity_system", length = 100)
     public String sourceEntitySystem;
@@ -349,7 +349,7 @@ public class ProvenanceSupplement extends LedgerSupplement {
 - [ ] **Step 5: Create `ObservabilitySupplement.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model.supplement;
+package io.casehub.ledger.runtime.model.supplement;
 
 import java.util.UUID;
 
@@ -385,7 +385,7 @@ public class ObservabilitySupplement extends LedgerSupplement {
     public String correlationId;
 
     /**
-     * FK to the {@link io.quarkiverse.ledger.runtime.model.LedgerEntry} that
+     * FK to the {@link io.casehub.ledger.runtime.model.LedgerEntry} that
      * causally produced this entry. Null for entries with no known causal predecessor.
      *
      * <p>
@@ -409,7 +409,7 @@ Expected: BUILD SUCCESS with no errors.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/
 git commit -m "feat(supplement): add LedgerSupplement base + three concrete supplements
 
 Introduces the supplement architecture: optional, lazily-loaded, zero-boilerplate
@@ -425,15 +425,15 @@ Refs #7"
 ## Task 2 — LedgerSupplementSerializer (unit tests first)
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementSerializerTest.java`
-- Create: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplementSerializer.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementSerializerTest.java`
+- Create: `runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplementSerializer.java`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementSerializerTest.java`:
+Create `runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementSerializerTest.java`:
 
 ```java
-package io.quarkiverse.ledger.service.supplement;
+package io.casehub.ledger.service.supplement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -441,11 +441,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplementSerializer;
+import io.casehub.ledger.runtime.model.supplement.ObservabilitySupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
 
 /**
  * Unit tests for {@link LedgerSupplementSerializer} — no Quarkus runtime, no CDI.
@@ -563,7 +563,7 @@ Expected: FAIL — `LedgerSupplementSerializer` not found.
 - [ ] **Step 3: Create `LedgerSupplementSerializer.java`**
 
 ```java
-package io.quarkiverse.ledger.runtime.model.supplement;
+package io.casehub.ledger.runtime.model.supplement;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -680,8 +680,8 @@ Expected: `Tests run: 8, Failures: 0, Errors: 0`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/supplement/LedgerSupplementSerializer.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementSerializerTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/supplement/LedgerSupplementSerializer.java \
+        runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementSerializerTest.java
 git commit -m "feat(supplement): LedgerSupplementSerializer — explicit per-type JSON serialisation
 
 Null fields omitted; returns null for empty/absent supplements so supplement_json
@@ -696,9 +696,9 @@ Refs #7"
 ## Task 3 — Slim LedgerEntry + update LedgerHashChain
 
 **Files:**
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntry.java`
-- Modify: `runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerHashChain.java`
-- Modify: `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntry.java`
+- Modify: `runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerHashChain.java`
+- Modify: `runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java`
 
 The canonical form changes (planRef removed). Write the updated test first,
 run to confirm the old implementation makes it fail, then update the implementation.
@@ -709,7 +709,7 @@ Replace the `entry()` fixture method and add one new test. The fixture currently
 `e.planRef = null` — this field is being removed from `LedgerEntry` so it will not
 compile. Remove that line and add a test confirming supplement fields don't affect the hash.
 
-In `runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java`:
+In `runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java`:
 
 Replace the `entry()` fixture:
 ```java
@@ -764,7 +764,7 @@ fields are read). This is fine — proceed.
 - [ ] **Step 3: Replace `LedgerEntry.java` with slimmed core**
 
 ```java
-package io.quarkiverse.ledger.runtime.model;
+package io.casehub.ledger.runtime.model;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -787,11 +787,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer;
-import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplementSerializer;
+import io.casehub.ledger.runtime.model.supplement.ObservabilitySupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /**
@@ -805,7 +805,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
  *
  * <h2>Supplements</h2>
  * <p>
- * Optional cross-cutting concerns are handled by {@link io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement}
+ * Optional cross-cutting concerns are handled by {@link io.casehub.ledger.runtime.model.supplement.LedgerSupplement}
  * subclasses attached via {@link #attach(LedgerSupplement)}:
  * <ul>
  *   <li>{@link ComplianceSupplement} — GDPR Art.22 decision snapshot, governance</li>
@@ -1017,9 +1017,9 @@ other classes, fix them now — any reference to these fields must move to suppl
 - [ ] **Step 6: Commit**
 
 ```bash
-git add runtime/src/main/java/io/quarkiverse/ledger/runtime/model/LedgerEntry.java \
-        runtime/src/main/java/io/quarkiverse/ledger/runtime/service/LedgerHashChain.java \
-        runtime/src/test/java/io/quarkiverse/ledger/service/LedgerHashChainTest.java
+git add runtime/src/main/java/io/casehub/ledger/runtime/model/LedgerEntry.java \
+        runtime/src/main/java/io/casehub/ledger/runtime/service/LedgerHashChain.java \
+        runtime/src/test/java/io/casehub/ledger/service/LedgerHashChainTest.java
 git commit -m "feat(supplement): slim LedgerEntry to 10 core fields + attach() + typed accessors
 
 Removes planRef, rationale, evidence, detail, decisionContext, correlationId,
@@ -1053,7 +1053,7 @@ Refs #7"
 -- 3. Create ledger_supplement base table and three joined subclass tables.
 --
 -- Compatible with H2 (dev/test) and PostgreSQL (production).
--- No data migration required — all consumers are pre-release (v1.0.0-SNAPSHOT).
+-- No data migration required — all consumers are pre-release (0.2-SNAPSHOT).
 --
 -- Flyway convention update: base extension reserves V1000–V1002.
 -- Consumer subclass join tables must use V1003+ (updated from the previous V1002+).
@@ -1160,21 +1160,21 @@ Refs #7"
 ## Task 5 — Supplement integration tests
 
 **Files:**
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/TestEntry.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/supplement/TestEntry.java`
 - Create: `runtime/src/test/resources/db/migration/V1999__test_entry.sql`
-- Create: `runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementIT.java`
+- Create: `runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementIT.java`
 
 - [ ] **Step 1: Create test-only `TestEntry` entity**
 
-`runtime/src/test/java/io/quarkiverse/ledger/service/supplement/TestEntry.java`:
+`runtime/src/test/java/io/casehub/ledger/service/supplement/TestEntry.java`:
 ```java
-package io.quarkiverse.ledger.service.supplement;
+package io.casehub.ledger.service.supplement;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Minimal concrete subclass of {@link LedgerEntry} for integration tests only.
@@ -1201,9 +1201,9 @@ CREATE TABLE test_ledger_entry (
 
 - [ ] **Step 3: Write the failing integration tests**
 
-`runtime/src/test/java/io/quarkiverse/ledger/service/supplement/LedgerSupplementIT.java`:
+`runtime/src/test/java/io/casehub/ledger/service/supplement/LedgerSupplementIT.java`:
 ```java
-package io.quarkiverse.ledger.service.supplement;
+package io.casehub.ledger.service.supplement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1213,12 +1213,12 @@ import jakarta.transaction.Transactional;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ObservabilitySupplement;
-import io.quarkiverse.ledger.runtime.model.supplement.ProvenanceSupplement;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.LedgerSupplement;
+import io.casehub.ledger.runtime.model.supplement.ObservabilitySupplement;
+import io.casehub.ledger.runtime.model.supplement.ProvenanceSupplement;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**
@@ -1478,7 +1478,7 @@ public Order cancelOrder(final UUID orderId, final String actor, final String re
                     entry.attach(cs);
                 });
         // Refresh supplementJson after mutating the supplement
-        entry.supplementJson = io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplementSerializer
+        entry.supplementJson = io.casehub.ledger.runtime.model.supplement.LedgerSupplementSerializer
                 .toJson(entry.supplements);
     }
     return order;
@@ -1487,7 +1487,7 @@ public Order cancelOrder(final UUID orderId, final String actor, final String re
 
 Add the missing import:
 ```java
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
 ```
 
 - [ ] **Step 2: Run the existing 8 IT tests — they must still pass**
@@ -1566,17 +1566,17 @@ Refs #7"
 - [ ] **Step 1: Create the directory structure**
 
 ```bash
-mkdir -p examples/art22-decision-snapshot/src/main/java/io/quarkiverse/ledger/examples/art22/{ledger,model,service,api}
+mkdir -p examples/art22-decision-snapshot/src/main/java/io/casehub/ledger/examples/art22/{ledger,model,service,api}
 mkdir -p examples/art22-decision-snapshot/src/main/resources/db/migration
-mkdir -p examples/art22-decision-snapshot/src/test/java/io/quarkiverse/ledger/examples/art22
+mkdir -p examples/art22-decision-snapshot/src/test/java/io/casehub/ledger/examples/art22
 ```
 
-- [ ] **Step 2: Create `pom.xml`** — copy and adapt from `examples/order-processing/pom.xml`, changing artifactId to `quarkus-ledger-example-art22-decision-snapshot` and description.
+- [ ] **Step 2: Create `pom.xml`** — copy and adapt from `examples/order-processing/pom.xml`, changing artifactId to `casehub-ledger-example-art22-decision-snapshot` and description.
 
 - [ ] **Step 3: Create `DecisionLedgerEntry.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art22.ledger;
+package io.casehub.ledger.examples.art22.ledger;
 
 import java.util.UUID;
 
@@ -1585,13 +1585,13 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkiverse.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.model.LedgerEntry;
 
 /**
  * Domain-specific ledger entry for AI decisions.
  * Extends the base {@link LedgerEntry} — the Art.22 compliance fields live in
- * a {@link io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement}
- * attached via {@link LedgerEntry#attach(io.quarkiverse.ledger.runtime.model.supplement.LedgerSupplement)}.
+ * a {@link io.casehub.ledger.runtime.model.supplement.ComplianceSupplement}
+ * attached via {@link LedgerEntry#attach(io.casehub.ledger.runtime.model.supplement.LedgerSupplement)}.
  */
 @Entity
 @Table(name = "decision_ledger_entry")
@@ -1614,7 +1614,7 @@ public class DecisionLedgerEntry extends LedgerEntry {
 - [ ] **Step 4: Create `DecisionService.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art22.service;
+package io.casehub.ledger.examples.art22.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -1624,11 +1624,11 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
-import io.quarkiverse.ledger.runtime.model.ActorType;
-import io.quarkiverse.ledger.runtime.model.LedgerEntryType;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.casehub.ledger.examples.art22.ledger.DecisionLedgerEntry;
+import io.casehub.ledger.runtime.model.ActorType;
+import io.casehub.ledger.runtime.model.LedgerEntryType;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.service.LedgerHashChain;
 
 /**
  * Simulates an AI decision service that records each decision with a full
@@ -1693,7 +1693,7 @@ public class DecisionService {
 - [ ] **Step 5: Create `DecisionResource.java`**
 
 ```java
-package io.quarkiverse.ledger.examples.art22.api;
+package io.casehub.ledger.examples.art22.api;
 
 import java.util.List;
 import java.util.Map;
@@ -1707,10 +1707,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.quarkiverse.ledger.examples.art22.ledger.DecisionLedgerEntry;
-import io.quarkiverse.ledger.examples.art22.service.DecisionService;
-import io.quarkiverse.ledger.runtime.model.supplement.ComplianceSupplement;
-import io.quarkiverse.ledger.runtime.service.LedgerHashChain;
+import io.casehub.ledger.examples.art22.ledger.DecisionLedgerEntry;
+import io.casehub.ledger.examples.art22.service.DecisionService;
+import io.casehub.ledger.runtime.model.supplement.ComplianceSupplement;
+import io.casehub.ledger.runtime.service.LedgerHashChain;
 
 @Path("/decisions")
 @Produces(MediaType.APPLICATION_JSON)
@@ -1799,10 +1799,10 @@ quarkus.ledger.decision-context.enabled=true
 
 - [ ] **Step 8: Write the integration test**
 
-`src/test/java/io/quarkiverse/ledger/examples/art22/DecisionLedgerIT.java`:
+`src/test/java/io/casehub/ledger/examples/art22/DecisionLedgerIT.java`:
 
 ```java
-package io.quarkiverse.ledger.examples.art22;
+package io.casehub.ledger.examples.art22;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -1965,7 +1965,7 @@ supplement table only when accessed.
 
 If a consumer never calls `attach()`, no supplement table rows are written and the
 lazy `supplements` list is never initialised. Consumers already integrated with
-`quarkus-ledger` require zero changes.
+`casehub-ledger` require zero changes.
 ```
 
 - [ ] **Step 2: Update hash chain canonical form in `docs/DESIGN.md`**
@@ -1990,7 +1990,7 @@ Find the Flyway version numbering table and update:
 ```markdown
 | Range | Owner | Purpose |
 |---|---|---|
-| V1000–V1002 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1000–V1002 | `casehub-ledger` base | Base schema (reserved — do not use in consumers) |
 | V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
 | V1003+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 ```
@@ -2041,7 +2041,7 @@ Art.22 compliant AI decision service. See its `README.md` for regulatory context
 ```markdown
 # Example: GDPR Art.22 Decision Snapshot
 
-This example demonstrates how to use `quarkus-ledger` with `ComplianceSupplement`
+This example demonstrates how to use `casehub-ledger` with `ComplianceSupplement`
 to build an AI decision service that is compliant with GDPR Article 22.
 
 ## What is GDPR Article 22?

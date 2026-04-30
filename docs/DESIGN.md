@@ -1,9 +1,9 @@
-# Quarkus Ledger — Design Document
+# CaseHub Ledger — Design Document
 
 ## Purpose
 
-`quarkus-ledger` is the shared audit/provenance foundation for the Quarkus Native AI
-Ecosystem. It was extracted from `quarkus-tarkus-ledger` and generalised so that
+`casehub-ledger` is the shared audit/provenance foundation for the Quarkus Native AI
+Ecosystem. It was extracted from `casehub-ledger` and generalised so that
 Tarkus, Qhorus, and future consumers (CaseHub) each extend it with a domain-specific
 JPA subclass rather than duplicating the same patterns.
 
@@ -17,7 +17,7 @@ auth model, and event system better than a shared base can.
 ## Ecosystem Context
 
 ```
-quarkus-ledger        (audit/provenance — this project)
+casehub-ledger        (audit/provenance — this project)
     ↑         ↑         ↑
  tarkus    qhorus    casehub    (each adds its own LedgerEntry subclass)
     ↑         ↑
@@ -28,8 +28,8 @@ quarkus-ledger        (audit/provenance — this project)
 
 | Consumer | Subclass | `subjectId` maps to | Added fields |
 |---|---|---|---|
-| `quarkus-tarkus` | `WorkItemLedgerEntry` | WorkItem UUID | `commandType`, `eventType` |
-| `quarkus-qhorus` | `AgentMessageLedgerEntry` | Channel UUID | `toolName`, `durationMs`, `tokenCount`, `contextRefs`, `sourceEntity` |
+| `casehub-work` | `WorkItemLedgerEntry` | WorkItem UUID | `commandType`, `eventType` |
+| `casehub-qhorus` | `AgentMessageLedgerEntry` | Channel UUID | `toolName`, `durationMs`, `tokenCount`, `contextRefs`, `sourceEntity` |
 
 ---
 
@@ -43,8 +43,8 @@ table joining on `id`.
 
 ```
 ledger_entry (base — V1000)
-  ├── work_item_ledger_entry     ← quarkus-tarkus (V100 in Tarkus)
-  └── agent_message_ledger_entry ← quarkus-qhorus (V1004+ in Qhorus)
+  ├── work_item_ledger_entry     ← casehub-work (V100 in Tarkus)
+  └── agent_message_ledger_entry ← casehub-qhorus (V1004+ in Qhorus)
 ```
 
 `LedgerAttestation` references `ledger_entry.id` directly — attestations work
@@ -112,7 +112,7 @@ accessed.
 
 If a consumer never calls `attach()`, no supplement table rows are written and the
 lazy `supplements` list is never initialised. Consumers already integrated with
-`quarkus-ledger` require zero changes.
+`casehub-ledger` require zero changes.
 
 ---
 
@@ -139,7 +139,7 @@ current consumer has needed this — all provide their own typed repo.
 
 | Range | Owner | Purpose |
 |---|---|---|
-| V1000–V1003 | `quarkus-ledger` base | Base schema (reserved — do not use in consumers) |
+| V1000–V1003 | `casehub-ledger` base | Base schema (reserved — do not use in consumers) |
 | V1–V999 | Consumer | Domain tables (orders, cases, channels, etc.) |
 | V1004+ | Consumer | Subclass join tables (must run after V1000 — FK constraint) |
 
@@ -212,7 +212,7 @@ warnings and cannot override defaults via `application.properties`.
 ### Privacy and Pseudonymisation
 
 Actor identities (`actorId`, `attestorId`) and decision context blobs are intercepted on
-every write by two SPIs in `io.quarkiverse.ledger.runtime.privacy`:
+every write by two SPIs in `io.casehub.ledger.runtime.privacy`:
 
 | SPI | Default | Purpose |
 |---|---|---|
@@ -340,7 +340,7 @@ cannot change faster than attestations arrive.
 
 ## Agent Mesh Topology
 
-Three topologies are possible for deploying `quarkus-ledger` across a mesh of LLM agents.
+Three topologies are possible for deploying `casehub-ledger` across a mesh of LLM agents.
 
 | Topology | Description | When appropriate |
 |---|---|---|
@@ -375,7 +375,7 @@ Gossip-based convergence requires conflict resolution, eventual consistency guar
 and Byzantine-fault-tolerant attestation handling. This complexity is only warranted when
 agents are genuinely adversarial and cannot trust the orchestrator. That is not the threat
 model for the current ecosystem. If it becomes one, the right answer is a purpose-built
-consensus layer, not an extension to `quarkus-ledger`.
+consensus layer, not an extension to `casehub-ledger`.
 
 ---
 
@@ -458,7 +458,7 @@ computation is added by #61 and #62 respectively.
 
 ### Medium-term
 
-**Submission target under review** — external feedback suggests `quarkus-ledger` may not
+**Submission target under review** — external feedback suggests `casehub-ledger` may not
 qualify as a Quarkus extension under Quarkiverse criteria; SmallRye is under consideration
 as an alternative. Structurally ready (192 tests, full docs, CI). Parked pending target
 decision — see `IDEAS.md` (2026-04-23 entry).
