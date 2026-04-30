@@ -29,6 +29,7 @@
       <id>github</id>
       <name>casehubio GitHub Packages</name>
       <url>https://maven.pkg.github.com/casehubio/ledger</url>
+      <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
   </distributionManagement>
 
