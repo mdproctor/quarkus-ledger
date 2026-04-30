@@ -36,3 +36,15 @@ jobs:
         run: mvn --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger downstream CI
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+        run: |
+          for repo in work qhorus; do
+            echo "Triggering $repo CI..."
+            gh api repos/casehubio/$repo/dispatches \
+              -f event_type=upstream-published \
+              -f client_payload[source]="ledger" 2>/dev/null && echo "  ✅ $repo triggered" || echo "  ⚠️  $repo trigger failed (may not have listener yet)"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
