@@ -17,8 +17,8 @@ https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/caseh
 ```
 
 **Other repo deep-dives** (fetch the relevant ones when your implementation touches their domain):
-- quarkus-work: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/quarkus-work.md`
-- quarkus-qhorus: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/quarkus-qhorus.md`
+- casehub-work: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-work.md`
+- casehub-qhorus: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-qhorus.md`
 - casehub-engine: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-engine.md`
 - claudony: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/claudony.md`
 - casehub-connectors: `https://raw.githubusercontent.com/casehubio/casehub-parent/main/docs/repos/casehub-connectors.md`
@@ -52,8 +52,8 @@ Domain logic is NOT in this extension — it lives in consumers via JPA JOINED s
 
 | Consumer | Subclass | Subclass table | subject_id maps to |
 |---|---|---|---|
-| `quarkus-work` | `WorkItemLedgerEntry` | `work_item_ledger_entry` | WorkItem UUID |
-| `quarkus-qhorus` | `MessageLedgerEntry` | `message_ledger_entry` | Channel UUID |
+| `casehub-work` | `WorkItemLedgerEntry` | `work_item_ledger_entry` | WorkItem UUID |
+| `casehub-qhorus` | `MessageLedgerEntry` | `message_ledger_entry` | Channel UUID |
 
 Each consumer defines its own subclass and its own Flyway migration for the subclass table.
 The base tables (`ledger_entry`, `ledger_attestation`, `actor_trust_score`) are defined here
@@ -226,12 +226,12 @@ JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home
 ```
 casehub-ledger       (audit/provenance — this project)
     ↑         ↑
- quarkus-work    quarkus-qhorus    (each adds its own LedgerEntry subclass)
+ casehub-work    casehub-qhorus    (each adds its own LedgerEntry subclass)
     ↑         ↑
           claudony
 ```
 
-quarkus-work and quarkus-qhorus are siblings — neither depends on the other. Both depend on
+casehub-work and casehub-qhorus are siblings — neither depends on the other. Both depend on
 `casehub-ledger`. Claudony composes them.
 
 ---
@@ -281,4 +281,4 @@ All casehubio projects align on these conventions:
 ```
 CI must use `server-id: github` + `GITHUB_TOKEN` in `actions/setup-java`.
 
-**Cross-project SNAPSHOT versions:** `casehub-ledger` and `quarkus-work` modules are `0.2-SNAPSHOT` resolved from GitHub Packages. Declare in `pom.xml` properties and `<dependencyManagement>` — no hardcoded versions in submodule poms.
+**Cross-project SNAPSHOT versions:** `casehub-ledger` and `casehub-work` modules are `0.2-SNAPSHOT` resolved from GitHub Packages. Declare in `pom.xml` properties and `<dependencyManagement>` — no hardcoded versions in submodule poms.
