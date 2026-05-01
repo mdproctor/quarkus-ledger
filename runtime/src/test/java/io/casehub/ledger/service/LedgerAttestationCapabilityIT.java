@@ -36,7 +36,7 @@ class LedgerAttestationCapabilityIT {
 
     @Test
     @Transactional
-    void save_specificCapabilityTag_storedAndRetrieved() {
+    void findByEntryIdAndCapabilityTag_matchingTag_returnsAttestation() {
         final TestEntry entry = savedEntry();
         repo.saveAttestation(attestation(entry.id, entry.subjectId, "security-review"));
 
@@ -129,6 +129,8 @@ class LedgerAttestationCapabilityIT {
 
         assertThat(results).hasSize(2);
         assertThat(results).allMatch(a -> "security-review".equals(a.capabilityTag));
+        assertThat(results).extracting(a -> a.ledgerEntryId)
+                .containsExactlyInAnyOrder(e1.id, e2.id);
     }
 
     // ── Robustness: no matching tag returns empty ─────────────────────────────
