@@ -142,6 +142,33 @@ class LedgerPrivacyWiringIT {
         assertThat(repo.findByActorId("never-saved-" + UUID.randomUUID(), from, to)).isEmpty();
     }
 
+    // ── Happy path: findAttestationsByAttestorIdAndCapabilityTag uses tokenised attestorId ──
+
+    @Test
+    @Transactional
+    void findByAttestorIdAndCapabilityTag_withPseudonymisation_findsTokenisedAttestation() {
+        final String rawAttestorId = "attestor-" + UUID.randomUUID();
+        final TestEntry entry = entry(rawAttestorId);
+        repo.save(entry);
+
+        final LedgerAttestation att = new LedgerAttestation();
+        att.ledgerEntryId = entry.id;
+        att.subjectId = entry.subjectId;
+        att.attestorId = rawAttestorId;
+        att.attestorType = ActorType.AGENT;
+        att.verdict = AttestationVerdict.SOUND;
+        att.confidence = 1.0;
+        att.capabilityTag = "security-review";
+        att.occurredAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        repo.saveAttestation(att);
+
+        // Query by raw attestorId — tokeniseForQuery must translate to the stored token
+        final var results = repo.findAttestationsByAttestorIdAndCapabilityTag(rawAttestorId, "security-review");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).capabilityTag).isEqualTo("security-review");
+    }
+
     // ── Fixture ───────────────────────────────────────────────────────────────
 
     private TestEntry entry(final String actorId) {
