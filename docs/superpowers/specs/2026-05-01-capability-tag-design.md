@@ -7,15 +7,31 @@
 
 ## Goal
 
-Add a nullable `capabilityTag` field to `LedgerAttestation` so trust scoring can be scoped per capability. A null tag means the attestation is global (applies to all capabilities). A non-null tag (e.g. `"security-review"`) scopes the verdict to that capability only.
+Add a `capabilityTag` field to `LedgerAttestation` so trust scoring can be scoped per capability. The sentinel value `"*"` means the attestation is global (applies to all capabilities). A specific tag (e.g. `"security-review"`) scopes the verdict to that capability only. No NULL semantics.
+
+## Constant
+
+New class **`api/model/CapabilityTag.java`**:
+
+```java
+package io.casehub.ledger.api.model;
+
+public final class CapabilityTag {
+    public static final String GLOBAL = "*";
+
+    private CapabilityTag() {}
+}
+```
 
 ## Schema
 
 Rewrite `V1000__ledger_base_schema.sql` in place — no new migration file. Add to `ledger_attestation` CREATE TABLE:
 
 ```sql
-capability_tag   VARCHAR(255)
+capability_tag   VARCHAR(255)    NOT NULL DEFAULT '*'
 ```
+
+`NOT NULL` — every attestation has a tag; global attestations use `'*'`. The `DEFAULT '*'` protects against any insert that omits the column.
 
 Add two new indexes:
 
@@ -31,8 +47,8 @@ The composite `(ledger_entry_id, capability_tag)` covers the two entry-scoped qu
 **`api/model/LedgerAttestation.java`** (`@MappedSuperclass`) — add one field:
 
 ```java
-@Column(name = "capability_tag")
-public String capabilityTag;  // nullable — null means global
+@Column(name = "capability_tag", nullable = false)
+public String capabilityTag = CapabilityTag.GLOBAL;  // defaults to global
 ```
 
 **`runtime/model/LedgerAttestation.java`** (`@Entity`) — add three `@NamedQuery` annotations:
@@ -43,7 +59,7 @@ public String capabilityTag;  // nullable — null means global
     query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag = :capabilityTag ORDER BY a.occurredAt ASC")
 @NamedQuery(
     name = "LedgerAttestation.findGlobalByEntryId",
-    query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag IS NULL ORDER BY a.occurredAt ASC")
+    query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag = '*' ORDER BY a.occurredAt ASC")
 @NamedQuery(
     name = "LedgerAttestation.findByAttestorIdAndCapabilityTag",
     query = "SELECT a FROM LedgerAttestation a WHERE a.attestorId = :attestorId AND a.capabilityTag = :capabilityTag ORDER BY a.occurredAt ASC")
@@ -77,13 +93,20 @@ Uni<List<LedgerAttestation>> findAttestationsByAttestorIdAndCapabilityTag(String
 
 | Test | Assertion |
 |---|---|
-| Attestation with `capabilityTag` set | Stored and retrieved correctly |
-| Attestation with `capabilityTag = null` | Returned by `findGlobalAttestationsByEntryId`, not by capability query |
-| `findAttestationsByEntryIdAndCapabilityTag` | Returns only matching tag; excludes other tags on same entry |
+| Attestation with specific `capabilityTag` | Stored and retrieved correctly |
+| Attestation with `capabilityTag = CapabilityTag.GLOBAL` (`"*"`) | Returned by `findGlobalAttestationsByEntryId` |
+| `findGlobalAttestationsByEntryId` | Does not return capability-specific attestations on same entry |
+| `findAttestationsByEntryIdAndCapabilityTag` | Returns only matching tag; excludes `"*"` and other tags on same entry |
 | `findAttestationsByAttestorIdAndCapabilityTag` | Returns attestations across multiple entries for same actor+capability |
-| Existing attestation tests | All pass unchanged — null capabilityTag is backward-compatible |
+| Existing attestation tests | All pass — existing `LedgerTestFixtures.seedDecision` produces `capabilityTag = "*"` by default |
 
-**`LedgerTestFixtures`** — add an overload of `seedDecision` accepting a `capabilityTag` parameter for use by B2 tests. Existing overloads unchanged.
+**`LedgerTestFixtures`** — existing `seedDecision` overloads set `capabilityTag = CapabilityTag.GLOBAL` on the created attestation (no signature change needed — the field default handles it). Add one new overload accepting an explicit `capabilityTag` for B2 tests:
+
+```java
+public static TestEntry seedDecision(String actorId, Instant decisionTime,
+        AttestationVerdict verdictOrNull, String capabilityTag,
+        LedgerEntryRepository repo, EntityManager em)
+```
 
 ## Out of Scope
 
