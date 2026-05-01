@@ -73,6 +73,10 @@ public final class LedgerTestFixtures {
      * Persist a {@link TestEntry} EVENT with an attestation at an explicit timestamp and
      * capability tag. Use {@link io.casehub.ledger.api.model.CapabilityTag#GLOBAL} for
      * cross-capability attestations.
+     *
+     * <p>Persists the attestation directly via {@link jakarta.persistence.EntityManager} —
+     * bypasses {@link io.casehub.ledger.runtime.repository.LedgerEntryRepository#saveAttestation};
+     * {@code attestorId} is stored without pseudonymisation.
      */
     public static TestEntry seedDecision(final String actorId, final Instant decisionTime,
             final AttestationVerdict verdictOrNull, final Instant attestationTime,
