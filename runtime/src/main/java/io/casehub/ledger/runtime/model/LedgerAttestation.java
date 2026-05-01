@@ -17,6 +17,15 @@ import jakarta.persistence.Table;
 @NamedQuery(name = "LedgerAttestation.findByEntryId", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId ORDER BY a.occurredAt ASC")
 @NamedQuery(name = "LedgerAttestation.findBySubjectId", query = "SELECT a FROM LedgerAttestation a WHERE a.subjectId = :subjectId ORDER BY a.occurredAt ASC")
 @NamedQuery(name = "LedgerAttestation.findByEntryIds", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId IN :entryIds")
+@NamedQuery(
+        name = "LedgerAttestation.findByEntryIdAndCapabilityTag",
+        query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag = :capabilityTag ORDER BY a.occurredAt ASC")
+@NamedQuery(
+        name = "LedgerAttestation.findGlobalByEntryId",
+        query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag = '*' ORDER BY a.occurredAt ASC")
+@NamedQuery(
+        name = "LedgerAttestation.findByAttestorIdAndCapabilityTag",
+        query = "SELECT a FROM LedgerAttestation a WHERE a.attestorId = :attestorId AND a.capabilityTag = :capabilityTag ORDER BY a.occurredAt ASC")
 public class LedgerAttestation extends io.casehub.ledger.api.model.LedgerAttestation {
 
     @PrePersist
