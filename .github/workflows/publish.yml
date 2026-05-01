@@ -1,6 +1,8 @@
 name: Build and Publish
 
 on:
+  repository_dispatch:
+    types: [upstream-published]
   push:
     branches: [main]
   pull_request:
@@ -32,19 +34,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to GitHub Packages
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request'
         run: mvn --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger downstream CI
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && success()
+        if: github.event_name != 'pull_request' && success()
         run: |
           for repo in work qhorus; do
-            echo "Triggering $repo CI..."
             gh api repos/casehubio/$repo/dispatches \
               -f event_type=upstream-published \
-              -f client_payload[source]="ledger" 2>/dev/null && echo "  ✅ $repo triggered" || echo "  ⚠️  $repo trigger failed (may not have listener yet)"
+              -f client_payload[source]="${GITHUB_REPOSITORY}" \
+              2>/dev/null && echo "  ✅ $repo triggered" || echo "  ⚠️  $repo trigger failed"
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
