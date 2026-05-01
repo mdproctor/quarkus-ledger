@@ -33,6 +33,18 @@
       <artifactId>mutiny</artifactId>
       <scope>provided</scope>
     </dependency>
+
+    <!-- Testing — pure JUnit 5, no Quarkus runtime -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
     <build>

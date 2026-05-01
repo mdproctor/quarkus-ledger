@@ -46,4 +46,7 @@ public class LedgerAttestation {
 
     @Column(name = "occurred_at", nullable = false)
     public Instant occurredAt;
+
+    @Column(name = "capability_tag", nullable = false)
+    public String capabilityTag = CapabilityTag.GLOBAL;
 }
