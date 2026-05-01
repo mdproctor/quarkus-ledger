@@ -37,7 +37,7 @@ casehub-ledger        (audit/provenance — this project)
 
 | Document | What it covers |
 |---|---|
-| [`DESIGN-capabilities.md`](DESIGN-capabilities.md) | Merkle Mountain Range, W3C PROV-DM JSON-LD export, `@ConfigRoot` config wiring, privacy/pseudonymisation, agent identity model, agent mesh topology |
+| [`DESIGN-capabilities.md`](DESIGN-capabilities.md) | Merkle Mountain Range, W3C PROV-DM JSON-LD export, `@ConfigRoot` config wiring, privacy/pseudonymisation, trust scoring capability tags, agent identity model, agent mesh topology |
 
 ---
 
@@ -242,6 +242,8 @@ capability tag — wired by #61), or `DIMENSION` (scoped to a trust dimension �
 enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows; capability and dimension
 computation is added by #61 and #62 respectively.
 
+`LedgerAttestation.capabilityTag` (✅ #60) — nullable-free `"*"` sentinel (`CapabilityTag.GLOBAL`) marks cross-capability attestations. Capability-specific attestations carry an explicit tag (e.g. `"security-review"`). Three new SPI query methods allow `TrustScoreJob` (#61) to retrieve per-actor, per-capability attestation history.
+
 **EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
 **Privacy / pseudonymisation** — ✅ Done. `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, built-in UUID tokenisation, `LedgerErasureService` for GDPR Art.17 requests. See `docs/PRIVACY.md`.
@@ -289,5 +291,6 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Agent mesh topology** | ✅ Done | Centralized recommended for current ecosystem; hierarchical path documented for distributed Claudony; gossip ruled out. Closes #27. |
 | **Submission target decision** | ⬜ Pending | Quarkiverse vs SmallRye — external feedback questions whether this qualifies as a Quarkus extension. See IDEAS.md 2026-04-23. |
 | **OTel trace ID auto-wiring** | ✅ Done | `LedgerEntryEnricher` SPI + `LedgerTraceListener` pipeline runner; `TraceIdEnricher` populates `traceId` from active OTel span. `correlationId` renamed to `traceId`. Closes #30, #31, #67. |
+| **capabilityTag on LedgerAttestation** | ✅ Done | `"*"` sentinel (no NULL); `CapabilityTag.GLOBAL` constant in api module; 3 new SPI query methods (blocking + reactive parity); V1000 schema updated; 9 IT + 3 unit tests. Closes #60. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |

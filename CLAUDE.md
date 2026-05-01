@@ -141,6 +141,7 @@ casehub-ledger/  (local folder: ~/claude/casehub/ledger)
 │       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION
 │       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM
 │       │   ├── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
+│       │   ├── CapabilityTag.java           — sentinel constants: GLOBAL = "*" for cross-capability attestations (api module)
 │       │   └── ActorIdentity.java           — token↔identity mapping for pseudonymisation
 │       ├── repository/
 │       │   ├── LedgerEntryRepository.java        — blocking SPI (uses subjectId); findById → findEntryById

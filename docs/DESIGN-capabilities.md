@@ -80,6 +80,25 @@ affected (entries are not deleted).
 
 ---
 
+## Trust Scoring — Capability Tags
+
+`LedgerAttestation.capabilityTag` scopes each verdict to a capability domain. The sentinel
+`CapabilityTag.GLOBAL = "*"` (never null) means the verdict applies to all capabilities.
+A specific tag (e.g. `"security-review"`) restricts it to that capability only.
+
+Three SPI query methods feed capability-aware trust computation:
+
+| Method | Purpose |
+|---|---|
+| `findAttestationsByEntryIdAndCapabilityTag(entryId, tag)` | Capability-specific verdicts on one entry |
+| `findAttestationsByEntryIdGlobal(entryId)` | Global (`"*"`) verdicts on one entry |
+| `findAttestationsByAttestorIdAndCapabilityTag(attestorId, tag)` | All verdicts by one actor for one capability (feeds B2 `TrustScoreJob`) |
+
+See `docs/DESIGN.md` (Roadmap → Trust scoring) for the `ActorTrustScore` discriminator model
+that consumes these signals in B2 (#61) and B3 (#62).
+
+---
+
 ## Agent Identity Model
 
 LLM agents are stateless — each session starts fresh. For trust scores to accumulate and
