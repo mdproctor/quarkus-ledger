@@ -39,6 +39,7 @@ casehub-ledger        (audit/provenance — this project)
 |---|---|
 | [`DESIGN-capabilities.md`](DESIGN-capabilities.md) | Merkle Mountain Range, W3C PROV-DM JSON-LD export, `@ConfigRoot` config wiring, privacy/pseudonymisation, agent identity model, agent mesh topology |
 
+---
 
 ## Architecture
 
@@ -282,7 +283,7 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Bayesian trust weighting** | ✅ Done | Bayesian Beta model: per-attestation recency weighting, alpha/beta posterior, ForgivenessParams removed. See ADR 0003. |
 | **Privacy / pseudonymisation** | ✅ Done | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, `InternalActorIdentityProvider`, `LedgerErasureService`, `ActorIdentity` entity, V1004 migration. 31 tests. |
 | **EigenTrust transitivity** | ✅ Done | `EigenTrustComputer` (power iteration, dangling-node fix, pre-trusted seed), `global_trust_score` on `ActorTrustScore`, `TrustScoreJob` eigentrust pass (opt-in). 8 unit tests. Closes #26. |
-| **LLM agent identity model** | ✅ Done | Versioned persona names (`{model-family}:{persona}@{major}`); `agentConfigHash` on `ProvenanceSupplement` for config drift detection; DESIGN.md agent identity section; ADR 0004. Closes #23. |
+| **LLM agent identity model** | ✅ Done | Versioned persona names (`{model-family}:{persona}@{major}`); `agentConfigHash` on `ProvenanceSupplement` for config drift detection; DESIGN-capabilities.md agent identity section; ADR 0004. Closes #23. |
 | **Trust score continuity across LLM sessions** | ✅ Done | Documented sparse/concurrent/scheduling behaviour in agent mesh deployments; `trust-score.schedule` config key (default `24h`, configurable for high-interaction meshes). Closes #24. |
 | **Agent identity versioning criteria** | ✅ Done | Concrete bump/no-bump criteria for CLAUDE.md changes; no inheritance API (clean break is safe default); pre-seeding via synthetic attestations documented. ADR 0004 updated. Closes #25. |
 | **Agent mesh topology** | ✅ Done | Centralized recommended for current ecosystem; hierarchical path documented for distributed Claudony; gossip ruled out. Closes #27. |
