@@ -14,12 +14,19 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "ledger_attestation")
-@NamedQuery(name = "LedgerAttestation.findByEntryId", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId ORDER BY a.occurredAt ASC")
-@NamedQuery(name = "LedgerAttestation.findBySubjectId", query = "SELECT a FROM LedgerAttestation a WHERE a.subjectId = :subjectId ORDER BY a.occurredAt ASC")
-@NamedQuery(name = "LedgerAttestation.findByEntryIds", query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId IN :entryIds")
+@NamedQuery(
+        name = "LedgerAttestation.findByEntryId",
+        query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId ORDER BY a.occurredAt ASC")
+@NamedQuery(
+        name = "LedgerAttestation.findBySubjectId",
+        query = "SELECT a FROM LedgerAttestation a WHERE a.subjectId = :subjectId ORDER BY a.occurredAt ASC")
+@NamedQuery(
+        name = "LedgerAttestation.findByEntryIds",
+        query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId IN :entryIds")
 @NamedQuery(
         name = "LedgerAttestation.findByEntryIdAndCapabilityTag",
         query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag = :capabilityTag ORDER BY a.occurredAt ASC")
+// '*' is CapabilityTag.GLOBAL — JPQL cannot reference Java constants directly
 @NamedQuery(
         name = "LedgerAttestation.findGlobalByEntryId",
         query = "SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId AND a.capabilityTag = '*' ORDER BY a.occurredAt ASC")

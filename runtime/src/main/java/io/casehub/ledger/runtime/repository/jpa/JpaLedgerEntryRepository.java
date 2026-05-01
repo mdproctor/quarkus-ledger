@@ -288,7 +288,7 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     /** {@inheritDoc} */
     @Override
-    public List<LedgerAttestation> findGlobalAttestationsByEntryId(final UUID entryId) {
+    public List<LedgerAttestation> findAttestationsByEntryIdGlobal(final UUID entryId) {
         return em.createNamedQuery("LedgerAttestation.findGlobalByEntryId", LedgerAttestation.class)
                 .setParameter("entryId", entryId)
                 .getResultList();

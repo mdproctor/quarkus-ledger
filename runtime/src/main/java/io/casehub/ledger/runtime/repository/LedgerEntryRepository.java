@@ -158,12 +158,13 @@ public interface LedgerEntryRepository {
 
     /**
      * Return all global attestations for the given ledger entry (where
-     * {@code capabilityTag = "*"}), ordered by occurrence time ascending.
+     * {@code capabilityTag = }{@link io.casehub.ledger.api.model.CapabilityTag#GLOBAL}),
+     * ordered by occurrence time ascending.
      *
      * @param entryId the ledger entry UUID
      * @return ordered list; empty if none exist
      */
-    List<LedgerAttestation> findGlobalAttestationsByEntryId(UUID entryId);
+    List<LedgerAttestation> findAttestationsByEntryIdGlobal(UUID entryId);
 
     /**
      * Return all attestations written by the given attestor for the given capability tag,
