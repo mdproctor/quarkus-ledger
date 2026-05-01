@@ -298,8 +298,9 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     public List<LedgerAttestation> findAttestationsByAttestorIdAndCapabilityTag(final String attestorId,
             final String capabilityTag) {
+        final String token = actorIdentityProvider.tokeniseForQuery(attestorId);
         return em.createNamedQuery("LedgerAttestation.findByAttestorIdAndCapabilityTag", LedgerAttestation.class)
-                .setParameter("attestorId", attestorId)
+                .setParameter("attestorId", token)
                 .setParameter("capabilityTag", capabilityTag)
                 .getResultList();
     }
