@@ -3,6 +3,7 @@
 | File | Date | Title |
 |------|------|-------|
 | [2026-04-29-mdp01-what-the-reviews-missed.md](2026-04-29-mdp01-what-the-reviews-missed.md) | 2026-04-29 | Prerequisites #67/#68 and Group A #55/#54/#53 shipped. NULLS NOT DISTINCT rendered the sentinel workaround obsolete. Valence multiplier in decay. Important review findings silently dismissed by the controller — and what to do about it. |
+| [2026-05-01-mdp01-the-sentinel-this-time.md](2026-05-01-mdp01-the-sentinel-this-time.md) | 2026-05-01 | Group B starts. DESIGN.md split. capabilityTag on LedgerAttestation: why NULL smelled and "*" didn't. Two correctness bugs the tests couldn't catch — caught by code review. |
 | [2026-04-24-mdp01-fix-that-breaks-everything.md](2026-04-24-mdp01-fix-that-breaks-everything.md) | 2026-04-24 | Claude hardcoded @PersistenceUnit("qhorus") in the generic extension; I reverted it and we built a configurable datasource producer instead. Org transfer to casehubio, casehub-parent BOM created. |
 | [2026-04-23-mdp01-routing-signals-health-cleanup.md](2026-04-23-mdp01-routing-signals-health-cleanup.md) | 2026-04-23 | Routing signals shipped via CDI payload types; health check found 4 broken examples; Claude added @PersistenceUnit("qhorus") to runtime without being asked |
 | [2026-04-15-mdp01-shared-audit-ledger-ecosystem.md](2026-04-15-mdp01-shared-audit-ledger-ecosystem.md) | 2026-04-15 | Extracting a shared audit ledger for the Quarkus AI ecosystem — JPA JOINED inheritance, subjectId, Flyway ordering gotcha, Tarkus migration |
