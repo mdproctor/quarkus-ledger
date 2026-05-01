@@ -275,4 +275,32 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
                 .setParameter("entryId", entryId)
                 .getResultList();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerAttestation> findAttestationsByEntryIdAndCapabilityTag(final UUID entryId,
+            final String capabilityTag) {
+        return em.createNamedQuery("LedgerAttestation.findByEntryIdAndCapabilityTag", LedgerAttestation.class)
+                .setParameter("entryId", entryId)
+                .setParameter("capabilityTag", capabilityTag)
+                .getResultList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerAttestation> findGlobalAttestationsByEntryId(final UUID entryId) {
+        return em.createNamedQuery("LedgerAttestation.findGlobalByEntryId", LedgerAttestation.class)
+                .setParameter("entryId", entryId)
+                .getResultList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<LedgerAttestation> findAttestationsByAttestorIdAndCapabilityTag(final String attestorId,
+            final String capabilityTag) {
+        return em.createNamedQuery("LedgerAttestation.findByAttestorIdAndCapabilityTag", LedgerAttestation.class)
+                .setParameter("attestorId", attestorId)
+                .setParameter("capabilityTag", capabilityTag)
+                .getResultList();
+    }
 }

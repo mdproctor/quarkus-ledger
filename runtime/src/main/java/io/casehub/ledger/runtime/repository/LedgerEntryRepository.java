@@ -144,4 +144,36 @@ public interface LedgerEntryRepository {
      * @return ordered list; empty if none
      */
     List<LedgerEntry> findCausedBy(UUID entryId);
+
+    /**
+     * Return all attestations for the given ledger entry scoped to the given capability tag,
+     * ordered by occurrence time ascending. Use {@link io.casehub.ledger.api.model.CapabilityTag#GLOBAL}
+     * to query global attestations explicitly.
+     *
+     * @param entryId the ledger entry UUID
+     * @param capabilityTag the capability tag to filter by; never {@code null}
+     * @return ordered list; empty if none match
+     */
+    List<LedgerAttestation> findAttestationsByEntryIdAndCapabilityTag(UUID entryId, String capabilityTag);
+
+    /**
+     * Return all global attestations for the given ledger entry (where
+     * {@code capabilityTag = "*"}), ordered by occurrence time ascending.
+     *
+     * @param entryId the ledger entry UUID
+     * @return ordered list; empty if none exist
+     */
+    List<LedgerAttestation> findGlobalAttestationsByEntryId(UUID entryId);
+
+    /**
+     * Return all attestations written by the given attestor for the given capability tag,
+     * across all ledger entries, ordered by occurrence time ascending.
+     *
+     * <p>Used by B2 trust scoring to aggregate per-actor, per-capability attestation history.
+     *
+     * @param attestorId the attestor identity
+     * @param capabilityTag the capability tag to filter by; never {@code null}
+     * @return ordered list; empty if none match
+     */
+    List<LedgerAttestation> findAttestationsByAttestorIdAndCapabilityTag(String attestorId, String capabilityTag);
 }

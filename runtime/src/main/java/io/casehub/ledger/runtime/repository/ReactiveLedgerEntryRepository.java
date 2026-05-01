@@ -51,4 +51,10 @@ public interface ReactiveLedgerEntryRepository {
     Uni<List<LedgerAttestation>> findAttestationsByEntryId(UUID ledgerEntryId);
 
     Uni<Map<UUID, List<LedgerAttestation>>> findAttestationsForEntries(Set<UUID> entryIds);
+
+    Uni<List<LedgerAttestation>> findAttestationsByEntryIdAndCapabilityTag(UUID entryId, String capabilityTag);
+
+    Uni<List<LedgerAttestation>> findGlobalAttestationsByEntryId(UUID entryId);
+
+    Uni<List<LedgerAttestation>> findAttestationsByAttestorIdAndCapabilityTag(String attestorId, String capabilityTag);
 }
