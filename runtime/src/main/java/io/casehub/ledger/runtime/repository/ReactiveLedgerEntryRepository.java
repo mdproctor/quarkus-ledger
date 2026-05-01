@@ -54,7 +54,7 @@ public interface ReactiveLedgerEntryRepository {
 
     Uni<List<LedgerAttestation>> findAttestationsByEntryIdAndCapabilityTag(UUID entryId, String capabilityTag);
 
-    Uni<List<LedgerAttestation>> findGlobalAttestationsByEntryId(UUID entryId);
+    Uni<List<LedgerAttestation>> findAttestationsByEntryIdGlobal(UUID entryId);
 
     Uni<List<LedgerAttestation>> findAttestationsByAttestorIdAndCapabilityTag(String attestorId, String capabilityTag);
 }
