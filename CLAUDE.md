@@ -202,8 +202,12 @@ casehub-ledger/  (local folder: ~/claude/casehub/ledger)
 # Build all modules
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean install
 
-# Run tests (runtime module)
+# Run all tests (all modules)
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test
+
+# Run tests for a specific module
+JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test -pl runtime   # QuarkusTest + IT
+JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test -pl api        # pure JUnit 5, no Quarkus runtime
 
 # Native image build (requires GraalVM)
 JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home \
