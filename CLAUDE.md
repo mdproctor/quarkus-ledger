@@ -59,6 +59,8 @@ Each consumer defines its own subclass and its own Flyway migration for the subc
 The base tables (`ledger_entry`, `ledger_attestation`, `actor_trust_score`) are defined here
 in V1000–V1004 and always present when `casehub-ledger` is on the classpath.
 
+**Design documentation:** `docs/DESIGN.md` covers entity model, architecture, SPI contracts, and configuration. `docs/DESIGN-capabilities.md` covers Merkle MMR, PROV-DM export, agent identity model, and agent mesh topology.
+
 ---
 
 ## Maven Coordinates
@@ -119,7 +121,7 @@ Qhorus each define their own REST/MCP endpoints on top.
 LLM agents are stateless; use versioned persona names so trust accumulates correctly
 across sessions: `"{model-family}:{persona}@{major}"` — e.g. `"claude:tarkus-reviewer@v1"`.
 Major version bump resets the trust baseline; tuning/bug-fix does not. See ADR 0004 and
-`docs/DESIGN.md` (Agent Identity Model) for concrete bump criteria and the no-inheritance
+`docs/DESIGN-capabilities.md` (Agent Identity Model) for concrete bump criteria and the no-inheritance
 rationale.
 
 ---
