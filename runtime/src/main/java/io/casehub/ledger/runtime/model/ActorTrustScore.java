@@ -12,7 +12,7 @@ import jakarta.persistence.UniqueConstraint;
  * One row per {@code (actor_id, score_type, scope_key)} triple:
  * <ul>
  * <li>{@code GLOBAL} — one row per actor; classic score across all decisions. {@code scope_key} is null.</li>
- * <li>{@code CAPABILITY} — one row per (actor, capability tag); requires #61.</li>
+ * <li>{@code CAPABILITY} — one row per (actor, capability tag). See ADR 0008.</li>
  * <li>{@code DIMENSION} — one row per (actor, trust dimension); requires #62.</li>
  * </ul>
  *

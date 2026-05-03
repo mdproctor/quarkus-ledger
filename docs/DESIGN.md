@@ -239,8 +239,7 @@ Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
 `score_type` is `GLOBAL` (classic cross-decision Beta score), `CAPABILITY` (scoped to a
 capability tag — wired by #61), or `DIMENSION` (scoped to a trust dimension — wired by #62).
 `scope_key` is null for GLOBAL rows; the unique constraint uses `NULLS NOT DISTINCT` to
-enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows; capability and dimension
-computation is added by #61 and #62 respectively.
+enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows (✅ #60) and CAPABILITY rows (✅ #61); dimension computation is added by #62.
 
 `LedgerAttestation.capabilityTag` (✅ #60) — nullable-free `"*"` sentinel (`CapabilityTag.GLOBAL`) marks cross-capability attestations. Capability-specific attestations carry an explicit tag (e.g. `"security-review"`). Three new SPI query methods allow `TrustScoreJob` (#61) to retrieve per-actor, per-capability attestation history.
 
@@ -292,5 +291,6 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Submission target decision** | ⬜ Pending | Quarkiverse vs SmallRye — external feedback questions whether this qualifies as a Quarkus extension. See IDEAS.md 2026-04-23. |
 | **OTel trace ID auto-wiring** | ✅ Done | `LedgerEntryEnricher` SPI + `LedgerTraceListener` pipeline runner; `TraceIdEnricher` populates `traceId` from active OTel span. `correlationId` renamed to `traceId`. Closes #30, #31, #67. |
 | **capabilityTag on LedgerAttestation** | ✅ Done | `"*"` sentinel (no NULL); `CapabilityTag.GLOBAL` constant in api module; 3 new SPI query methods (blocking + reactive parity); V1000 schema updated; 9 IT + 3 unit tests. Closes #60. |
+| **Capability-scoped trust scores** | ✅ Done | `GlobalScoreStrategy` SPI (3 implementations: all-attestations default, explicit-global, frequency-weighted); `TrustScoreJob` capability pass (O(M) single-pass); `TrustGateService` Phase 2 (capability-then-global fallback). ADR 0008. Closes #61. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |

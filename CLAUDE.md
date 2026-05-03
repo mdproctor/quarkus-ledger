@@ -165,6 +165,10 @@ casehub-ledger/  (local folder: ~/claude/casehub/ledger)
 │           ├── ExponentialDecayFunction.java — @DefaultBean: 2^(-age/halfLife) × valence multiplier (FLAGGED slower decay)
 │           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring; delegates decay to DecayFunction (pure Java)
 │           ├── TrustGateService.java        — CDI bean: trust threshold enforcement (meetsThreshold, currentScore)
+│           ├── GlobalScoreStrategy.java          — SPI: select attestations / derive global trust score
+│           ├── AllAttestationsGlobalStrategy.java — @DefaultBean: all attestations → global Beta (Option B)
+│           ├── ExplicitGlobalAttestationsStrategy.java — @Alternative: only "*" attestations (Option A)
+│           ├── FrequencyWeightedGlobalStrategy.java — @Alternative: frequency-weighted from capability scores (Option C)
 │           ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
 │           ├── TrustScoreJob.java           — @Scheduled nightly recomputation
 │           └── routing/

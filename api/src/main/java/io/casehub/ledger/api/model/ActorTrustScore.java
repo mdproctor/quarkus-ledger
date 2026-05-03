@@ -16,7 +16,7 @@ import jakarta.persistence.MappedSuperclass;
  * One row per {@code (actor_id, score_type, scope_key)} triple:
  * <ul>
  * <li>{@code GLOBAL} — one row per actor; classic score across all decisions. {@code scope_key} is null.</li>
- * <li>{@code CAPABILITY} — one row per (actor, capability tag); requires #61.</li>
+ * <li>{@code CAPABILITY} — one row per (actor, capability tag). See ADR 0008.</li>
  * <li>{@code DIMENSION} — one row per (actor, trust dimension); requires #62.</li>
  * </ul>
  */
@@ -27,7 +27,7 @@ public class ActorTrustScore {
     public enum ScoreType {
         /** Classic cross-decision score. scope_key is null. */
         GLOBAL,
-        /** Capability-scoped score. scope_key is the capability tag (e.g. "security-review"). Requires #61. */
+        /** Capability-scoped score. scope_key is the capability tag (e.g. "security-review"). See ADR 0008. */
         CAPABILITY,
         /** Dimension-scoped score. scope_key is the dimension name (e.g. "thoroughness"). Requires #62. */
         DIMENSION

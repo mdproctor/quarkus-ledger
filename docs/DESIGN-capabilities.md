@@ -99,6 +99,25 @@ that consumes these signals in B2 (#61) and B3 (#62).
 
 ---
 
+## Trust Scoring — Capability Beta Scores
+
+`TrustScoreJob` computes per-capability Beta models alongside the global score (✅ #61).
+For each distinct `capabilityTag ≠ "*"` in the actor's attestations, a separate `CAPABILITY`
+row is written to `actor_trust_score` with `scope_key = capabilityTag`.
+
+The global score aggregation strategy is pluggable via `GlobalScoreStrategy` (see ADR 0008):
+
+| Implementation | CDI | Behaviour | Backed by |
+|---|---|---|---|
+| `AllAttestationsGlobalStrategy` | `@DefaultBean` | All attestations → global Beta | Wang & Vassileva (2003) |
+| `ExplicitGlobalAttestationsStrategy` | `@Alternative` | Only `"*"` attestations → global Beta | Semantic separation |
+| `FrequencyWeightedGlobalStrategy` | `@Alternative` | Global = Σ(count_i/total × capScore_i) | Fan et al. (2015) |
+
+`TrustGateService.meetsThreshold(actorId, capabilityTag, minTrust)` queries the CAPABILITY
+score first and falls back to GLOBAL when none exists.
+
+---
+
 ## Agent Identity Model
 
 LLM agents are stateless — each session starts fresh. For trust scores to accumulate and
