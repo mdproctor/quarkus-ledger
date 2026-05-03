@@ -12,7 +12,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.casehub.ledger.api.model.CapabilityTag;
-import io.casehub.ledger.runtime.service.GlobalScoreStrategy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -126,23 +125,18 @@ public class TrustScoreJob {
             }
 
             // ── Capability pass ────────────────────────────────────────────────────────
-            // Group by capabilityTag, excluding the global sentinel "*"
-            final Map<String, List<LedgerAttestation>> byCapability = actorAttestations.stream()
+            // Group actor's capability-specific attestations by (capabilityTag → entryId) in one pass
+            final Map<String, Map<UUID, List<LedgerAttestation>>> byCapabilityAndEntry = actorAttestations.stream()
                     .filter(a -> !CapabilityTag.GLOBAL.equals(a.capabilityTag))
-                    .collect(Collectors.groupingBy(a -> a.capabilityTag));
+                    .collect(Collectors.groupingBy(
+                            a -> a.capabilityTag,
+                            Collectors.groupingBy(a -> a.ledgerEntryId)));
 
             final Map<String, TrustScoreComputer.ActorScore> capabilityScores = new LinkedHashMap<>();
 
-            for (final Map.Entry<String, List<LedgerAttestation>> capEntry : byCapability.entrySet()) {
+            for (final Map.Entry<String, Map<UUID, List<LedgerAttestation>>> capEntry : byCapabilityAndEntry.entrySet()) {
                 final String capabilityTag = capEntry.getKey();
-
-                // Filter attestationsByEntry to only this capability tag
-                final Map<UUID, List<LedgerAttestation>> capByEntry = attestationsByEntry.entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                e -> e.getValue().stream()
-                                        .filter(a -> capabilityTag.equals(a.capabilityTag))
-                                        .collect(Collectors.toList())));
+                final Map<UUID, List<LedgerAttestation>> capByEntry = capEntry.getValue();
 
                 final TrustScoreComputer.ActorScore capScore = computer.compute(decisions, capByEntry, now);
                 trustRepo.upsert(actorId, ActorTrustScore.ScoreType.CAPABILITY, capabilityTag,
