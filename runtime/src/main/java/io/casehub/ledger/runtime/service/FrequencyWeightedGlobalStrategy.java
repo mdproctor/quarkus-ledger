@@ -26,6 +26,15 @@ import io.casehub.ledger.runtime.model.LedgerAttestation;
  * Returns empty if no capability scores exist (no override; job uses Beta prior 0.5).
  *
  * <p>
+ * <b>Note on alpha/beta fields:</b> The {@link TrustScoreComputer.ActorScore} returned by
+ * {@link #derive} combines alpha/beta from multiple Beta models using a weighted average.
+ * The resulting alpha/beta values are approximations — {@code alpha/(alpha+beta)} does not
+ * equal {@code trustScore} exactly because the two quantities are computed on different
+ * formula paths. Consumers should read only {@code trustScore} from GLOBAL rows computed
+ * by this strategy; alpha/beta are not valid Beta posterior parameters in this context.
+ * See ADR 0008 for the design rationale and known limitations.
+ *
+ * <p>
  * Activate via {@code quarkus.arc.selected-alternatives=
  * io.casehub.ledger.runtime.service.FrequencyWeightedGlobalStrategy}.
  */
