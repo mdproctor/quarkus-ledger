@@ -239,7 +239,7 @@ Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
 `score_type` is `GLOBAL` (classic cross-decision Beta score), `CAPABILITY` (scoped to a
 capability tag — wired by #61), or `DIMENSION` (scoped to a trust dimension — wired by #62).
 `scope_key` is null for GLOBAL rows; the unique constraint uses `NULLS NOT DISTINCT` to
-enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows (✅ #60) and CAPABILITY rows (✅ #61); dimension computation is added by #62.
+enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows (unchanged) and CAPABILITY rows (✅ #61 — via `GlobalScoreStrategy` SPI); dimension computation is added by #62.
 
 `LedgerAttestation.capabilityTag` (✅ #60) — nullable-free `"*"` sentinel (`CapabilityTag.GLOBAL`) marks cross-capability attestations. Capability-specific attestations carry an explicit tag (e.g. `"security-review"`). Three new SPI query methods allow `TrustScoreJob` (#61) to retrieve per-actor, per-capability attestation history.
 
