@@ -31,7 +31,10 @@ public interface GlobalScoreStrategy {
      * Select which attestations feed the global Beta model.
      *
      * @param all all attestations for the actor's decisions (may be empty)
-     * @return the subset to include in the global Beta computation; return all, a filter, or empty
+     * @return a subset of {@code all} using the same object references — implementations must
+     *         not construct new {@link LedgerAttestation} instances. The caller uses reference
+     *         equality ({@link java.util.HashSet}) to map the result back to entry buckets;
+     *         returning new instances would silently produce an empty global Beta model.
      */
     List<LedgerAttestation> selectAttestations(List<LedgerAttestation> all);
 
