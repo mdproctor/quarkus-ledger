@@ -19,9 +19,8 @@ import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
  * directly — this ensures threshold logic stays in one place.
  *
  * <p>
- * Phase 1: both overloads query the global trust score.
- * Phase 2 (after Group B — #61): the capability overload will query the per-capability score
- * and fall back to global when no capability-specific score exists.
+ * The capability overload queries the CAPABILITY score first and falls back to the global
+ * score when no capability-specific score has been computed yet (#61).
  */
 @ApplicationScoped
 public class TrustGateService {
