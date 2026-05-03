@@ -5,6 +5,7 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.casehub.ledger.api.model.ActorTrustScore.ScoreType;
 import io.casehub.ledger.runtime.model.ActorTrustScore;
 import io.casehub.ledger.runtime.repository.ActorTrustScoreRepository;
 
@@ -52,20 +53,20 @@ public class TrustGateService {
      * {@code minTrust}.
      *
      * <p>
-     * Phase 1: falls back to the global score (capability-scoped scores require Group B — #61).
-     * Phase 2: will query {@code ScoreType.CAPABILITY} for {@code capabilityTag} before
-     * falling back to global.
+     * Queries the {@code CAPABILITY} score for {@code capabilityTag} first; falls back to the
+     * global score when no capability-specific score has been computed yet.
      *
      * @param actorId the actor identity string
-     * @param capabilityTag the capability tag (e.g. {@code "security-review"}) — ignored in Phase 1;
-     *        Phase 2 implementer must add a null guard before using this value
+     * @param capabilityTag the capability tag (e.g. {@code "security-review"})
      * @param minTrust minimum trust score in [0.0, 1.0]
      * @return {@code true} if the actor meets the threshold for this capability
      */
     public boolean meetsThreshold(final String actorId, final String capabilityTag,
             final double minTrust) {
-        // TODO #61: query ScoreType.CAPABILITY for capabilityTag before falling back
-        return meetsThreshold(actorId, minTrust);
+        return repository
+                .findByActorIdAndTypeAndKey(actorId, ScoreType.CAPABILITY, capabilityTag)
+                .map(s -> s.trustScore >= minTrust)
+                .orElseGet(() -> meetsThreshold(actorId, minTrust));
     }
 
     /**
@@ -77,6 +78,20 @@ public class TrustGateService {
      */
     public Optional<Double> currentScore(final String actorId) {
         return repository.findByActorId(actorId).map(s -> s.trustScore);
+    }
+
+    /**
+     * Returns the actor's trust score for the given capability, or {@link Optional#empty()} if
+     * no capability-specific score has been computed yet.
+     *
+     * @param actorId the actor identity string
+     * @param capabilityTag the capability tag (e.g. {@code "security-review"})
+     * @return the capability trust score in [0.0, 1.0], or empty
+     */
+    public Optional<Double> currentScore(final String actorId, final String capabilityTag) {
+        return repository
+                .findByActorIdAndTypeAndKey(actorId, ScoreType.CAPABILITY, capabilityTag)
+                .map(s -> s.trustScore);
     }
 
     /**
