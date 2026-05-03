@@ -1,12 +1,18 @@
 package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import io.casehub.ledger.api.model.CapabilityTag;
+import io.casehub.ledger.runtime.service.GlobalScoreStrategy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -53,6 +59,9 @@ public class TrustScoreJob {
 
     @Inject
     DecayFunction decayFunction;
+
+    @Inject
+    GlobalScoreStrategy globalScoreStrategy;
 
     @Inject
     @LedgerPersistenceUnit
@@ -110,13 +119,62 @@ public class TrustScoreJob {
                     .findFirst()
                     .orElse(ActorType.HUMAN);
 
-            final TrustScoreComputer.ActorScore score = computer.compute(decisions, attestationsByEntry, now);
+            // Collect all attestations for this actor's decisions
+            final List<LedgerAttestation> actorAttestations = new ArrayList<>();
+            for (final LedgerEntry decision : decisions) {
+                actorAttestations.addAll(attestationsByEntry.getOrDefault(decision.id, List.of()));
+            }
+
+            // ── Capability pass ────────────────────────────────────────────────────────
+            // Group by capabilityTag, excluding the global sentinel "*"
+            final Map<String, List<LedgerAttestation>> byCapability = actorAttestations.stream()
+                    .filter(a -> !CapabilityTag.GLOBAL.equals(a.capabilityTag))
+                    .collect(Collectors.groupingBy(a -> a.capabilityTag));
+
+            final Map<String, TrustScoreComputer.ActorScore> capabilityScores = new LinkedHashMap<>();
+
+            for (final Map.Entry<String, List<LedgerAttestation>> capEntry : byCapability.entrySet()) {
+                final String capabilityTag = capEntry.getKey();
+
+                // Filter attestationsByEntry to only this capability tag
+                final Map<UUID, List<LedgerAttestation>> capByEntry = attestationsByEntry.entrySet().stream()
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().stream()
+                                        .filter(a -> capabilityTag.equals(a.capabilityTag))
+                                        .collect(Collectors.toList())));
+
+                final TrustScoreComputer.ActorScore capScore = computer.compute(decisions, capByEntry, now);
+                trustRepo.upsert(actorId, ActorTrustScore.ScoreType.CAPABILITY, capabilityTag,
+                        actorType, capScore.trustScore(),
+                        capScore.decisionCount(), capScore.overturnedCount(),
+                        capScore.alpha(), capScore.beta(),
+                        capScore.attestationPositive(), capScore.attestationNegative(), now);
+                capabilityScores.put(capabilityTag, capScore);
+            }
+
+            // ── Global pass ────────────────────────────────────────────────────────────
+            final List<LedgerAttestation> selectedAttestations =
+                    globalScoreStrategy.selectAttestations(actorAttestations);
+            final Set<LedgerAttestation> selectedSet = new HashSet<>(selectedAttestations);
+
+            final Map<UUID, List<LedgerAttestation>> selectedByEntry = attestationsByEntry.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            e -> e.getValue().stream()
+                                    .filter(selectedSet::contains)
+                                    .collect(Collectors.toList())));
+
+            final TrustScoreComputer.ActorScore globalScore = computer.compute(decisions, selectedByEntry, now);
+            final TrustScoreComputer.ActorScore finalScore =
+                    globalScoreStrategy.derive(capabilityScores, actorAttestations)
+                            .orElse(globalScore);
 
             trustRepo.upsert(actorId, ActorTrustScore.ScoreType.GLOBAL, null,
-                    actorType, score.trustScore(),
-                    score.decisionCount(), score.overturnedCount(),
-                    score.alpha(), score.beta(),
-                    score.attestationPositive(), score.attestationNegative(), now);
+                    actorType, finalScore.trustScore(),
+                    finalScore.decisionCount(), finalScore.overturnedCount(),
+                    finalScore.alpha(), finalScore.beta(),
+                    finalScore.attestationPositive(), finalScore.attestationNegative(), now);
         }
 
         if (config.trustScore().eigentrust().enabled()) {
