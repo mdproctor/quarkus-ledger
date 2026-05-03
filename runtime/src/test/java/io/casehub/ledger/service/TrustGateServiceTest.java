@@ -35,6 +35,39 @@ class TrustGateServiceTest {
         return new StubRepository(null);
     }
 
+    private static ActorTrustScoreRepository repoWith(
+            final String actorId, final double globalScore,
+            final String capabilityTag, final double capabilityScore) {
+        final ActorTrustScore global = new ActorTrustScore();
+        global.id = UUID.randomUUID();
+        global.actorId = actorId;
+        global.scoreType = ScoreType.GLOBAL;
+        global.actorType = ActorType.AGENT;
+        global.trustScore = globalScore;
+        global.lastComputedAt = Instant.now();
+
+        final ActorTrustScore capability = new ActorTrustScore();
+        capability.id = UUID.randomUUID();
+        capability.actorId = actorId;
+        capability.scoreType = ScoreType.CAPABILITY;
+        capability.scopeKey = capabilityTag;
+        capability.actorType = ActorType.AGENT;
+        capability.trustScore = capabilityScore;
+        capability.lastComputedAt = Instant.now();
+
+        return new StubRepository(global) {
+            @Override
+            public Optional<ActorTrustScore> findByActorIdAndTypeAndKey(
+                    final String id, final ScoreType type, final String scopeKey) {
+                if (actorId.equals(id) && ScoreType.CAPABILITY.equals(type)
+                        && capabilityTag.equals(scopeKey)) {
+                    return Optional.of(capability);
+                }
+                return Optional.empty();
+            }
+        };
+    }
+
     private static class StubRepository implements ActorTrustScoreRepository {
         private final ActorTrustScore score;
 
@@ -110,14 +143,58 @@ class TrustGateServiceTest {
         assertThat(gate.meetsThreshold("unknown-actor", 0.0)).isFalse();
     }
 
-    // ── meetsThreshold (capability overload — Phase 1 falls back to global) ──
+    // ── meetsThreshold (capability overload — Phase 2) ────────────────────────
 
     @Test
-    void meetsThreshold_withCapability_fallsBackToGlobalScore_phase1() {
-        final TrustGateService gate = new TrustGateService(repoWith("actor-b", 0.85));
+    void meetsThreshold_withCapability_usesCapabilityScore_whenAvailable() {
+        // global = 0.4 (would fail), capability "security-review" = 0.9 (should pass)
+        final TrustGateService gate = new TrustGateService(
+                repoWith("actor-x", 0.4, "security-review", 0.9));
 
-        assertThat(gate.meetsThreshold("actor-b", "security-review", 0.80)).isTrue();
-        assertThat(gate.meetsThreshold("actor-b", "security-review", 0.90)).isFalse();
+        assertThat(gate.meetsThreshold("actor-x", "security-review", 0.8)).isTrue();
+    }
+
+    @Test
+    void meetsThreshold_withCapability_capabilityScoreBelowThreshold() {
+        // global = 0.9 (would pass), capability "style-review" = 0.3 (should fail)
+        final TrustGateService gate = new TrustGateService(
+                repoWith("actor-y", 0.9, "style-review", 0.3));
+
+        assertThat(gate.meetsThreshold("actor-y", "style-review", 0.8)).isFalse();
+    }
+
+    @Test
+    void meetsThreshold_withCapability_fallsBackToGlobal_whenNoCapabilityScore() {
+        // No capability row for "unknown-tag" → falls back to global = 0.85
+        final TrustGateService gate = new TrustGateService(repoWith("actor-z", 0.85));
+
+        assertThat(gate.meetsThreshold("actor-z", "unknown-tag", 0.8)).isTrue();
+        assertThat(gate.meetsThreshold("actor-z", "unknown-tag", 0.9)).isFalse();
+    }
+
+    @Test
+    void meetsThreshold_withCapability_falseWhenNoScoreAtAll() {
+        final TrustGateService gate = new TrustGateService(emptyRepo());
+
+        assertThat(gate.meetsThreshold("ghost", "security-review", 0.0)).isFalse();
+    }
+
+    // ── currentScore (capability overload) ───────────────────────────────────
+
+    @Test
+    void currentScore_withCapability_returnsCapabilityScore() {
+        final TrustGateService gate = new TrustGateService(
+                repoWith("actor-q", 0.5, "security-review", 0.9));
+
+        assertThat(gate.currentScore("actor-q", "security-review")).isPresent();
+        assertThat(gate.currentScore("actor-q", "security-review").get()).isEqualTo(0.9);
+    }
+
+    @Test
+    void currentScore_withCapability_emptyWhenNoCapabilityScore() {
+        final TrustGateService gate = new TrustGateService(repoWith("actor-r", 0.7));
+
+        assertThat(gate.currentScore("actor-r", "unknown-tag")).isEmpty();
     }
 
     // ── currentScore ─────────────────────────────────────────────────────────
