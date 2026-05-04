@@ -164,6 +164,7 @@ public class TrustScoreJob {
                             .filter(a -> a.dimensionScore >= 0.5).count();
                     final int dimNegative = (int) dimAttestations.stream()
                             .filter(a -> a.dimensionScore < 0.5).count();
+                    // distinct entries where this actor was decision-maker, assessed on this dimension
                     final int dimDecisionCount = (int) dimAttestations.stream()
                             .map(a -> a.ledgerEntryId).distinct().count();
 
