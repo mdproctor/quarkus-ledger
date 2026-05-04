@@ -1,6 +1,8 @@
 package io.casehub.ledger.runtime.service;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -90,6 +92,30 @@ public class TrustGateService {
     public Optional<Double> currentScore(final String actorId, final String capabilityTag) {
         return repository
                 .findByActorIdAndTypeAndKey(actorId, ScoreType.CAPABILITY, capabilityTag)
+                .map(s -> s.trustScore);
+    }
+
+    /**
+     * Returns all dimension trust scores for the given actor, keyed by dimension name.
+     * Returns an empty map if no dimension scores have been computed yet.
+     *
+     * @param actorId the actor identity string
+     * @return dimension name → score in [0.0, 1.0] for each DIMENSION row
+     */
+    public Map<String, Double> dimensionScores(final String actorId) {
+        return repository.findByActorIdAndScoreType(actorId, ScoreType.DIMENSION).stream()
+                .collect(Collectors.toMap(s -> s.scopeKey, s -> s.trustScore));
+    }
+
+    /**
+     * Returns the trust score for a specific dimension, or empty if not yet computed.
+     *
+     * @param actorId the actor identity string
+     * @param dimension the dimension name (e.g. {@code "review-thoroughness"})
+     * @return the dimension score in [0.0, 1.0], or empty
+     */
+    public Optional<Double> dimensionScore(final String actorId, final String dimension) {
+        return repository.findByActorIdAndTypeAndKey(actorId, ScoreType.DIMENSION, dimension)
                 .map(s -> s.trustScore);
     }
 
