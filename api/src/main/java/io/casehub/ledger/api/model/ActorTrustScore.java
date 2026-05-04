@@ -55,9 +55,11 @@ public class ActorTrustScore {
     @Column(name = "trust_score")
     public double trustScore;
 
+    /** Bayesian Beta α parameter. Not used for DIMENSION rows (stored as 0.0). */
     @Column(name = "alpha_value")
     public double alpha;
 
+    /** Bayesian Beta β parameter. Not used for DIMENSION rows (stored as 0.0). */
     @Column(name = "beta_value")
     public double beta;
 
