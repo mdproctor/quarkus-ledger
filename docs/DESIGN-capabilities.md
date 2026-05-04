@@ -95,7 +95,7 @@ Three SPI query methods feed capability-aware trust computation:
 | `findAttestationsByAttestorIdAndCapabilityTag(attestorId, tag)` | All verdicts by one actor for one capability (feeds B2 `TrustScoreJob`) |
 
 See `docs/DESIGN.md` (Roadmap → Trust scoring) for the `ActorTrustScore` discriminator model
-that consumes these signals in B2 (#61) and B3 (#62).
+that consumes these signals in B2 (✅ #61) and B3 (✅ #62).
 
 ---
 
@@ -115,6 +115,29 @@ The global score aggregation strategy is pluggable via `GlobalScoreStrategy` (se
 
 `TrustGateService.meetsThreshold(actorId, capabilityTag, minTrust)` queries the CAPABILITY
 score first and falls back to GLOBAL when none exists.
+
+---
+
+## Trust Scoring — Dimension Scores (✅ #62)
+
+Dimension scores capture continuous quality axes — orthogonal to capability scores. Where capability scores answer "can this actor do this task?", dimension scores answer "how well does this actor perform along a specific quality dimension?".
+
+`LedgerAttestation` carries two nullable dimension fields:
+- `trustDimension` — quality axis label (e.g. `"review-thoroughness"`, `"false-positive-rate"`)
+- `dimensionScore` — continuous score in [0.0, 1.0]
+
+Both are nullable. Ordinary attestations omit them; capability and global scoring are unaffected.
+
+For each `(actorId, trustDimension)` pair, `TrustScoreJob` runs a dimension pass (after capability, before global) computing:
+
+```
+score = Σ(weight_i × confidence_i × dimensionScore_i) / Σ(weight_i × confidence_i)
+weight_i = 2^(-ageInDays_i / halfLifeDays)
+```
+
+`TrustScoreComputer.computeDimensionScore()` performs this calculation. Pure time-based decay — no valence asymmetry. Result is stored as a `DIMENSION` row in `actor_trust_score` (`scope_key = dimensionName`). The `alpha_value`/`beta_value` columns are not meaningful for DIMENSION rows (stored as 0.0).
+
+Query surface: `TrustGateService.dimensionScores(actorId)` → `Map<String, Double>`; `TrustGateService.dimensionScore(actorId, dimension)` → `Optional<Double>`.
 
 ---
 
