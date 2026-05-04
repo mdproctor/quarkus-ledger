@@ -147,6 +147,33 @@ public class TrustScoreJob {
                 capabilityScores.put(capabilityTag, capScore);
             }
 
+            // ── Dimension pass ─────────────────────────────────────────────────────────
+            // Group actor's dimension-tagged attestations by dimension in one pass.
+            // Excludes attestations with null dimensionScore — they carry no quality signal.
+            final Map<String, List<LedgerAttestation>> byDimension = actorAttestations.stream()
+                    .filter(a -> a.trustDimension != null && a.dimensionScore != null)
+                    .collect(Collectors.groupingBy(a -> a.trustDimension));
+
+            for (final Map.Entry<String, List<LedgerAttestation>> dimEntry : byDimension.entrySet()) {
+                final String dimension = dimEntry.getKey();
+                final List<LedgerAttestation> dimAttestations = dimEntry.getValue();
+
+                computer.computeDimensionScore(dimAttestations, now).ifPresent(dimScore -> {
+                    final int dimPositive = (int) dimAttestations.stream()
+                            .filter(a -> a.dimensionScore != null && a.dimensionScore > 0.5).count();
+                    final int dimNegative = (int) dimAttestations.stream()
+                            .filter(a -> a.dimensionScore != null && a.dimensionScore <= 0.5).count();
+                    final int dimDecisionCount = (int) dimAttestations.stream()
+                            .map(a -> a.ledgerEntryId).distinct().count();
+
+                    trustRepo.upsert(actorId, ActorTrustScore.ScoreType.DIMENSION, dimension,
+                            actorType, dimScore,
+                            dimDecisionCount, 0,
+                            0.0, 0.0,
+                            dimPositive, dimNegative, now);
+                });
+            }
+
             // ── Global pass ────────────────────────────────────────────────────────────
             final List<LedgerAttestation> selectedAttestations =
                     globalScoreStrategy.selectAttestations(actorAttestations);
