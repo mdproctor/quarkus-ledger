@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -564,5 +565,130 @@ class TrustScoreComputerTest {
                 List.of(d), Map.of(d.id, List.of(a)), now);
 
         assertThat(s0.trustScore()).isCloseTo(s90.trustScore(), within(0.001));
+    }
+
+    // ── Dimension score fixture ───────────────────────────────────────────────
+
+    private LedgerAttestation dimensionAttestation(final UUID entryId, final String dimension,
+            final double dimensionScore) {
+        return dimensionAttestation(entryId, dimension, dimensionScore, now);
+    }
+
+    private LedgerAttestation dimensionAttestation(final UUID entryId, final String dimension,
+            final double dimensionScore, final Instant occurredAt) {
+        final LedgerAttestation a = new LedgerAttestation();
+        a.id = UUID.randomUUID();
+        a.ledgerEntryId = entryId;
+        a.attestorId = "peer";
+        a.attestorType = ActorType.HUMAN;
+        a.verdict = AttestationVerdict.SOUND;
+        a.confidence = 1.0;
+        a.trustDimension = dimension;
+        a.dimensionScore = dimensionScore;
+        a.occurredAt = occurredAt;
+        return a;
+    }
+
+    // ── computeDimensionScore — happy path ────────────────────────────────────
+
+    @Test
+    void computeDimensionScore_singleAttestation_returnsDimensionScore() {
+        final TestLedgerEntry d = decision("actor", now.minus(1, ChronoUnit.DAYS));
+        final LedgerAttestation a = dimensionAttestation(d.id, "thoroughness", 0.8);
+
+        final OptionalDouble result = computer.computeDimensionScore(List.of(a), now);
+
+        assertThat(result).isPresent();
+        assertThat(result.getAsDouble()).isCloseTo(0.8, within(0.001));
+    }
+
+    @Test
+    void computeDimensionScore_twoAttestations_returnsDecayWeightedAverage() {
+        // Both at age 0 → equal weight → simple mean = (0.6 + 0.9) / 2 = 0.75
+        final TestLedgerEntry d = decision("actor", now.minus(1, ChronoUnit.DAYS));
+        final LedgerAttestation a1 = dimensionAttestation(d.id, "thoroughness", 0.6);
+        final LedgerAttestation a2 = dimensionAttestation(d.id, "thoroughness", 0.9);
+
+        final OptionalDouble result = computer.computeDimensionScore(List.of(a1, a2), now);
+
+        assertThat(result).isPresent();
+        assertThat(result.getAsDouble()).isCloseTo(0.75, within(0.01));
+    }
+
+    // ── computeDimensionScore — correctness ───────────────────────────────────
+
+    @Test
+    void computeDimensionScore_olderAttestationHasLowerWeight() {
+        final TestLedgerEntry d = decision("actor", now.minus(10, ChronoUnit.DAYS));
+        final LedgerAttestation recent = dimensionAttestation(d.id, "thoroughness", 1.0, now);
+        final LedgerAttestation old = dimensionAttestation(d.id, "thoroughness", 0.0,
+                now.minus(180, ChronoUnit.DAYS));
+
+        final OptionalDouble result = computer.computeDimensionScore(List.of(recent, old), now);
+
+        assertThat(result).isPresent();
+        // recent (score=1.0) carries more weight than old (score=0.0), so result > 0.5
+        assertThat(result.getAsDouble()).isGreaterThan(0.5);
+    }
+
+    @Test
+    void computeDimensionScore_nullDimensionScore_excluded() {
+        final TestLedgerEntry d = decision("actor", now);
+        final LedgerAttestation withScore = dimensionAttestation(d.id, "thoroughness", 0.7);
+        final LedgerAttestation noScore = new LedgerAttestation();
+        noScore.id = UUID.randomUUID();
+        noScore.ledgerEntryId = d.id;
+        noScore.attestorId = "peer";
+        noScore.attestorType = ActorType.HUMAN;
+        noScore.verdict = AttestationVerdict.SOUND;
+        noScore.confidence = 1.0;
+        noScore.trustDimension = "thoroughness";
+        noScore.dimensionScore = null;
+        noScore.occurredAt = now;
+
+        final OptionalDouble result = computer.computeDimensionScore(List.of(withScore, noScore), now);
+
+        assertThat(result).isPresent();
+        assertThat(result.getAsDouble()).isCloseTo(0.7, within(0.001));
+    }
+
+    // ── computeDimensionScore — robustness ────────────────────────────────────
+
+    @Test
+    void computeDimensionScore_emptyList_returnsEmpty() {
+        final OptionalDouble result = computer.computeDimensionScore(List.of(), now);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void computeDimensionScore_allNullDimensionScores_returnsEmpty() {
+        final TestLedgerEntry d = decision("actor", now);
+        final LedgerAttestation a = new LedgerAttestation();
+        a.id = UUID.randomUUID();
+        a.ledgerEntryId = d.id;
+        a.attestorId = "peer";
+        a.attestorType = ActorType.HUMAN;
+        a.verdict = AttestationVerdict.SOUND;
+        a.confidence = 1.0;
+        a.trustDimension = "thoroughness";
+        a.dimensionScore = null;
+        a.occurredAt = now;
+
+        final OptionalDouble result = computer.computeDimensionScore(List.of(a), now);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void computeDimensionScore_clampedToUnitInterval() {
+        // Pathological case: dimensionScore above 1.0 (guard against bad input)
+        final TestLedgerEntry d = decision("actor", now);
+        final LedgerAttestation a = dimensionAttestation(d.id, "thoroughness", 2.0);
+
+        final OptionalDouble result = computer.computeDimensionScore(List.of(a), now);
+
+        assertThat(result).isPresent();
+        assertThat(result.getAsDouble()).isLessThanOrEqualTo(1.0);
     }
 }
