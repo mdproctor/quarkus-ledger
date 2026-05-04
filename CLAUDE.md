@@ -213,6 +213,11 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test -pl runtime   # QuarkusTest + IT
 JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test -pl api        # pure JUnit 5, no Quarkus runtime
 
+# If you edited api/ and want to run only runtime tests, install api first:
+# (mvn test -pl runtime resolves api from .m2 cache — source changes in api are invisible otherwise)
+JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn install -pl api -q && \
+  JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn test -pl runtime
+
 # Native image build (requires GraalVM)
 JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home \
   mvn package -Pnative -DskipTests
