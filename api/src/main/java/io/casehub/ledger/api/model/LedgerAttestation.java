@@ -11,6 +11,10 @@ import jakarta.persistence.MappedSuperclass;
 
 /**
  * A peer attestation stamped onto a {@link LedgerEntry}.
+ *
+ * <p>Carries either a binary verdict ({@code verdict}) for trust scoring, or a continuous
+ * quality score ({@code dimensionScore} ∈ [0.0, 1.0]) for dimension-labelled scoring when
+ * {@code trustDimension} is set. Both fields may be populated together.
  */
 @MappedSuperclass
 public class LedgerAttestation {
@@ -49,4 +53,14 @@ public class LedgerAttestation {
 
     @Column(name = "capability_tag", nullable = false)
     public String capabilityTag = CapabilityTag.GLOBAL;
+
+    @Column(name = "trust_dimension")
+    public String trustDimension;
+
+    /**
+     * Continuous quality score in [0.0, 1.0]. Only meaningful when {@code trustDimension} is
+     * set. Null on ordinary (binary verdict) attestations.
+     */
+    @Column(name = "dimension_score")
+    public Double dimensionScore;
 }
