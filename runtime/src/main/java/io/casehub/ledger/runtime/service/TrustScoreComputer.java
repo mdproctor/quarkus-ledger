@@ -3,6 +3,7 @@ package io.casehub.ledger.runtime.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.UUID;
 
 import io.casehub.ledger.api.model.AttestationVerdict;
@@ -134,5 +135,44 @@ public final class TrustScoreComputer {
                 trustScore, alpha, beta,
                 decisions.size(), overturnedCount,
                 totalPositive, totalNegative);
+    }
+
+    /**
+     * Computes a decay-weighted average of continuous quality dimension scores.
+     *
+     * <p>
+     * Unlike the Bayesian Beta model used by {@link #compute}, dimension scores are continuous
+     * in [0.0, 1.0]. This method computes {@code Σ(weight_i × dimensionScore_i) / Σ(weight_i)}
+     * where weight decays purely with age (using {@link AttestationVerdict#SOUND} to suppress
+     * the FLAGGED/CHALLENGED valence asymmetry — continuous scores have no verdict polarity).
+     *
+     * <p>
+     * Attestations with {@code null} {@code dimensionScore} are excluded.
+     *
+     * @param dimensionAttestations attestations for one (actor, trustDimension) pair
+     * @param now reference timestamp for age calculation
+     * @return weighted average in [0.0, 1.0], or empty if no valid attestations exist
+     */
+    public OptionalDouble computeDimensionScore(
+            final List<LedgerAttestation> dimensionAttestations,
+            final Instant now) {
+        double weightedSum = 0.0;
+        double totalWeight = 0.0;
+
+        for (final LedgerAttestation a : dimensionAttestations) {
+            if (a.dimensionScore == null) {
+                continue;
+            }
+            final Instant attestedAt = a.occurredAt != null ? a.occurredAt : now;
+            final long ageInDays = Math.max(0, java.time.Duration.between(attestedAt, now).toDays());
+            final double weight = decayFunction.weight(ageInDays, AttestationVerdict.SOUND);
+            weightedSum += weight * a.dimensionScore;
+            totalWeight += weight;
+        }
+
+        if (totalWeight == 0.0) {
+            return OptionalDouble.empty();
+        }
+        return OptionalDouble.of(Math.max(0.0, Math.min(1.0, weightedSum / totalWeight)));
     }
 }
