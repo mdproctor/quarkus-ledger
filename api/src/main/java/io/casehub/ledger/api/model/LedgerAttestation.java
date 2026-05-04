@@ -48,12 +48,10 @@ public class LedgerAttestation {
     @Column(nullable = false)
     public double confidence;
 
-    @Column(name = "occurred_at", nullable = false)
-    public Instant occurredAt;
-
     @Column(name = "capability_tag", nullable = false)
     public String capabilityTag = CapabilityTag.GLOBAL;
 
+    /** Application-defined quality dimension label (e.g. {@code "review-thoroughness"}). Null on ordinary attestations. */
     @Column(name = "trust_dimension")
     public String trustDimension;
 
@@ -63,4 +61,7 @@ public class LedgerAttestation {
      */
     @Column(name = "dimension_score")
     public Double dimensionScore;
+
+    @Column(name = "occurred_at", nullable = false)
+    public Instant occurredAt;
 }
