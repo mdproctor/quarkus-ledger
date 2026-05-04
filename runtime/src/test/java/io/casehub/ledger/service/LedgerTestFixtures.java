@@ -109,4 +109,52 @@ public final class LedgerTestFixtures {
 
         return entry;
     }
+
+    /**
+     * Persist a {@link TestEntry} EVENT with a dimension-tagged attestation.
+     *
+     * <p>Persists the attestation directly via {@link jakarta.persistence.EntityManager}.
+     * {@code verdict} is set to {@link io.casehub.ledger.api.model.AttestationVerdict#SOUND}
+     * for all dimension attestations — the quality measurement is carried by
+     * {@code dimensionScore}, not the verdict.
+     *
+     * @param actorId        the actor who made the decision
+     * @param decisionTime   when the decision occurred
+     * @param trustDimension the dimension label (e.g. "review-thoroughness")
+     * @param dimensionScore continuous quality score in [0.0, 1.0]
+     * @param capabilityTag  the capability tag (or {@link io.casehub.ledger.api.model.CapabilityTag#GLOBAL})
+     * @param repo           entry repository for persisting the EVENT entry
+     * @param em             entity manager for direct attestation persist
+     */
+    public static TestEntry seedDecisionWithDimension(final String actorId, final Instant decisionTime,
+            final String trustDimension, final double dimensionScore,
+            final String capabilityTag,
+            final LedgerEntryRepository repo, final EntityManager em) {
+
+        final TestEntry entry = new TestEntry();
+        entry.subjectId = UUID.randomUUID();
+        entry.sequenceNumber = 1;
+        entry.entryType = LedgerEntryType.EVENT;
+        entry.actorId = actorId;
+        entry.actorType = ActorType.AGENT;
+        entry.actorRole = "Reviewer";
+        entry.occurredAt = decisionTime.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        repo.save(entry);
+
+        final LedgerAttestation att = new LedgerAttestation();
+        att.id = UUID.randomUUID();
+        att.ledgerEntryId = entry.id;
+        att.subjectId = entry.subjectId;
+        att.attestorId = "dimension-assessor";
+        att.attestorType = ActorType.AGENT;
+        att.verdict = io.casehub.ledger.api.model.AttestationVerdict.SOUND;
+        att.confidence = 1.0;
+        att.capabilityTag = capabilityTag;
+        att.trustDimension = trustDimension;
+        att.dimensionScore = dimensionScore;
+        att.occurredAt = decisionTime.plusSeconds(60).truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        em.persist(att);
+
+        return entry;
+    }
 }
