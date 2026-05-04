@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -212,5 +214,99 @@ class TrustGateServiceTest {
         final TrustGateService gate = new TrustGateService(emptyRepo());
 
         assertThat(gate.currentScore("ghost")).isEmpty();
+    }
+
+    private static ActorTrustScoreRepository repoWithDimensions(
+            final String actorId,
+            final Map<String, Double> dimensionScores) {
+        return new StubRepository(null) {
+            @Override
+            public List<ActorTrustScore> findByActorIdAndScoreType(
+                    final String id, final ScoreType type) {
+                if (!actorId.equals(id) || type != ScoreType.DIMENSION) {
+                    return List.of();
+                }
+                return dimensionScores.entrySet().stream().map(e -> {
+                    final ActorTrustScore s = new ActorTrustScore();
+                    s.id = UUID.randomUUID();
+                    s.actorId = actorId;
+                    s.scoreType = ScoreType.DIMENSION;
+                    s.scopeKey = e.getKey();
+                    s.actorType = ActorType.AGENT;
+                    s.trustScore = e.getValue();
+                    s.lastComputedAt = Instant.now();
+                    return s;
+                }).collect(Collectors.toList());
+            }
+
+            @Override
+            public Optional<ActorTrustScore> findByActorIdAndTypeAndKey(
+                    final String id, final ScoreType type, final String scopeKey) {
+                if (!actorId.equals(id) || type != ScoreType.DIMENSION) {
+                    return Optional.empty();
+                }
+                final Double score = dimensionScores.get(scopeKey);
+                if (score == null) {
+                    return Optional.empty();
+                }
+                final ActorTrustScore s = new ActorTrustScore();
+                s.id = UUID.randomUUID();
+                s.actorId = actorId;
+                s.scoreType = ScoreType.DIMENSION;
+                s.scopeKey = scopeKey;
+                s.actorType = ActorType.AGENT;
+                s.trustScore = score;
+                s.lastComputedAt = Instant.now();
+                return Optional.of(s);
+            }
+        };
+    }
+
+    // ── dimensionScores ───────────────────────────────────────────────────────
+
+    @Test
+    void dimensionScores_returnsAllDimensionScores() {
+        final TrustGateService gate = new TrustGateService(
+                repoWithDimensions("actor-d",
+                        Map.of("thoroughness", 0.8, "false-positive-rate", 0.2)));
+
+        final Map<String, Double> scores = gate.dimensionScores("actor-d");
+
+        assertThat(scores).hasSize(2);
+        assertThat(scores.get("thoroughness")).isEqualTo(0.8);
+        assertThat(scores.get("false-positive-rate")).isEqualTo(0.2);
+    }
+
+    @Test
+    void dimensionScores_returnsEmptyMap_whenNoDimensionRows() {
+        final TrustGateService gate = new TrustGateService(emptyRepo());
+
+        assertThat(gate.dimensionScores("ghost")).isEmpty();
+    }
+
+    // ── dimensionScore ────────────────────────────────────────────────────────
+
+    @Test
+    void dimensionScore_returnsScore_whenDimensionExists() {
+        final TrustGateService gate = new TrustGateService(
+                repoWithDimensions("actor-e", Map.of("thoroughness", 0.75)));
+
+        assertThat(gate.dimensionScore("actor-e", "thoroughness")).isPresent();
+        assertThat(gate.dimensionScore("actor-e", "thoroughness").get()).isEqualTo(0.75);
+    }
+
+    @Test
+    void dimensionScore_returnsEmpty_whenDimensionNotFound() {
+        final TrustGateService gate = new TrustGateService(
+                repoWithDimensions("actor-f", Map.of("thoroughness", 0.75)));
+
+        assertThat(gate.dimensionScore("actor-f", "false-positive-rate")).isEmpty();
+    }
+
+    @Test
+    void dimensionScore_returnsEmpty_whenActorUnknown() {
+        final TrustGateService gate = new TrustGateService(emptyRepo());
+
+        assertThat(gate.dimensionScore("ghost", "thoroughness")).isEmpty();
     }
 }
