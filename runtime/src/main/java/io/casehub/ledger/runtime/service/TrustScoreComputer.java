@@ -145,6 +145,8 @@ public final class TrustScoreComputer {
      * in [0.0, 1.0]. This method computes {@code Σ(weight_i × dimensionScore_i) / Σ(weight_i)}
      * where weight decays purely with age (using {@link AttestationVerdict#SOUND} to suppress
      * the FLAGGED/CHALLENGED valence asymmetry — continuous scores have no verdict polarity).
+     * Each attestation's contribution is also weighted by its {@code confidence} in [0.0, 1.0],
+     * consistent with {@link #compute}.
      *
      * <p>
      * Attestations with {@code null} {@code dimensionScore} are excluded.
@@ -165,7 +167,8 @@ public final class TrustScoreComputer {
             }
             final Instant attestedAt = a.occurredAt != null ? a.occurredAt : now;
             final long ageInDays = Math.max(0, java.time.Duration.between(attestedAt, now).toDays());
-            final double weight = decayFunction.weight(ageInDays, AttestationVerdict.SOUND);
+            final double weight = decayFunction.weight(ageInDays, AttestationVerdict.SOUND)
+                    * Math.max(0.0, Math.min(1.0, a.confidence));
             weightedSum += weight * a.dimensionScore;
             totalWeight += weight;
         }
