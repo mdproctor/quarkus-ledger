@@ -163,14 +163,14 @@ casehub-ledger/  (local folder: ~/claude/casehub/ledger)
 │           ├── LedgerRetentionJob.java      — @Scheduled daily retention sweep (EU AI Act Art.12)
 │           ├── DecayFunction.java           — SPI: attestation decay weight (ageInDays, verdict) → weight
 │           ├── ExponentialDecayFunction.java — @DefaultBean: 2^(-age/halfLife) × valence multiplier (FLAGGED slower decay)
-│           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring; delegates decay to DecayFunction (pure Java)
-│           ├── TrustGateService.java        — CDI bean: trust threshold enforcement (meetsThreshold, currentScore)
+│           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (compute) + decay-weighted dimension average (computeDimensionScore); delegates decay to DecayFunction (pure Java)
+│           ├── TrustGateService.java        — CDI bean: trust threshold enforcement (meetsThreshold, currentScore, dimensionScores, dimensionScore)
 │           ├── GlobalScoreStrategy.java          — SPI: select attestations / derive global trust score (ADR 0008)
 │           ├── AllAttestationsGlobalStrategy.java — @DefaultBean: all attestations → global Beta (Option B)
 │           ├── ExplicitGlobalAttestationsStrategy.java — @Alternative: only "*" attestations (Option A)
 │           ├── FrequencyWeightedGlobalStrategy.java — @Alternative: frequency-weighted from capability scores (Option C)
 │           ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
-│           ├── TrustScoreJob.java           — @Scheduled nightly recomputation
+│           ├── TrustScoreJob.java           — @Scheduled nightly recomputation (capability pass → dimension pass → global pass)
 │           └── routing/
 │               ├── TrustScoreRoutingPublisher.java — CDI event dispatch after trust score computation
 │               ├── TrustScoreFullPayload.java      — all current scores (strategy: rebuild ranked list)

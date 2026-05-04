@@ -237,11 +237,30 @@ Prior is Beta(1,1) → score 0.5 with no history. Score = α/(α+β).
 
 `ActorTrustScore` uses a discriminator model keyed by `(actor_id, score_type, scope_key)`.
 `score_type` is `GLOBAL` (classic cross-decision Beta score), `CAPABILITY` (scoped to a
-capability tag — wired by #61), or `DIMENSION` (scoped to a trust dimension — wired by #62).
+capability tag — ✅ #61), or `DIMENSION` (scoped to a trust dimension — ✅ #62).
 `scope_key` is null for GLOBAL rows; the unique constraint uses `NULLS NOT DISTINCT` to
-enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows (unchanged) and CAPABILITY rows (✅ #61 — via `GlobalScoreStrategy` SPI); dimension computation is added by #62.
+enforce one GLOBAL row per actor. `TrustScoreJob` writes GLOBAL rows (via `GlobalScoreStrategy` SPI — ✅ #61), CAPABILITY rows (✅ #61), and DIMENSION rows (✅ #62).
 
 `LedgerAttestation.capabilityTag` (✅ #60) — nullable-free `"*"` sentinel (`CapabilityTag.GLOBAL`) marks cross-capability attestations. Capability-specific attestations carry an explicit tag (e.g. `"security-review"`). Three new SPI query methods allow `TrustScoreJob` (#61) to retrieve per-actor, per-capability attestation history.
+
+### Dimension-Scoped Trust Scores (✅ #62)
+
+Dimension scores answer "along which quality axes does this actor excel?" — orthogonal to capability scores ("what tasks can this actor handle?").
+
+A dimension attestation carries a continuous `dimensionScore` ∈ [0.0, 1.0] alongside the binary `verdict`. `trustDimension` names the quality axis (e.g. `"review-thoroughness"`, `"false-positive-rate"`). Both fields are nullable — ordinary attestations omit them.
+
+**Computation model:** For each `(actorId, trustDimension)` pair, `TrustScoreJob` computes a decay-weighted average:
+```
+score = Σ(weight_i × confidence_i × dimensionScore_i) / Σ(weight_i × confidence_i)
+weight_i = 2^(-ageInDays_i / halfLifeDays)
+```
+Pure time-based decay (no valence asymmetry) — `TrustScoreComputer.computeDimensionScore()`. Stored as `DIMENSION` rows in `actor_trust_score` (`scope_key = dimensionName`). The `alpha_value` and `beta_value` columns are not meaningful for DIMENSION rows (stored as 0.0). The dimension pass runs after the capability pass and before the global pass in `TrustScoreJob`.
+
+**Audit counters:** `attestation_positive` counts dimension attestations with `dimensionScore >= 0.5`; `attestation_negative` counts `dimensionScore < 0.5`. These do not affect `trustScore` but appear in reporting.
+
+**Query surface:** `TrustGateService.dimensionScores(actorId)` → `Map<String, Double>` (all dimensions for an actor). `TrustGateService.dimensionScore(actorId, dimension)` → `Optional<Double>` (one specific dimension).
+
+**Application responsibility:** dimension names are defined and stamped by consuming extensions — this library provides the storage and computation infrastructure only.
 
 **EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
@@ -293,4 +312,5 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **capabilityTag on LedgerAttestation** | ✅ Done | `"*"` sentinel (no NULL); `CapabilityTag.GLOBAL` constant in api module; 3 new SPI query methods (blocking + reactive parity); V1000 schema updated; 9 IT + 3 unit tests. Closes #60. |
 | **Capability-scoped trust scores** | ✅ Done | `GlobalScoreStrategy` SPI (3 implementations: all-attestations default, explicit-global, frequency-weighted); `TrustScoreJob` capability pass (O(M) single-pass); `TrustGateService` Phase 2 (capability-then-global fallback). ADR 0008. Closes #61. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
+| **Dimension-scoped trust scores** | ✅ Done | `trustDimension` + `dimensionScore` on `LedgerAttestation`; `TrustScoreComputer.computeDimensionScore()` (decay-weighted average); dimension pass in `TrustScoreJob`; `TrustGateService.dimensionScores()` + `dimensionScore()`; 26 new tests (unit + IT + E2E). Closes #62. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |
