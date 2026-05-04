@@ -159,10 +159,11 @@ public class TrustScoreJob {
                 final List<LedgerAttestation> dimAttestations = dimEntry.getValue();
 
                 computer.computeDimensionScore(dimAttestations, now).ifPresent(dimScore -> {
+                    // scores >= 0.5 count as positive; < 0.5 count as negative; 0.5 (neutral) maps to positive
                     final int dimPositive = (int) dimAttestations.stream()
-                            .filter(a -> a.dimensionScore != null && a.dimensionScore > 0.5).count();
+                            .filter(a -> a.dimensionScore >= 0.5).count();
                     final int dimNegative = (int) dimAttestations.stream()
-                            .filter(a -> a.dimensionScore != null && a.dimensionScore <= 0.5).count();
+                            .filter(a -> a.dimensionScore < 0.5).count();
                     final int dimDecisionCount = (int) dimAttestations.stream()
                             .map(a -> a.ledgerEntryId).distinct().count();
 
