@@ -55,6 +55,8 @@ CREATE TABLE ledger_attestation (
     evidence         TEXT,
     confidence       DOUBLE PRECISION NOT NULL DEFAULT 1.0,
     capability_tag   VARCHAR(255)     NOT NULL DEFAULT '*',
+    trust_dimension  VARCHAR(255),
+    dimension_score  DOUBLE PRECISION,
     occurred_at      TIMESTAMP       NOT NULL,
     CONSTRAINT pk_ledger_attestation PRIMARY KEY (id),
     CONSTRAINT fk_attestation_entry FOREIGN KEY (ledger_entry_id) REFERENCES ledger_entry (id)
@@ -64,6 +66,7 @@ CREATE INDEX idx_ledger_attestation_entry     ON ledger_attestation (ledger_entr
 CREATE INDEX idx_ledger_attestation_subject   ON ledger_attestation (subject_id);
 CREATE INDEX idx_ledger_attestation_capability ON ledger_attestation (ledger_entry_id, capability_tag);
 CREATE INDEX idx_ledger_attestation_actor_cap  ON ledger_attestation (attestor_id, capability_tag);
+CREATE INDEX idx_ledger_attestation_dimension ON ledger_attestation (attestor_id, trust_dimension);
 
 CREATE TABLE ledger_merkle_frontier (
     id          UUID        NOT NULL,
