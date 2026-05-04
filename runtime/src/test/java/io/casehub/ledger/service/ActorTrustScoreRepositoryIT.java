@@ -151,4 +151,77 @@ class ActorTrustScoreRepositoryIT {
 
         assertThat(repo.findByActorId(actorId).get().globalTrustScore).isEqualTo(0.42);
     }
+
+    // ── DIMENSION rows ────────────────────────────────────────────────────────
+
+    @Test
+    @Transactional
+    void upsert_dimension_storesDimensionRow() {
+        final String actorId = "actor-dim-" + System.nanoTime();
+        repo.upsert(actorId, ScoreType.DIMENSION, "thoroughness", ActorType.AGENT,
+                0.78, 5, 0, 0.0, 0.0, 4, 1, Instant.now());
+
+        final var result = repo.findByActorIdAndTypeAndKey(actorId, ScoreType.DIMENSION, "thoroughness");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().trustScore).isEqualTo(0.78);
+        assertThat(result.get().scoreType).isEqualTo(ScoreType.DIMENSION);
+        assertThat(result.get().scopeKey).isEqualTo("thoroughness");
+    }
+
+    @Test
+    @Transactional
+    void upsert_dimension_isIdempotent() {
+        final String actorId = "actor-dim-idem-" + System.nanoTime();
+        repo.upsert(actorId, ScoreType.DIMENSION, "thoroughness", ActorType.AGENT,
+                0.5, 2, 0, 0.0, 0.0, 2, 0, Instant.now());
+        repo.upsert(actorId, ScoreType.DIMENSION, "thoroughness", ActorType.AGENT,
+                0.9, 10, 0, 0.0, 0.0, 10, 0, Instant.now());
+
+        final var results = repo.findByActorIdAndScoreType(actorId, ScoreType.DIMENSION);
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).trustScore).isEqualTo(0.9);
+    }
+
+    @Test
+    @Transactional
+    void findByActorIdAndScoreType_dimension_returnsAllDimensionRows() {
+        final String actorId = "actor-dim-multi-" + System.nanoTime();
+        repo.upsert(actorId, ScoreType.DIMENSION, "thoroughness", ActorType.AGENT,
+                0.8, 5, 0, 0.0, 0.0, 5, 0, Instant.now());
+        repo.upsert(actorId, ScoreType.DIMENSION, "false-positive-rate", ActorType.AGENT,
+                0.1, 3, 2, 0.0, 0.0, 1, 2, Instant.now());
+
+        final var results = repo.findByActorIdAndScoreType(actorId, ScoreType.DIMENSION);
+
+        assertThat(results).hasSize(2);
+        assertThat(results).extracting(s -> s.scopeKey)
+                .containsExactlyInAnyOrder("thoroughness", "false-positive-rate");
+    }
+
+    @Test
+    @Transactional
+    void findByActorId_global_notAffectedByDimensionRows() {
+        final String actorId = "actor-dim-isolation-" + System.nanoTime();
+        repo.upsert(actorId, ScoreType.GLOBAL, null, ActorType.AGENT,
+                0.7, 5, 0, 2.5, 1.0, 5, 0, Instant.now());
+        repo.upsert(actorId, ScoreType.DIMENSION, "thoroughness", ActorType.AGENT,
+                0.9, 3, 0, 0.0, 0.0, 3, 0, Instant.now());
+
+        final var global = repo.findByActorId(actorId);
+        assertThat(global).isPresent();
+        assertThat(global.get().scoreType).isEqualTo(ScoreType.GLOBAL);
+        assertThat(global.get().trustScore).isEqualTo(0.7);
+    }
+
+    @Test
+    @Transactional
+    void findByActorIdAndTypeAndKey_dimension_wrongKey_returnsEmpty() {
+        final String actorId = "actor-dim-wrongkey-" + System.nanoTime();
+        repo.upsert(actorId, ScoreType.DIMENSION, "thoroughness", ActorType.AGENT,
+                0.8, 5, 0, 0.0, 0.0, 5, 0, Instant.now());
+
+        assertThat(repo.findByActorIdAndTypeAndKey(actorId, ScoreType.DIMENSION, "false-positive-rate"))
+                .isEmpty();
+    }
 }
