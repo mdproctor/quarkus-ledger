@@ -189,6 +189,7 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `trust-score.eigentrust-alpha` | `0.15` | EigenTrust dampening constant α — higher values anchor the eigenvector closer to the pre-trusted set |
 | `trust-score.pre-trusted-actors` | (empty) | Comma-separated actor IDs used as the EigenTrust seed; uniform distribution used when empty |
 | `trust-score.schedule` | `24h` | Recomputation interval as a Quarkus duration string; reduce for high-interaction agent mesh deployments |
+| `trust-score.aggregation-strategy` | `WEIGHTED_MAJORITY` | How multiple attestations on the same entry are resolved before trust scoring (`WEIGHTED_MAJORITY`, `UNANIMOUS_REQUIRED`, `FIRST_ATTESTOR`) |
 
 **Retention sub-config (`quarkus.ledger.retention.*`):**
 
@@ -262,6 +263,17 @@ Pure time-based decay (no valence asymmetry) — `TrustScoreComputer.computeDime
 
 **Application responsibility:** dimension names are defined and stamped by consuming extensions — this library provides the storage and computation infrastructure only.
 
+### Attestation Aggregation (✅ #57)
+
+When multiple attestors assess the same ledger entry, `AttestationAggregator` collapses each `(entryId, capabilityTag)` group into a single consensus verdict before trust scoring. This prevents a low-confidence minority attestation from dragging actor scores disproportionately.
+
+**Strategies** (configured via `trust-score.aggregation-strategy`):
+- `WEIGHTED_MAJORITY` (default) — confidence-weighted vote; winner = side with higher total weighted confidence; aggregated confidence = normalised margin
+- `UNANIMOUS_REQUIRED` — any FLAGGED/CHALLENGED attestation produces FLAGGED consensus regardless of count; confidence = highest-confidence dissenter
+- `FIRST_ATTESTOR` — use the first attestation only (regression compatibility)
+
+The dimension pass always uses raw attestations — continuous `dimensionScore` values are not subject to verdict aggregation.
+
 **EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
 **Privacy / pseudonymisation** — ✅ Done. `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, built-in UUID tokenisation, `LedgerErasureService` for GDPR Art.17 requests. See `docs/PRIVACY.md`.
@@ -313,4 +325,5 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Capability-scoped trust scores** | ✅ Done | `GlobalScoreStrategy` SPI (3 implementations: all-attestations default, explicit-global, frequency-weighted); `TrustScoreJob` capability pass (O(M) single-pass); `TrustGateService` Phase 2 (capability-then-global fallback). ADR 0008. Closes #61. |
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **Dimension-scoped trust scores** | ✅ Done | `trustDimension` + `dimensionScore` on `LedgerAttestation`; `TrustScoreComputer.computeDimensionScore()` (decay-weighted average); dimension pass in `TrustScoreJob`; `TrustGateService.dimensionScores()` + `dimensionScore()`; 26 new tests (unit + IT + E2E). Closes #62. |
+| **Multi-attestation aggregation** | ✅ Done | `AttestationAggregator` CDI bean (WEIGHTED_MAJORITY / UNANIMOUS_REQUIRED / FIRST_ATTESTOR); `TrustScoreJob` aggregates per (entryId, capabilityTag) before capability and global passes; `trust-score.aggregation-strategy` config key. 17 unit + 4 IT tests. Closes #57. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |

@@ -324,6 +324,24 @@ public interface LedgerConfig {
          */
         @WithDefault("24h")
         String schedule();
+
+        /**
+         * Strategy for aggregating multiple attestations on the same ledger entry before
+         * trust score computation. Aggregation reduces noise when peers disagree on a decision.
+         *
+         * <ul>
+         * <li>{@code WEIGHTED_MAJORITY} (default) — confidence-weighted vote; the side with
+         * the higher total weighted confidence wins.</li>
+         * <li>{@code UNANIMOUS_REQUIRED} — any FLAGGED/CHALLENGED attestation produces a
+         * FLAGGED consensus.</li>
+         * <li>{@code FIRST_ATTESTOR} — uses only the first attestation; equivalent to the
+         * pre-aggregation behaviour (single-attestation pass-through).</li>
+         * </ul>
+         *
+         * @return the aggregation strategy (default {@code WEIGHTED_MAJORITY})
+         */
+        @WithDefault("WEIGHTED_MAJORITY")
+        io.casehub.ledger.runtime.service.AttestationAggregator.Strategy aggregationStrategy();
     }
 
     /** Actor identity pseudonymisation settings. */
