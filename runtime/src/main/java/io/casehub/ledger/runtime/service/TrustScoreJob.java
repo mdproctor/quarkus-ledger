@@ -2,7 +2,6 @@ package io.casehub.ledger.runtime.service;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -63,6 +62,9 @@ public class TrustScoreJob {
     GlobalScoreStrategy globalScoreStrategy;
 
     @Inject
+    AttestationAggregator attestationAggregator;
+
+    @Inject
     @LedgerPersistenceUnit
     EntityManager em;
 
@@ -108,6 +110,7 @@ public class TrustScoreJob {
                 .map(e -> e.id)
                 .collect(Collectors.toSet());
         final Map<UUID, List<LedgerAttestation>> attestationsByEntry = ledgerRepo.findAttestationsForEntries(entryIds);
+        final AttestationAggregator.Strategy aggregationStrategy = config.trustScore().aggregationStrategy();
 
         for (final Map.Entry<String, List<LedgerEntry>> actorEntry : byActor.entrySet()) {
             final String actorId = actorEntry.getKey();
@@ -118,15 +121,20 @@ public class TrustScoreJob {
                     .findFirst()
                     .orElse(ActorType.HUMAN);
 
-            // Collect all attestations for this actor's decisions
+            // Collect all attestations for this actor's decisions (used by the dimension pass and derive())
             final List<LedgerAttestation> actorAttestations = new ArrayList<>();
             for (final LedgerEntry decision : decisions) {
                 actorAttestations.addAll(attestationsByEntry.getOrDefault(decision.id, List.of()));
             }
 
+            // Build aggregated view for capability and global passes.
+            // Dimension pass uses the original actorAttestations (dimensionScore is continuous, not verdict-based).
+            final List<LedgerAttestation> effectiveAttestations =
+                    buildEffectiveAttestations(decisions, attestationsByEntry, aggregationStrategy);
+
             // ── Capability pass ────────────────────────────────────────────────────────
-            // Group actor's capability-specific attestations by (capabilityTag → entryId) in one pass
-            final Map<String, Map<UUID, List<LedgerAttestation>>> byCapabilityAndEntry = actorAttestations.stream()
+            // Group aggregated attestations by (capabilityTag → entryId) in one pass
+            final Map<String, Map<UUID, List<LedgerAttestation>>> byCapabilityAndEntry = effectiveAttestations.stream()
                     .filter(a -> !CapabilityTag.GLOBAL.equals(a.capabilityTag))
                     .collect(Collectors.groupingBy(
                             a -> a.capabilityTag,
@@ -177,18 +185,16 @@ public class TrustScoreJob {
             }
 
             // ── Global pass ────────────────────────────────────────────────────────────
-            final List<LedgerAttestation> selectedAttestations =
-                    globalScoreStrategy.selectAttestations(actorAttestations);
-            final Set<LedgerAttestation> selectedSet = new HashSet<>(selectedAttestations);
-
-            final Map<UUID, List<LedgerAttestation>> selectedByEntry = attestationsByEntry.entrySet().stream()
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            e -> e.getValue().stream()
-                                    .filter(selectedSet::contains)
-                                    .collect(Collectors.toList())));
+            // selectAttestations filters by capabilityTag/etc. — synthetics preserve all fields.
+            // Group directly by ledgerEntryId rather than using reference-equality set,
+            // since effectiveAttestations are synthetic instances not in attestationsByEntry.
+            final List<LedgerAttestation> selectedEffective =
+                    globalScoreStrategy.selectAttestations(effectiveAttestations);
+            final Map<UUID, List<LedgerAttestation>> selectedByEntry = selectedEffective.stream()
+                    .collect(Collectors.groupingBy(a -> a.ledgerEntryId));
 
             final TrustScoreComputer.ActorScore globalScore = computer.compute(decisions, selectedByEntry, now);
+            // derive() receives original actorAttestations — capability frequency counts stay accurate
             final TrustScoreComputer.ActorScore finalScore =
                     globalScoreStrategy.derive(capabilityScores, actorAttestations)
                             .orElse(globalScore);
@@ -210,6 +216,56 @@ public class TrustScoreJob {
                 .peek(em::detach)
                 .collect(Collectors.toList());
         routingPublisher.publish(currentScores, previousSnapshot, now);
+    }
+
+    /**
+     * Aggregates attestations per (entryId, capabilityTag) group and returns the flattened result.
+     * Each group is reduced to a single synthetic {@link LedgerAttestation} carrying the consensus
+     * verdict and aggregated confidence. The dimension pass is excluded — it uses raw attestations.
+     */
+    private List<LedgerAttestation> buildEffectiveAttestations(
+            final List<LedgerEntry> decisions,
+            final Map<UUID, List<LedgerAttestation>> attestationsByEntry,
+            final AttestationAggregator.Strategy strategy) {
+        final List<LedgerAttestation> result = new ArrayList<>();
+        for (final LedgerEntry decision : decisions) {
+            final List<LedgerAttestation> entryAttestations = attestationsByEntry.getOrDefault(decision.id, List.of());
+            if (entryAttestations.isEmpty()) {
+                continue;
+            }
+            // Aggregate per capabilityTag — different capability scopes are independent signals
+            final Map<String, List<LedgerAttestation>> byCapTag = entryAttestations.stream()
+                    .collect(Collectors.groupingBy(a -> a.capabilityTag != null ? a.capabilityTag : CapabilityTag.GLOBAL));
+            for (final List<LedgerAttestation> group : byCapTag.values()) {
+                attestationAggregator.aggregate(group, strategy)
+                        .map(agg -> toSynthetic(agg, group.get(0)))
+                        .ifPresent(result::add);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Builds a non-persisted synthetic {@link LedgerAttestation} from an aggregated result.
+     * {@code id}, {@code attestorId}, and {@code attestorType} are intentionally left null —
+     * the synthetic is never written to the database and is not attributed to a single attestor.
+     * {@code trustDimension} and {@code dimensionScore} are copied for structural completeness
+     * but are never read from synthetics; the dimension pass always uses raw attestations.
+     */
+    private static LedgerAttestation toSynthetic(
+            final AttestationAggregator.AggregatedAttestation agg,
+            final LedgerAttestation template) {
+        final LedgerAttestation synthetic = new LedgerAttestation();
+        synthetic.ledgerEntryId = template.ledgerEntryId;
+        synthetic.subjectId = template.subjectId;
+        synthetic.capabilityTag = template.capabilityTag;
+        synthetic.trustDimension = template.trustDimension;
+        synthetic.dimensionScore = template.dimensionScore;
+        synthetic.verdict = agg.consensusVerdict();
+        synthetic.confidence = agg.aggregatedConfidence();
+        synthetic.occurredAt = template.occurredAt;
+        synthetic.attestorRole = template.attestorRole;
+        return synthetic;
     }
 
     private void runEigenTrustPass(

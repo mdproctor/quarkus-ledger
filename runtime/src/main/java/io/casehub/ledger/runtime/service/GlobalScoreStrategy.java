@@ -30,11 +30,16 @@ public interface GlobalScoreStrategy {
     /**
      * Select which attestations feed the global Beta model.
      *
-     * @param all all attestations for the actor's decisions (may be empty)
-     * @return a subset of {@code all} using the same object references — implementations must
-     *         not construct new {@link LedgerAttestation} instances. The caller uses reference
-     *         equality ({@link java.util.HashSet}) to map the result back to entry buckets;
-     *         returning new instances would silently produce an empty global Beta model.
+     * <p>
+     * The input list contains aggregated synthetic {@link LedgerAttestation} instances produced by
+     * {@link AttestationAggregator} — one per {@code (entryId, capabilityTag)} group. The caller
+     * groups the returned list by {@code ledgerEntryId} to build the per-entry attestation map
+     * for {@link TrustScoreComputer#compute}. Implementations may filter by any field
+     * ({@code capabilityTag}, {@code verdict}, etc.); all fields on the input instances are set.
+     *
+     * @param all all aggregated attestations for the actor's decisions (may be empty)
+     * @return a subset of {@code all} to use for the global Beta computation; return the
+     *         full list to include all attestations, or an empty list to skip global scoring
      */
     List<LedgerAttestation> selectAttestations(List<LedgerAttestation> all);
 
