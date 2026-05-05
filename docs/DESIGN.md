@@ -192,6 +192,8 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `trust-score.pre-trusted-actors` | (empty) | Comma-separated actor IDs used as the EigenTrust seed; uniform distribution used when empty |
 | `trust-score.schedule` | `24h` | Recomputation interval as a Quarkus duration string; reduce for high-interaction agent mesh deployments |
 | `trust-score.aggregation-strategy` | `WEIGHTED_MAJORITY` | How multiple attestations on the same entry are resolved before trust scoring (`WEIGHTED_MAJORITY`, `UNANIMOUS_REQUIRED`, `FIRST_ATTESTOR`) |
+| `health.enabled` | `true` | Enable scheduled audit health checks (sequence gap detection + reconciliation) |
+| `health.check-interval` | `1h` | Interval between health check runs as a Quarkus duration string (e.g. `30m`, `2h`) |
 
 **Retention sub-config (`quarkus.ledger.retention.*`):**
 
@@ -278,6 +280,10 @@ The dimension pass always uses raw attestations — continuous `dimensionScore` 
 
 **EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
+**Audit health checks (✅ #56)** — `LedgerHealthJob` runs on a configurable schedule (default 1h) and fires `LedgerGapDetected` CDI events for anomalies:
+- *Sequence gap detection*: for each subject, verifies that sequence numbers are contiguous (`COUNT(e) == MAX(seqNum) - MIN(seqNum) + 1`). A gap indicates entries were deleted after write.
+- *Reconciliation*: consumers register `LedgerReconciliationSource` SPI implementations to compare domain entity counts against ledger entry counts. Gated by `source.isActive()` — inactive sources are skipped. Fired events carry the subject type, expected count, actual count, and `GapType` (`SEQUENCE_GAP` or `RECONCILIATION_MISMATCH`). No data is modified; alerting is delegated to observers.
+
 **Privacy / pseudonymisation** — ✅ Done. `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs, built-in UUID tokenisation, `LedgerErasureService` for GDPR Art.17 requests. See `docs/PRIVACY.md`.
 
 ### Medium-term
@@ -328,5 +334,6 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **Dimension-scoped trust scores** | ✅ Done | `trustDimension` + `dimensionScore` on `LedgerAttestation`; `TrustScoreComputer.computeDimensionScore()` (decay-weighted average); dimension pass in `TrustScoreJob`; `TrustGateService.dimensionScores()` + `dimensionScore()`; 26 new tests (unit + IT + E2E). Closes #62. |
 | **Multi-attestation aggregation** | ✅ Done | `AttestationAggregator` CDI bean (WEIGHTED_MAJORITY / UNANIMOUS_REQUIRED / FIRST_ATTESTOR); `TrustScoreJob` aggregates per (entryId, capabilityTag) before capability and global passes; `trust-score.aggregation-strategy` config key. 17 unit + 4 IT tests. Closes #57. |
+| **Ledger health checks** | ✅ Done | `LedgerHealthJob` (scheduled gap detection + reconciliation); `LedgerReconciliationSource` SPI; `LedgerGapDetected` CDI event; `GapType` enum; `health.enabled` + `health.check-interval` config. 7 IT tests. Closes #56. |
 | **@ProvenanceCapture interceptor** | ✅ Done | `@ProvenanceCapture` interceptor binding + `ProvenanceCaptureInterceptor`; `ProvenanceCaptureEnricher` auto-attaches `ProvenanceSupplement` via existing enricher pipeline; `ProvenanceContext` ThreadLocal stack (nesting, exception-safe, `agentConfigHash` preserved); `@SourceEntityId` parameter annotation. 7 IT tests. Closes #59. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |

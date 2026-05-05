@@ -99,6 +99,13 @@ public interface LedgerConfig {
      */
     DecayConfig decay();
 
+    /**
+     * Audit health check settings — sequence gap detection and reconciliation.
+     *
+     * @return the health sub-configuration
+     */
+    HealthConfig health();
+
     /** Merkle Mountain Range and external publishing settings. */
     interface MerkleConfig {
 
@@ -392,5 +399,29 @@ public interface LedgerConfig {
          */
         @WithDefault("0.5")
         double flaggedPersistenceMultiplier();
+    }
+
+    /** Audit health check settings. */
+    interface HealthConfig {
+
+        /**
+         * When {@code true}, the health job runs at the configured interval checking for
+         * sequence gaps and reconciliation mismatches. On by default — operators who do not
+         * want automatic health checks can disable this without removing the extension.
+         *
+         * @return {@code true} if health checks are enabled (default)
+         */
+        @WithDefault("true")
+        boolean enabled();
+
+        /**
+         * Interval between health check runs expressed as a Quarkus duration string
+         * (e.g. {@code "1h"}, {@code "30m"}). Reduce for high-frequency write workloads
+         * where gaps should be caught quickly.
+         *
+         * @return check interval (default {@code "1h"})
+         */
+        @WithDefault("1h")
+        String checkInterval();
     }
 }
