@@ -32,6 +32,8 @@ public interface ReactiveLedgerEntryRepository {
 
     Uni<List<LedgerEntry>> findBySubjectId(UUID subjectId);
 
+    Uni<List<LedgerEntry>> findBySubjectIdAndTimeRange(UUID subjectId, Instant from, Instant to);
+
     Uni<Optional<LedgerEntry>> findLatestBySubjectId(UUID subjectId);
 
     Uni<Optional<LedgerEntry>> findEntryById(UUID id);
