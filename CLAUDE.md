@@ -138,55 +138,75 @@ casehub-ledger/  (local folder: ~/claude/casehub/ledger)
 │       │   ├── LedgerAttestation.java       — peer attestation entity
 │       │   ├── ActorTrustScore.java         — trust score entity; discriminator model (GLOBAL|CAPABILITY|DIMENSION) × scope_key
 │       │   ├── LedgerMerkleFrontier.java    — Merkle frontier node entity (log₂(N) rows per subject)
-│       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION
-│       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM
-│       │   ├── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED
+│       │   ├── LedgerEntryArchiveRecord.java — archive snapshot record for retention-deleted entries (V1003)
+│       │   ├── LedgerEntryType.java         — COMMAND | EVENT | ATTESTATION (api module)
+│       │   ├── ActorType.java               — HUMAN | AGENT | SYSTEM (api module)
+│       │   ├── AttestationVerdict.java      — SOUND | FLAGGED | ENDORSED | CHALLENGED (api module)
 │       │   ├── CapabilityTag.java           — sentinel constants: GLOBAL = "*" for cross-capability attestations (api module)
-│       │   └── ActorIdentity.java           — token↔identity mapping for pseudonymisation
+│       │   ├── ActorIdentity.java           — token↔identity mapping for pseudonymisation
+│       │   └── supplement/
+│       │       ├── LedgerSupplement.java        — abstract base (JOINED inheritance)
+│       │       ├── ComplianceSupplement.java    — GDPR Art.22, governance fields
+│       │       ├── ProvenanceSupplement.java    — workflow source entity; agentConfigHash for LLM config drift detection
+│       │       └── LedgerSupplementSerializer.java — JSON serialiser for supplementJson
 │       ├── repository/
 │       │   ├── LedgerEntryRepository.java        — blocking SPI (uses subjectId); findById → findEntryById
 │       │   ├── ReactiveLedgerEntryRepository.java — reactive SPI (Uni<T> return types)
 │       │   ├── ActorTrustScoreRepository.java     — SPI
 │       │   └── jpa/                              — JPA implementations (EntityManager-based)
-│       └── service/
-│           ├── LedgerEntryEnricher.java         — SPI: pluggable @PrePersist enrichment pipeline
-│           ├── TraceIdEnricher.java             — auto-populates traceId from active OTel span
-│           ├── LedgerTraceListener.java         — @EntityListeners runner: iterates LedgerEntryEnricher pipeline, non-fatal
-│           ├── LedgerMerkleTree.java        — Merkle Mountain Range algorithm (pure static)
-│           ├── LedgerVerificationService.java — treeRoot / inclusionProof / verify (CDI bean)
-│           ├── LedgerMerklePublisher.java   — Ed25519 signed tlog-checkpoint (opt-in CDI bean)
-│           ├── model/
-│           │   ├── InclusionProof.java       — Merkle inclusion proof value type
-│           │   └── ProofStep.java            — single sibling node in a proof path
-│           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
-│           ├── RetentionEligibilityChecker.java — pure utility: checks retention window eligibility per entry
-│           ├── LedgerRetentionJob.java      — @Scheduled daily retention sweep (EU AI Act Art.12)
-│           ├── DecayFunction.java           — SPI: attestation decay weight (ageInDays, verdict) → weight
-│           ├── ExponentialDecayFunction.java — @DefaultBean: 2^(-age/halfLife) × valence multiplier (FLAGGED slower decay)
-│           ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (compute) + decay-weighted dimension average (computeDimensionScore); delegates decay to DecayFunction (pure Java)
-│           ├── TrustGateService.java        — CDI bean: trust threshold enforcement (meetsThreshold, currentScore, dimensionScores, dimensionScore)
-│           ├── GlobalScoreStrategy.java          — SPI: select attestations / derive global trust score (ADR 0008)
-│           ├── AllAttestationsGlobalStrategy.java — @DefaultBean: all attestations → global Beta (Option B)
-│           ├── ExplicitGlobalAttestationsStrategy.java — @Alternative: only "*" attestations (Option A)
-│           ├── FrequencyWeightedGlobalStrategy.java — @Alternative: frequency-weighted from capability scores (Option C)
-│           ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
-│           ├── TrustScoreJob.java           — @Scheduled nightly recomputation (capability pass → dimension pass → global pass)
-│           └── routing/
-│               ├── TrustScoreRoutingPublisher.java — CDI event dispatch after trust score computation
-│               ├── TrustScoreFullPayload.java      — all current scores (strategy: rebuild ranked list)
-│               ├── TrustScoreDeltaPayload.java     — changed actors only (strategy: incremental cache)
-│               ├── TrustScoreComputedAt.java       — lightweight notification (strategy: signal only)
-│               └── TrustScoreDelta.java            — single actor score change value type
+│       ├── service/
+│       │   ├── LedgerEntryEnricher.java         — SPI: pluggable @PrePersist enrichment pipeline
+│       │   ├── TraceIdEnricher.java             — auto-populates traceId from active OTel span
+│       │   ├── OtelTraceIdProvider.java         — OTel span reader for TraceIdEnricher
+│       │   ├── LedgerTraceListener.java         — @EntityListeners runner: iterates LedgerEntryEnricher pipeline, non-fatal
+│       │   ├── LedgerMerkleTree.java            — Merkle Mountain Range algorithm (pure static)
+│       │   ├── LedgerVerificationService.java   — treeRoot / inclusionProof / verify (CDI bean)
+│       │   ├── LedgerMerklePublisher.java       — Ed25519 signed tlog-checkpoint (opt-in CDI bean)
+│       │   ├── LedgerProvExportService.java      — W3C PROV-DM JSON-LD export (CDI bean)
+│       │   ├── LedgerProvSerializer.java         — PROV-DM serialisation utility
+│       │   ├── LedgerEntryArchiver.java          — archive record JSON serialisation for retention
+│       │   ├── model/
+│       │   │   ├── InclusionProof.java       — Merkle inclusion proof value type
+│       │   │   └── ProofStep.java            — single sibling node in a proof path
+│       │   ├── RetentionEligibilityChecker.java — pure utility: checks retention window eligibility per entry
+│       │   ├── LedgerRetentionJob.java      — @Scheduled daily retention sweep (EU AI Act Art.12)
+│       │   ├── DecayFunction.java           — SPI: attestation decay weight (ageInDays, verdict) → weight
+│       │   ├── ExponentialDecayFunction.java — @DefaultBean: 2^(-age/halfLife) × valence multiplier (FLAGGED slower decay)
+│       │   ├── TrustScoreComputer.java      — Bayesian Beta trust scoring (compute) + decay-weighted dimension average (computeDimensionScore); delegates decay to DecayFunction (pure Java)
+│       │   ├── TrustGateService.java        — CDI bean: trust threshold enforcement (meetsThreshold, currentScore, dimensionScores, dimensionScore)
+│       │   ├── GlobalScoreStrategy.java          — SPI: select attestations / derive global trust score (ADR 0008)
+│       │   ├── AllAttestationsGlobalStrategy.java — @DefaultBean: all attestations → global Beta (Option B)
+│       │   ├── ExplicitGlobalAttestationsStrategy.java — @Alternative: only "*" attestations (Option A)
+│       │   ├── FrequencyWeightedGlobalStrategy.java — @Alternative: frequency-weighted from capability scores (Option C)
+│       │   ├── AttestationAggregator.java   — CDI bean: collapses (entryId, capabilityTag) attestation groups into consensus verdict (WEIGHTED_MAJORITY | UNANIMOUS_REQUIRED | FIRST_ATTESTOR)
+│       │   ├── EigenTrustComputer.java      — EigenTrust power iteration, transitive global trust scores (pure Java)
+│       │   ├── TrustScoreJob.java           — @Scheduled nightly recomputation (capability pass → dimension pass → global pass)
+│       │   ├── LedgerHealthJob.java         — @Scheduled gap detection + reconciliation (configurable interval, default 1h)
+│       │   ├── LedgerReconciliationSource.java — SPI: consumers implement to compare domain entity counts vs ledger counts
+│       │   ├── LedgerGapDetected.java       — CDI event fired on sequence gap or reconciliation mismatch
+│       │   ├── GapType.java                 — SEQUENCE_GAP | RECONCILIATION_MISMATCH
+│       │   ├── LedgerComplianceReportService.java — CDI bean: reportForActor / reportForSubject → ComplianceReport
+│       │   ├── ComplianceReport.java        — value type: DecisionRecord list + Merkle anchor + format(ReportFormat)
+│       │   ├── DecisionRecord.java          — single automated decision entry in a compliance report
+│       │   ├── ReportFormat.java            — PLAIN_JSON | JSON_LD | CSV
+│       │   ├── routing/
+│       │   │   ├── TrustScoreRoutingPublisher.java — CDI event dispatch after trust score computation
+│       │   │   ├── TrustScoreFullPayload.java      — all current scores (strategy: rebuild ranked list)
+│       │   │   ├── TrustScoreDeltaPayload.java     — changed actors only (strategy: incremental cache)
+│       │   │   ├── TrustScoreComputedAt.java       — lightweight notification (strategy: signal only)
+│       │   │   └── TrustScoreDelta.java            — single actor score change value type
+│       │   └── intercept/
+│       │       ├── ProvenanceCapture.java           — CDI interceptor binding (@InterceptorBinding); attributes sourceEntityType, sourceEntitySystem
+│       │       ├── ProvenanceCaptureInterceptor.java — CDI interceptor: pushes ProvenanceContext before proceed, pops in finally
+│       │       ├── ProvenanceCaptureEnricher.java   — LedgerEntryEnricher: attaches ProvenanceSupplement from active context
+│       │       ├── ProvenanceContext.java           — @ApplicationScoped ThreadLocal stack; supports nested @ProvenanceCapture scopes
+│       │       └── SourceEntityId.java              — parameter annotation: marks the UUID to use as sourceEntityId
 │       └── privacy/
 │           ├── ActorIdentityProvider.java   — SPI: tokenise/resolve/erase actor identities
 │           ├── DecisionContextSanitiser.java — SPI: sanitise decisionContext JSON before persist
 │           ├── InternalActorIdentityProvider.java — built-in UUID token impl (config-gated)
+│           ├── LedgerErasureService.java    — GDPR Art.17 erasure (CDI bean)
 │           └── LedgerPrivacyProducer.java   — CDI producer for both SPIs (@DefaultBean)
-│       └── supplement/
-│           ├── LedgerSupplement.java        — abstract base (JOINED inheritance)
-│           ├── ComplianceSupplement.java    — GDPR Art.22, governance fields
-│           ├── ProvenanceSupplement.java    — workflow source entity
-│           └── LedgerSupplementSerializer.java — JSON serialiser for supplementJson
 │   └── src/main/resources/db/migration/
 │       ├── V1000__ledger_base_schema.sql    — ledger_entry + ledger_attestation tables
 │       ├── V1001__actor_trust_score.sql     — actor_trust_score discriminator model (UUID PK, score_type GLOBAL|CAPABILITY|DIMENSION, scope_key, NULLS NOT DISTINCT)

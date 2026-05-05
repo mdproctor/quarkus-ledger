@@ -9,7 +9,7 @@ compliance in multi-agent orchestration (Tarkus → Qhorus → Claudony).
 Gaps are stated honestly. Where a gap is uncomfortable, that is the point — it is the
 thing to fix.
 
-**Last assessed:** 2026-04-21 against `casehub-ledger` v0.2-SNAPSHOT.
+**Last assessed:** 2026-05-05 against `casehub-ledger` v0.2-SNAPSHOT.
 
 ---
 
@@ -32,12 +32,12 @@ every consumer; it must never surprise them.
 | Axiom | Status | Addressed by |
 |---|---|---|
 | 1. Integrity | ✅ Strong | — (already met) |
-| 2. Coverage | ⚠️ Partial | CDI interceptors (not yet planned) |
+| 2. Coverage | ⚠️ Partial | CDI interceptors (partial — `@ProvenanceCapture` auto-attaches `ProvenanceSupplement` for workflow provenance; general `@Auditable` entry-capture interceptor not yet planned) |
 | 3. Temporal Coherence | ✅ Addressed | `causedByEntryId` core field + `findCausedBy()` (#10) |
 | 4. Verifiability | ✅ Addressed | Merkle tree upgrade (#11) — O(log N) inclusion proofs + Ed25519 publishing |
 | 5. Accessibility | ✅ Addressed | EU AI Act Art.12 audit query API (#9) |
 | 6. Resource Proportionality | ✅ Addressed | Retention config (#9) |
-| 7. Privacy Compatibility | ✅ Addressed | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs. Built-in tokenisation via `quarkus.ledger.identity.tokenisation.enabled`. `LedgerErasureService` for GDPR Art.17 requests. |
+| 7. Privacy Compatibility | ✅ Addressed | `ActorIdentityProvider` + `DecisionContextSanitiser` SPIs. Built-in tokenisation via `casehub.ledger.identity.tokenisation.enabled`. `LedgerErasureService` for GDPR Art.17 requests. |
 | 8. Governance Alignment | ✅ Addressed | ComplianceSupplement (#7) + EU AI Act Art. 12 (#9) |
 
 ---
@@ -79,6 +79,8 @@ O(log N) proof verifiable without database access.
 `inclusionProof(entryId)` as a CDI bean — no database credentials or schema knowledge
 needed by an external verifier. See Axiom 4 (Verifiability) for the full treatment.
 
+`LedgerHealthJob` provides continuous integrity monitoring — it runs on a configurable schedule (default 1h) and fires `LedgerGapDetected` CDI events when sequence numbers are not contiguous for a subject. A gap indicates entries were deleted after write. This complements the static inclusion proofs of `LedgerVerificationService`.
+
 ---
 
 ### 2. Coverage ⚠️ Partial
@@ -107,10 +109,12 @@ new code path in Tarkus or Qhorus must remember to add the capture call — ther
 safety net.
 
 **How to incorporate (without breaking existing consumers):**
+CDI interceptors (partial — `@ProvenanceCapture` auto-attaches `ProvenanceSupplement` for workflow provenance; general `@Auditable` entry-capture interceptor not yet planned)
+
 A `@Auditable` method-level annotation processed by a CDI interceptor could auto-capture
 ledger entries for annotated methods without any changes to existing consumers. Existing
 consumers already writing their own capture calls would simply not use the annotation —
-zero impact. This is not yet designed or planned.
+zero impact.
 
 **Risk without this:**
 High. As the ecosystem grows (CaseHub, Claudony), the probability of a missing capture
@@ -184,7 +188,7 @@ directly — no CDI service, no documented third-party verification path.
 - `LedgerVerificationService` — CDI bean. `treeRoot(subjectId)`, `inclusionProof(entryId)`,
   `verify(subjectId)`. Auto-activated; no consumer configuration required.
 - `LedgerMerklePublisher` — opt-in Ed25519-signed tlog-checkpoint publishing.
-  Configure `quarkus.ledger.merkle.publish.url` to activate. Disabled by default.
+  Configure `casehub.ledger.merkle.publish.url` to activate. Disabled by default.
 - An external auditor needs only: a published checkpoint + an `InclusionProof` record.
   No DB access, no schema knowledge, no trust in the operator required.
 
@@ -220,6 +224,8 @@ There is no query by `actorId` across subjects, no time-range query, no query by
 reconstructability without knowledge of system internals. All return entries in
 `occurredAt ASC` order using `Instant` params for timezone-safe querying.
 
+`LedgerComplianceReportService` provides pre-formatted regulatory output: `reportForActor` and `reportForSubject` return `ComplianceReport` with structured `DecisionRecord` entries (algorithmRef, confidence, contestationUri, provenanceSupplement fields) and a `merkleRootAtGeneration` tamper-evidence anchor. Supported formats: `PLAIN_JSON`, `JSON_LD` (with PROV context), `CSV` for tabular regulatory submissions.
+
 ---
 
 ### 6. Resource Proportionality ✅ Addressed (#9)
@@ -241,7 +247,7 @@ concern.
 **Current state:**
 Partial. The nightly `TrustScoreJob` runs on a configurable schedule — appropriate
 for its batch nature. SHA-256 hash computation adds minimal per-write overhead.
-`quarkus.ledger.trust-score.*` config exists. However, all ledger entries are stored
+`casehub.ledger.trust-score.*` config exists. However, all ledger entries are stored
 identically regardless of their risk level. There is no retention configuration, no
 risk tiering, and no way to tell the ledger that certain entry types warrant extended
 retention or additional fidelity.
@@ -249,7 +255,7 @@ retention or additional fidelity.
 **Status:** ✅ Addressed (#9)
 
 **Addressed by (#9):**
-`quarkus.ledger.retention.*` config (disabled by default) enforces the EU AI Act Art.12
+`casehub.ledger.retention.*` config (disabled by default) enforces the EU AI Act Art.12
 180-day minimum with archive-before-delete. Zero behaviour change when unconfigured.
 
 ---
@@ -271,7 +277,7 @@ Two SPIs in `io.casehub.ledger.runtime.privacy`:
   persist. Default is pass-through; consumers supply a custom CDI bean to strip PII.
 
 Built-in implementation (`InternalActorIdentityProvider`) backed by the `actor_identity`
-table (V1004). Activated via `quarkus.ledger.identity.tokenisation.enabled=true`.
+table (V1004). Activated via `casehub.ledger.identity.tokenisation.enabled=true`.
 
 `LedgerErasureService.erase(String rawActorId)` processes GDPR Art.17 requests: locates
 the token, counts affected entries (informational), severs the mapping, returns `ErasureResult`.
@@ -318,7 +324,7 @@ The hash chain satisfies the tamper-evidence requirement. Supplement fields are
 deliberately excluded from the canonical form.
 
 **EU AI Act Art.12 (#9) — ✅ Complete:**
-- ✅ 6-month retention enforcement via `quarkus.ledger.retention.*` config (disabled by default)
+- ✅ 6-month retention enforcement via `casehub.ledger.retention.*` config (disabled by default)
 - ✅ Reconstructability API: `findByActorId()`, `findByActorRole()`, `findByTimeRange()`
 - ✅ Documentation mapping Art.12 requirements: `docs/compliance/EU-AI-ACT-ART12.md`
 - ✅ Runnable example: `examples/art12-compliance/`

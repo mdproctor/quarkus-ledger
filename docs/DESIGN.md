@@ -173,9 +173,9 @@ utility works for any subclass.
 
 ## Configuration
 
-The extension is configured under the `quarkus.ledger` prefix via `application.properties` or environment variables.
+The extension is configured under the `casehub.ledger` prefix via `application.properties` or environment variables.
 
-**Core settings (`quarkus.ledger.*`):**
+**Core settings (`casehub.ledger.*`):**
 
 | Key | Default | Description |
 |---|---|---|
@@ -187,15 +187,15 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `trust-score.enabled` | `false` | Enable nightly Bayesian Beta trust score computation (requires historical data) |
 | `trust-score.decay-half-life-days` | `90` | Exponential decay half-life for attestation recency weighting |
 | `trust-score.routing-enabled` | `false` | Influence routing via CDI events based on trust scores |
-| `trust-score.eigentrust-enabled` | `false` | Run EigenTrust power iteration after the Beta pass to compute transitive global trust scores |
-| `trust-score.eigentrust-alpha` | `0.15` | EigenTrust dampening constant α — higher values anchor the eigenvector closer to the pre-trusted set |
-| `trust-score.pre-trusted-actors` | (empty) | Comma-separated actor IDs used as the EigenTrust seed; uniform distribution used when empty |
+| `trust-score.eigentrust.enabled` | `false` | Run EigenTrust power iteration after the Beta pass to compute transitive global trust scores |
+| `trust-score.eigentrust.alpha` | `0.15` | EigenTrust dampening constant α — higher values anchor the eigenvector closer to the pre-trusted set |
+| `trust-score.eigentrust.pre-trusted-actors` | (empty) | Comma-separated actor IDs used as the EigenTrust seed; uniform distribution used when empty |
 | `trust-score.schedule` | `24h` | Recomputation interval as a Quarkus duration string; reduce for high-interaction agent mesh deployments |
 | `trust-score.aggregation-strategy` | `WEIGHTED_MAJORITY` | How multiple attestations on the same entry are resolved before trust scoring (`WEIGHTED_MAJORITY`, `UNANIMOUS_REQUIRED`, `FIRST_ATTESTOR`) |
 | `health.enabled` | `true` | Enable scheduled audit health checks (sequence gap detection + reconciliation) |
 | `health.check-interval` | `1h` | Interval between health check runs as a Quarkus duration string (e.g. `30m`, `2h`) |
 
-**Retention sub-config (`quarkus.ledger.retention.*`):**
+**Retention sub-config (`casehub.ledger.retention.*`):**
 
 | Key | Default | Description |
 |---|---|---|
@@ -203,7 +203,7 @@ The extension is configured under the `quarkus.ledger` prefix via `application.p
 | `retention.operational-days` | `180` | Retention window in days (EU AI Act Art.12 minimum: 6 months) |
 | `retention.archive-before-delete` | `true` | Write full entry JSON to `ledger_entry_archive` before deletion |
 
-**Merkle publishing sub-config (`quarkus.ledger.merkle.publish.*`):**
+**Merkle publishing sub-config (`casehub.ledger.merkle.publish.*`):**
 
 | Key | Default | Description |
 |---|---|---|
@@ -278,7 +278,7 @@ When multiple attestors assess the same ledger entry, `AttestationAggregator` co
 
 The dimension pass always uses raw attestations — continuous `dimensionScore` values are not subject to verdict aggregation.
 
-**EigenTrust transitivity** (opt-in, `quarkus.ledger.trust-score.eigentrust-enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
+**EigenTrust transitivity** (opt-in, `casehub.ledger.trust-score.eigentrust.enabled`) — runs after the Beta pass. `EigenTrustComputer` builds a peer trust matrix C from attestation data (C[i][j] = normalised positive attestations from i on j's decisions), then runs power iteration with dampening: `t = (1-α) * Cᵀ * t + α * p`. The result is each actor's eigenvector trust share accounting for transitive relationships. Pre-trusted actors (platform SYSTEM actors, or configured via `pre-trusted-actors`) seed the distribution p.
 
 **Audit health checks (✅ #56)** — `LedgerHealthJob` runs on a configurable schedule (default 1h) and fires `LedgerGapDetected` CDI events for anomalies:
 - *Sequence gap detection*: for each subject, verifies that sequence numbers are contiguous (`COUNT(e) == MAX(seqNum) - MIN(seqNum) + 1`). A gap indicates entries were deleted after write.
