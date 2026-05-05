@@ -38,6 +38,17 @@ public interface LedgerEntryRepository {
     List<LedgerEntry> findBySubjectId(UUID subjectId);
 
     /**
+     * Return all ledger entries for the given subject whose {@code occurredAt} falls
+     * within [{@code from}, {@code to}] inclusive, ordered by {@code occurredAt} ascending.
+     *
+     * @param subjectId the aggregate identifier
+     * @param from start of the time range (inclusive)
+     * @param to end of the time range (inclusive)
+     * @return ordered list; empty if none match
+     */
+    List<LedgerEntry> findBySubjectIdAndTimeRange(UUID subjectId, Instant from, Instant to);
+
+    /**
      * Return the most recent ledger entry for the given subject, or empty if none.
      *
      * @param subjectId the aggregate identifier

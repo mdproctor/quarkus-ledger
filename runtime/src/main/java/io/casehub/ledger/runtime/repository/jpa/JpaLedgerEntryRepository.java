@@ -161,6 +161,19 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
 
     /** {@inheritDoc} */
     @Override
+    public List<LedgerEntry> findBySubjectIdAndTimeRange(final UUID subjectId, final Instant from, final Instant to) {
+        return em.createQuery(
+                "SELECT e FROM LedgerEntry e WHERE e.subjectId = :subjectId" +
+                " AND e.occurredAt >= :from AND e.occurredAt <= :to ORDER BY e.occurredAt ASC",
+                LedgerEntry.class)
+                .setParameter("subjectId", subjectId)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Optional<LedgerEntry> findLatestBySubjectId(final UUID subjectId) {
         return em.createQuery(
                 "SELECT e FROM LedgerEntry e WHERE e.subjectId = :subjectId ORDER BY e.sequenceNumber DESC",
