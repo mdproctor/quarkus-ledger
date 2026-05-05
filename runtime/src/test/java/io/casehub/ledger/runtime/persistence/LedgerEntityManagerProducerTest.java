@@ -147,6 +147,11 @@ class LedgerEntityManagerProducerTest {
         }
 
         @Override
+        public HealthConfig health() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public IdentityConfig identity() {
             throw new UnsupportedOperationException();
         }
