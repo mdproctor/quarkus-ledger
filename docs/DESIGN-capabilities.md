@@ -17,7 +17,7 @@ Replaces the linear hash chain. Per-subject stored frontier gives O(log N) inclu
 
 **`LedgerVerificationService`** (`@ApplicationScoped`) — `treeRoot(UUID)`, `inclusionProof(UUID)`, `verify(UUID)`. Auto-activated.
 
-**External publishing** (opt-in) — `LedgerMerklePublisher` posts Ed25519-signed tlog-checkpoints to `quarkus.ledger.merkle.publish.url` on each frontier update. Disabled by default.
+**External publishing** (opt-in) — `LedgerMerklePublisher` posts Ed25519-signed tlog-checkpoints to `casehub.ledger.merkle.publish.url` on each frontier update. Disabled by default.
 
 ## W3C PROV-DM JSON-LD Export
 
@@ -38,6 +38,8 @@ No CDI, no DB access. Must be called within a `@Transactional` boundary so suppl
 
 **`LedgerProvExportService`** (`@ApplicationScoped`) — `exportSubject(UUID subjectId)`.
 Fetches entries, initialises supplements, delegates to serialiser. Auto-activated.
+
+Consumers can auto-attach `ProvenanceSupplement` via the `@ProvenanceCapture` CDI interceptor binding — see `docs/DESIGN.md` (Supplements section) for usage.
 
 See `docs/prov-dm-mapping.md` for the full field-by-field mapping including all supplement fields.
 
@@ -64,7 +66,7 @@ every write by two SPIs in `io.casehub.ledger.runtime.privacy`:
 Both defaults produce zero behaviour change. Supply a custom CDI bean to replace either.
 
 **Built-in tokenisation** (`InternalActorIdentityProvider`) activates when
-`quarkus.ledger.identity.tokenisation.enabled=true`. Tokens are UUID strings stored in the
+`casehub.ledger.identity.tokenisation.enabled=true`. Tokens are UUID strings stored in the
 `actor_identity` table (V1004). Erasure deletes the mapping row — the token in existing
 entries becomes permanently unresolvable but the Merkle hash chain is intact.
 
@@ -76,7 +78,7 @@ affected (entries are not deleted).
 
 | Key | Default | Description |
 |---|---|---|
-| `quarkus.ledger.identity.tokenisation.enabled` | `false` | Activate built-in UUID token pseudonymisation (see `docs/PRIVACY.md`) |
+| `casehub.ledger.identity.tokenisation.enabled` | `false` | Activate built-in UUID token pseudonymisation (see `docs/PRIVACY.md`) |
 
 ---
 
@@ -115,6 +117,8 @@ The global score aggregation strategy is pluggable via `GlobalScoreStrategy` (se
 
 `TrustGateService.meetsThreshold(actorId, capabilityTag, minTrust)` queries the CAPABILITY
 score first and falls back to GLOBAL when none exists.
+
+**Attestation aggregation** — before per-(entryId, capabilityTag) Beta computation, `AttestationAggregator` collapses multiple attestors' verdicts for the same entry into a single consensus verdict. Configurable via `casehub.ledger.trust-score.aggregation-strategy` (`WEIGHTED_MAJORITY` default, `UNANIMOUS_REQUIRED`, `FIRST_ATTESTOR`). This prevents a low-confidence minority verdict from disproportionately affecting actor scores.
 
 ---
 
@@ -231,9 +235,9 @@ appropriate for most deployments. For dense agent meshes where an actor makes hu
 decisions per hour, reduce the interval so trust scores reflect recent behaviour:
 
 ```properties
-quarkus.ledger.trust-score.schedule=1h   # high-interaction mesh
-quarkus.ledger.trust-score.schedule=6h   # moderate interaction
-quarkus.ledger.trust-score.schedule=24h  # default (nightly)
+casehub.ledger.trust-score.schedule=1h   # high-interaction mesh
+casehub.ledger.trust-score.schedule=6h   # moderate interaction
+casehub.ledger.trust-score.schedule=24h  # default (nightly)
 ```
 
 There is no benefit to scheduling below the typical inter-attestation interval — scores

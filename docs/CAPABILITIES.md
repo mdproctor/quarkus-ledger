@@ -36,6 +36,10 @@ The capabilities are grouped by concern. Each has an applicability rating:
 | EigenTrust transitivity | ★★☆☆☆ | `false` | Decentralised agent mesh trust |
 | Trust score routing signals | ★★☆☆☆ | `false` | CDI event dispatch to routing layers |
 | Supplement system | ★★★★★ | Always available | Zero-overhead optional field sets |
+| `@ProvenanceCapture` interceptor | ★★★☆☆ | Annotation opt-in | Automatic provenance without boilerplate |
+| Attestation aggregation | ★★★☆☆ | `WEIGHTED_MAJORITY` | Multi-attestor consensus before trust scoring |
+| Audit health checks | ★★★★☆ | `true` | Continuous gap detection + reconciliation |
+| Compliance report API | ★★★★☆ | Always available | Formatted reports for GDPR Art.22 / EU AI Act Art.12 |
 
 ---
 
@@ -81,7 +85,7 @@ evidence chains, regulated healthcare systems, government contracting.
 The performance impact is negligible (one SHA-256 per write).
 
 **Skip when:** Pure development / exploratory environments. Set
-`quarkus.ledger.hash-chain.enabled=false`.
+`casehub.ledger.hash-chain.enabled=false`.
 
 ---
 
@@ -162,7 +166,7 @@ write site.
 ### Privacy / Pseudonymisation — GDPR Art.17 ★★★★★
 
 By default, `actorId` and `attestorId` store raw identity strings. When
-`quarkus.ledger.identity.tokenisation.enabled=true`, a pseudonymisation layer intercepts
+`casehub.ledger.identity.tokenisation.enabled=true`, a pseudonymisation layer intercepts
 all writes: raw identities are replaced with opaque UUID tokens, and the mapping is stored
 in a separate `actor_identity` table. Queries translate transparently.
 
@@ -246,6 +250,40 @@ Regulatory data lineage submissions, auditor-facing provenance reports, and inte
 
 ---
 
+### @ProvenanceCapture — Auto-Attach Provenance
+
+Eliminates manual `ProvenanceSupplement.attach()` boilerplate. Annotate any CDI bean method with `@ProvenanceCapture` and every `LedgerEntry` persisted within the call automatically gets a `ProvenanceSupplement` attached. Uses `@SourceEntityId` parameter annotation or the first `UUID` parameter for `sourceEntityId`. Exception-safe (always clears context in `finally`). Nesting supported — inner scope wins.
+
+### Attestation Aggregation
+
+When multiple agents attest to the same ledger entry, `AttestationAggregator` collapses each `(entryId, capabilityTag)` group into a single consensus verdict before trust scoring. This prevents a low-confidence minority attestor from dragging an actor's score disproportionately.
+
+**Strategies** (`casehub.ledger.trust-score.aggregation-strategy`):
+- `WEIGHTED_MAJORITY` (default) — confidence-weighted vote; normalised margin as confidence
+- `UNANIMOUS_REQUIRED` — any FLAGGED/CHALLENGED produces FLAGGED consensus
+- `FIRST_ATTESTOR` — use first attestation only (regression compatibility)
+
+### Audit Health Checks
+
+`LedgerHealthJob` runs at a configurable interval (default 1h) and fires `LedgerGapDetected` CDI events for two anomaly types:
+- `SEQUENCE_GAP` — a subject's sequence numbers are not contiguous (indicates post-write deletion)
+- `RECONCILIATION_MISMATCH` — a registered `LedgerReconciliationSource` reports different domain vs ledger counts
+
+Implement `LedgerReconciliationSource` to register your domain count provider. Controlled by `casehub.ledger.health.enabled` (default `true`).
+
+### Compliance Report API
+
+`LedgerComplianceReportService` produces structured regulatory output from `ComplianceSupplement`-carrying entries:
+
+```java
+ComplianceReport report = complianceService.reportForActor("claude:reviewer@v1", from, to);
+String csv = report.format(ReportFormat.CSV);   // for FCA / AI Act tabular submissions
+```
+
+Each `DecisionRecord` carries `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable`, and optional provenance fields. `merkleRootAtGeneration` anchors the report to the ledger state at generation time for independent verification.
+
+---
+
 ### Causal Chaining ★★★☆☆
 
 `causedByEntryId` links any ledger entry to the entry that triggered it — across subjects and consumers. This models the "was derived from" relationship in distributed workflows: a risk alert caused by a credit decision caused by an order placement.
@@ -297,7 +335,7 @@ Any multi-actor workflow where no single actor's word is final. Especially relev
 AI agent meshes, regulated financial operations, and clinical decision systems.
 
 **Enable when:** Multiple actors — human or agent — review, approve, or dispute each other's
-decisions. `quarkus.ledger.attestations.enabled=true` (default).
+decisions. `casehub.ledger.attestations.enabled=true` (default).
 
 ---
 
@@ -329,7 +367,7 @@ historical performance.
 
 **Enable when:** You have peer attestation enabled and want to derive a longitudinal
 reliability signal from attestation history.
-`quarkus.ledger.trust-score.enabled=true` (disabled by default — requires the attestation
+`casehub.ledger.trust-score.enabled=true` (disabled by default — requires the attestation
 dataset to be meaningful before scores are useful).
 
 **Skip when:** You have a small, fixed, well-known actor set where manual trust management
@@ -362,7 +400,7 @@ Large-scale decentralised AI agent networks, federated multi-organisation system
 central authority can be trusted to assign reputations, and cross-enterprise agent
 coordination (e.g. supply chain automation spanning multiple companies).
 
-**Enable when:** `quarkus.ledger.trust-score.eigentrust.enabled=true`. The agent mesh is large enough that direct attestation coverage is sparse and transitive propagation adds signal. For most organisations, direct Bayesian Beta scoring suffices until the actor count exceeds dozens of cross-attesting participants.
+**Enable when:** `casehub.ledger.trust-score.eigentrust.enabled=true`. The agent mesh is large enough that direct attestation coverage is sparse and transitive propagation adds signal. For most organisations, direct Bayesian Beta scoring suffices until the actor count exceeds dozens of cross-attesting participants.
 
 **Don't dismiss it:** This feature is not here because it is fashionable. It is here because
 direct trust scoring without transitivity does not scale to large agent meshes. The
@@ -385,7 +423,7 @@ Three payload types let each consumer choose its granularity:
 
 Consumers declare which granularity they want by the payload type they `@Observes`. Sync and async dispatch are per-consumer: `@Observes` runs inline; `@ObservesAsync` runs on the CDI managed executor. Note: in CDI 4.x, `event.fire()` delivers only to `@Observes` observers; `event.fireAsync()` is required separately for `@ObservesAsync`.
 
-**Enable when:** `quarkus.ledger.trust-score.routing-enabled=true`. Requires trust scoring to be enabled first. Most useful when consumers need to update routing decisions as actor reliability changes over time.
+**Enable when:** `casehub.ledger.trust-score.routing-enabled=true`. Requires trust scoring to be enabled first. Most useful when consumers need to update routing decisions as actor reliability changes over time.
 
 ---
 
@@ -404,7 +442,7 @@ Instead, optional cross-cutting field sets live in separate joined tables:
 | Supplement | Table | Fields |
 |---|---|---|
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` |
-| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem` |
+| `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem`, `agentConfigHash` — SHA-256 hex of agent configuration at session start; forensic config drift detection; nullable |
 
 OTel trace linkage (`traceId`) and causal chaining (`causedByEntryId`) are core
 fields on every `LedgerEntry` — present without attaching a supplement, incurring no extra

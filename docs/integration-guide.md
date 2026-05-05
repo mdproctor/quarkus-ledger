@@ -328,33 +328,40 @@ Add to `application.properties`:
 
 ```properties
 # Master switch (default: true)
-quarkus.ledger.enabled=true
+casehub.ledger.enabled=true
+
+# Named datasource — set when your app has no default datasource (optional)
+# casehub.ledger.datasource=mydb
 
 # Merkle leaf hash computation (RFC 9162 domain separation) — enables tamper detection (default: true)
-quarkus.ledger.hash-chain.enabled=true
+casehub.ledger.hash-chain.enabled=true
 
 # Decision context snapshots — required for GDPR Art.22 / EU AI Act Art.12 (default: true)
-quarkus.ledger.decision-context.enabled=true
+casehub.ledger.decision-context.enabled=true
 
 # Structured evidence fields — off by default (enable when callers supply evidence)
-quarkus.ledger.evidence.enabled=false
+casehub.ledger.evidence.enabled=false
 
 # Peer attestation API (default: true)
-quarkus.ledger.attestations.enabled=true
+casehub.ledger.attestations.enabled=true
 
 # Nightly EigenTrust trust score computation (default: false)
 # Enable only once history has accumulated — early scores are unreliable
-quarkus.ledger.trust-score.enabled=false
+casehub.ledger.trust-score.enabled=false
 
 # Exponential decay half-life for score weighting (default: 90 days)
-quarkus.ledger.trust-score.decay-half-life-days=90
+casehub.ledger.trust-score.decay-half-life-days=90
 
 # Trust-score routing signals via CDI events (default: false)
-quarkus.ledger.trust-score.routing-enabled=false
+casehub.ledger.trust-score.routing-enabled=false
+
+casehub.ledger.trust-score.aggregation-strategy=WEIGHTED_MAJORITY   # WEIGHTED_MAJORITY | UNANIMOUS_REQUIRED | FIRST_ATTESTOR
+casehub.ledger.health.enabled=true
+casehub.ledger.health.check-interval=1h
 
 # Merkle tree external publishing (opt-in) — post Ed25519-signed tlog-checkpoint on each write
-# quarkus.ledger.merkle.publish.url=https://your-checkpoint-log/
-# quarkus.ledger.merkle.publish.private-key=/path/to/ed25519-key.pem
+# casehub.ledger.merkle.publish.url=https://your-checkpoint-log/
+# casehub.ledger.merkle.publish.private-key=/path/to/ed25519-key.pem
 ```
 
 ---
@@ -431,6 +438,21 @@ entry.attach(ps);
 
 This enables cross-system audit queries: given a workflow instance ID, find all domain objects it created and their full audit trails.
 
+#### Auto-attachment via `@ProvenanceCapture`
+
+Annotate any CDI bean method to attach `ProvenanceSupplement` automatically — no manual `attach()` needed:
+
+```java
+@ProvenanceCapture(sourceEntityType = "WorkItem", sourceEntitySystem = "casehub-work")
+@Transactional
+public void completeWorkItem(@SourceEntityId UUID workItemId, String resolution) {
+    // Any LedgerEntry persisted here gets ProvenanceSupplement attached automatically
+    repo.save(entry);
+}
+```
+
+Use `@SourceEntityId` to mark which parameter is the entity ID. Falls back to the first `UUID` parameter when absent. Nesting is supported — the inner-most annotated scope wins. If the entry already has a `ProvenanceSupplement` with `agentConfigHash` set, that field is preserved.
+
 ---
 
 ## Using trust scoring (Bayesian Beta)
@@ -480,10 +502,10 @@ When `trust-score.routing-enabled=true`, `TrustScoreJob` fires CDI events after 
 Enable in `application.properties`:
 
 ```properties
-quarkus.ledger.trust-score.enabled=true
-quarkus.ledger.trust-score.routing-enabled=true
+casehub.ledger.trust-score.enabled=true
+casehub.ledger.trust-score.routing-enabled=true
 # Minimum score change to appear in a delta payload (default: 0.01)
-quarkus.ledger.trust-score.routing-delta-threshold=0.01
+casehub.ledger.trust-score.routing-delta-threshold=0.01
 ```
 
 ### Sync observer — rebuilding a ranked list
@@ -588,3 +610,41 @@ step required for single-entry reads.
 
 `examples/art22-decision-snapshot/` — a full Quarkus app demonstrating a GDPR
 Art.22 compliant AI decision service. See its `README.md` for regulatory context.
+
+---
+
+### Implementing `LedgerReconciliationSource` (audit health)
+
+Register a CDI bean to have `LedgerHealthJob` compare your domain entity count against the ledger:
+
+```java
+@ApplicationScoped
+public class WorkItemReconciliationSource implements LedgerReconciliationSource {
+    @Inject WorkItemRepository workItems;
+    @Inject LedgerEntryRepository ledger;
+
+    @Override public String subjectType()        { return "WorkItem"; }
+    @Override public long countDomainEntities()  { return workItems.count(); }
+    @Override public long countLedgerEntries()   { return ledger.countByActorRole("WorkItemAgent"); }
+    @Override public boolean isActive()          { return true; }
+}
+```
+
+`LedgerHealthJob` fires a `LedgerGapDetected` CDI event (type `RECONCILIATION_MISMATCH`) when counts differ. Observe it to log or alert.
+
+### Generating compliance reports
+
+```java
+@Inject LedgerComplianceReportService complianceService;
+
+// Actor report — all automated decisions by one agent in a time range
+ComplianceReport report = complianceService.reportForActor("claude:reviewer@v1", from, to);
+String json  = report.format(ReportFormat.PLAIN_JSON);
+String csv   = report.format(ReportFormat.CSV);
+String jsonLd = report.format(ReportFormat.JSON_LD); // JSON-LD with @context
+
+// Subject report — all automated decisions on one aggregate
+ComplianceReport subjectReport = complianceService.reportForSubject(workItemId, from, to);
+```
+
+`report.merkleRootAtGeneration()` provides the Merkle root at report time — recipients can independently verify ledger integrity using `LedgerVerificationService`.
