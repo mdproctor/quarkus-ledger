@@ -96,6 +96,8 @@ fields by concern and moving them out of the core entity entirely.
 | `ComplianceSupplement` | `ledger_supplement_compliance` | `planRef`, `rationale`, `evidence`, `detail`, `decisionContext`, `algorithmRef`, `confidenceScore`, `contestationUri`, `humanOverrideAvailable` | Recording automated decisions subject to GDPR Art.22 or EU AI Act Art.12 |
 | `ProvenanceSupplement` | `ledger_supplement_provenance` | `sourceEntityId`, `sourceEntityType`, `sourceEntitySystem`, `agentConfigHash` | Entry is driven by an external workflow system; or carries LLM agent configuration binding |
 
+**Auto-attachment via `@ProvenanceCapture` (✅ #59):** The `@ProvenanceCapture` CDI interceptor binding automatically attaches a `ProvenanceSupplement` to any `LedgerEntry` persisted within the annotated method's execution. `sourceEntityId` is resolved from a `@SourceEntityId`-annotated parameter, or falls back to the first `UUID` parameter. Nesting is supported — the inner-most context wins. Consumers that already attach a `ProvenanceSupplement` manually can still use `@ProvenanceCapture`; the enricher merges the interceptor's provenance fields while preserving manually set fields such as `agentConfigHash`.
+
 ### Attaching a supplement
 
 ```java
@@ -326,4 +328,5 @@ decision — see `IDEAS.md` (2026-04-23 entry).
 | **Trust score routing signals** | ✅ Done | `TrustScoreRoutingPublisher`, payload types (`TrustScoreFullPayload`, `TrustScoreDeltaPayload`, `TrustScoreComputedAt`, `TrustScoreDelta`), `LedgerConfig.routingDeltaThreshold`, `TrustScoreJob` wiring. CDI `event.fire()` + `fireAsync()` per payload type; sync/async per-consumer. Closes #33. |
 | **Dimension-scoped trust scores** | ✅ Done | `trustDimension` + `dimensionScore` on `LedgerAttestation`; `TrustScoreComputer.computeDimensionScore()` (decay-weighted average); dimension pass in `TrustScoreJob`; `TrustGateService.dimensionScores()` + `dimensionScore()`; 26 new tests (unit + IT + E2E). Closes #62. |
 | **Multi-attestation aggregation** | ✅ Done | `AttestationAggregator` CDI bean (WEIGHTED_MAJORITY / UNANIMOUS_REQUIRED / FIRST_ATTESTOR); `TrustScoreJob` aggregates per (entryId, capabilityTag) before capability and global passes; `trust-score.aggregation-strategy` config key. 17 unit + 4 IT tests. Closes #57. |
+| **@ProvenanceCapture interceptor** | ✅ Done | `@ProvenanceCapture` interceptor binding + `ProvenanceCaptureInterceptor`; `ProvenanceCaptureEnricher` auto-attaches `ProvenanceSupplement` via existing enricher pipeline; `ProvenanceContext` ThreadLocal stack (nesting, exception-safe, `agentConfigHash` preserved); `@SourceEntityId` parameter annotation. 7 IT tests. Closes #59. |
 | **CaseLedgerEntry** | ⬜ Pending | Blocked on CaseHub Epic #131 (WorkBroker integration). `CaseInstance.uuid` → subjectId. Refs #39. |
