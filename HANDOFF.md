@@ -1,37 +1,39 @@
 # CaseHub Ledger — Session Handover
-**Date:** 2026-05-04
+**Date:** 2026-05-05
 
 ## Current State
 
-`casehub-ledger` v0.2-SNAPSHOT. Clean working tree. 272 tests, BUILD SUCCESS, CI green.
-Group B: #60 ✅ #61 ✅. #62 (multi-dimensional trust) is next.
+`casehub-ledger` v0.2-SNAPSHOT. Clean working tree. 345 tests, BUILD SUCCESS.
+Group A (#49) fully closed: #57 ✅ #59 ✅ #56 ✅ #58 ✅. Group B was already done.
 
 ## What Landed This Session
 
-**#61 capability-scoped trust scores (Group B, epic #50):**
-- `GlobalScoreStrategy` SPI — 3 implementations: `AllAttestationsGlobalStrategy` (@DefaultBean,
-  Option B), `ExplicitGlobalAttestationsStrategy` (@Alternative), `FrequencyWeightedGlobalStrategy`
-  (@Alternative). Activation via `quarkus.arc.selected-alternatives`
-- `TrustScoreJob` capability pass: O(M) single-pass nested `groupingBy`; CAPABILITY rows written
-  per distinct tag; strategy injected; capability pass before global
-- `TrustGateService` Phase 2: `meetsThreshold(actorId, capabilityTag, minTrust)` — CAPABILITY
-  score first, falls back to GLOBAL; `currentScore(actorId, capabilityTag)` added
-- ADR 0008: GlobalScoreStrategy SPI with Wang & Vassileva, Fan et al., Jøsang & Ismail citations
-- Known limitation documented: `FrequencyWeightedGlobalStrategy.derive()` alpha/beta fields are
-  approximations, not valid Beta posteriors — `trustScore` is correct, alpha/beta are not
+**Group A — four independent features:**
+- `AttestationAggregator` — consensus verdict before trust scoring; WEIGHTED_MAJORITY/
+  UNANIMOUS_REQUIRED/FIRST_ATTESTOR; `casehub.ledger.trust-score.aggregation-strategy`
+- `@ProvenanceCapture` interceptor — auto-attaches `ProvenanceSupplement` via existing
+  enricher pipeline; `@SourceEntityId` param annotation; ThreadLocal stack context
+  (not `@RequestScoped` — works in schedulers and `@QuarkusTest` without HTTP)
+- `LedgerHealthJob` — scheduled gap detection (JPQL GROUP BY/HAVING) + reconciliation
+  SPI; `LedgerGapDetected` CDI event; `casehub.ledger.health.*` config
+- `LedgerComplianceReportService` — `reportForActor`/`reportForSubject`; `ComplianceReport`
+  with `format(PLAIN_JSON/CSV/JSON_LD)`; `findBySubjectIdAndTimeRange` added to both
+  repository SPIs
+
+**Documentation audit:** 6 files — CLAUDE.md structure table fully corrected (new files,
+wrong locations fixed), docs-wide config prefix `quarkus.ledger` → `casehub.ledger`,
+EigenTrust key names fixed, integration-guide.md got 3 new consumer sections.
 
 ## Immediate Next Steps
 
-1. **#62 (B3)** — multi-dimensional trust infrastructure: `DIMENSION` rows in `ActorTrustScore`,
-   `scope_key = dimensionName`, analogous to #61 but for trust dimensions (e.g. "thoroughness")
-2. **Group A remaining:** #56 (health checks), #57 (multi-attestation aggregation),
-   #58 (compliance report), #59 (ProvenanceSupplement enricher)
+1. **Group C / D** — check remaining open issues in epic #48 subtree:
+   `gh issue list --repo casehubio/ledger`
+2. **Milestone** — Group A+B done; consider `gh release create --generate-notes`
 
 ## References
 
 | What | Path |
 |---|---|
+| Latest blog | `blog/2026-05-05-mdp02-the-proxy-and-the-bean.md` |
 | Latest ADRs | `adr/0006` – `adr/0008` |
-| Latest blog | `blog/2026-05-04-mdp01-when-papers-disagree.md` |
-| Cross-repo bugs | `https://github.com/casehubio/ledger/issues/72` |
 | Previous handover | `git show HEAD~1:HANDOFF.md` |
