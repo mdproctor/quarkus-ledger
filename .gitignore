@@ -21,3 +21,4 @@ target/
 *.so
 *.dylib
 .worktrees/
+wksp
