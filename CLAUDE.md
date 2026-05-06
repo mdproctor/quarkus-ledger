@@ -335,6 +335,17 @@ relevant migration file in place. Treat every schema change as a clean-slate des
 
 ---
 
+## Project Artifacts
+
+Paths that are project content (not workspace noise). Skills use this to avoid
+filtering or dropping commits that touch these paths.
+
+| Path | What it is |
+|------|------------|
+| `docs/adr/` | Architecture decision records |
+| `CLAUDE.md` | Project conventions (build, test, naming) |
+| `docs/DESIGN.md` | Design document |
+
 ## Work Tracking
 
 **Issue tracking:** enabled
