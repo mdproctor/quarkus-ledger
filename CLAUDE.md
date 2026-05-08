@@ -348,6 +348,18 @@ filtering or dropping commits that touch these paths.
 | `CLAUDE.md` | Project conventions (build, test, naming) |
 | `docs/DESIGN.md` | Design document |
 
+
+## Development Workflow
+
+Before designing: `superpowers:brainstorming`
+Before implementing: `superpowers:test-driven-development`
+Before committing: `superpowers:requesting-code-review`
+
+Living docs — check for drift after significant changes:
+- `docs/DESIGN.md`
+- `docs/DESIGN-capabilities.md`
+- `docs/adr/INDEX.md`
+
 ## Work Tracking
 
 **Issue tracking:** enabled
